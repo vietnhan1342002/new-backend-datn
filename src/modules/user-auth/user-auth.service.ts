@@ -4,7 +4,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserAuthDto } from './dto/create-user-auth.dto';
-import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserAuth, UserAuthDocument } from './schemas/user-auth.schema';
@@ -86,6 +85,7 @@ export class UserAuthService {
     }
     //Generate JWT tokens
     const tokens = await this.generateUserTokens(user._id);
+
     return {
       ...tokens,
       userId: user._id,

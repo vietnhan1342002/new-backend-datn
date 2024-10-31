@@ -1,23 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-
-import { mongooseConfig } from './config/mongoose.config';
 import { ApiModule } from './modules/api.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [
-    // Cấu hình chung
-    ConfigModule.forRoot({ isGlobal: true }),
-
-    // Kết nối MongoDB
-    MongooseModule.forRootAsync({
-      useFactory: mongooseConfig,
-      inject: [ConfigService],
-    }),
-
-    ApiModule,
-  ],
+  imports: [ApiModule],
   controllers: [],
   providers: [],
 })
