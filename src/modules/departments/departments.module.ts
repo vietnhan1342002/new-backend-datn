@@ -3,12 +3,15 @@ import { DepartmentsService } from './departments.service';
 import { DepartmentsController } from './departments.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Department, DepartmentSchema } from './schemas/department.schema';
+import { RoleGuard } from '../user-auth/guard/role.guard';
+import { UserAuthModule } from '../user-auth/user-auth.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Department.name, schema: DepartmentSchema },
     ]),
+    UserAuthModule,
   ],
 
   controllers: [DepartmentsController],
