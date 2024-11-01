@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,26 +13,29 @@ import aqp from 'api-query-params';
 
 @Injectable()
 export class DepartmentsService {
-
   constructor(
     @InjectModel(Department.name)
-    private departmentModel: Model<Department>
-  ) { }
-
+    private departmentModel: Model<Department>,
+  ) {}
 
   async create(createDepartmentDto: CreateDepartmentDto) {
     const { departmentName, description } = createDepartmentDto;
 
-    const departmentExists = await isExistHelper({ departmentName }, this.departmentModel);
-
+    const departmentExists = await isExistHelper(
+      { departmentName },
+      this.departmentModel,
+    );
 
     if (departmentExists) {
-      throw new BadRequestException(`Phòng : ${departmentName} Đã tồn tại. Vui lòng đặt tên khác!`);
+      throw new BadRequestException(
+        `Phòng : ${departmentName} Đã tồn tại. Vui lòng đặt tên khác!`,
+      );
     }
 
     const department = await this.departmentModel.create({
-      departmentName, description
-    })
+      departmentName,
+      description,
+    });
     return { _id: department.id };
   }
 
@@ -38,26 +45,29 @@ export class DepartmentsService {
     if (filter.current) delete filter.current;
     if (filter.pageSize) delete filter.pageSize;
 
-    if (!current) current = 1
-    if (!pageSize) pageSize = 10
+    if (!current) current = 1;
+    if (!pageSize) pageSize = 10;
 
     const totalItems = (await this.departmentModel.find(filter)).length;
     const totalPages = Math.ceil(totalItems / pageSize);
 
-
-    const skip = (current - 1) * (pageSize);
+    const skip = (current - 1) * pageSize;
 
     const result = await this.departmentModel
       .find(filter)
       .limit(pageSize)
       .skip(skip)
-      .sort(sort as any)
+      .sort(sort as any);
+
+    if (result.length === 0) throw new NotFoundException('Không có phòng nào');
+
     return { result, totalPages };
   }
 
   async findOne(id: string) {
-    const result = await this.departmentModel.findById({ _id: id })
-      .select("departmentName description");
+    const result = await this.departmentModel
+      .findById({ _id: id })
+      .select('departmentName description');
     if (!result) {
       throw new NotFoundException(`Department with ID ${id} not found`);
     }
@@ -68,7 +78,7 @@ export class DepartmentsService {
     const { departmentName, description } = updateDepartmentDto;
     return await this.departmentModel.updateOne(
       { _id: id },
-      { departmentName, description }
+      { departmentName, description },
     );
   }
 
