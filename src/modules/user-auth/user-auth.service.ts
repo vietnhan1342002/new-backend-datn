@@ -17,6 +17,7 @@ import { RefreshToken } from './schemas/refresh-token.schema';
 import { v4 as uuidv4 } from 'uuid';
 import { LoginDto } from './dto/login.dto';
 import { RolesService } from '../roles/roles.service';
+import aqp from 'api-query-params';
 
 @Injectable()
 export class UserAuthService {
@@ -141,6 +142,29 @@ export class UserAuthService {
 
     const role = await this.roleService.findRoleById(user.roleId.toString());
     return role.permissions;
+  }
+
+  async findAll(query: string, current: number, pageSize: number) {
+    const { filter, sort } = aqp(query);
+
+    if (filter.current) delete filter.current;
+    if (filter.pageSize) delete filter.pageSize;
+
+    if (!current) current = 1;
+    if (!pageSize) pageSize = 10;
+
+    const totalItems = (await this.userAuthModel.find(filter)).length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    const skip = (current - 1) * pageSize;
+
+    const result = await this.userAuthModel
+      .find(filter)
+      .limit(pageSize)
+      .skip(skip)
+      .select('-password')
+      .sort(sort as any);
+    return { result, totalPages };
   }
 
   async findById(userId: string) {
