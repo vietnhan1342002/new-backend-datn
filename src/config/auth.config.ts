@@ -4,7 +4,7 @@ import { ExtractJwt } from 'passport-jwt';
 
 export const JwtStrategyConfig = (configService: ConfigService) => ({
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  ignoreExpiration: true,
+  ignoreExpiration: false,
   secretOrKey: configService.get<string>('JWT_SECRET'),
 });
 

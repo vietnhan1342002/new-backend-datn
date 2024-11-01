@@ -13,6 +13,8 @@ import { jwtConfig } from '@/config/auth.config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { RolesService } from '../roles/roles.service';
+import { RolesModule } from '../roles/roles.module';
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       { name: RefreshToken.name, schema: RefreshTokenSchema },
     ]),
     PassportModule,
+    RolesModule,
   ],
   controllers: [UserAuthController],
   providers: [UserAuthService, LocalStrategy, JwtStrategy],

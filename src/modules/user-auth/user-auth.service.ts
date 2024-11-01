@@ -16,6 +16,7 @@ import {
 import { RefreshToken } from './schemas/refresh-token.schema';
 import { v4 as uuidv4 } from 'uuid';
 import { LoginDto } from './dto/login.dto';
+import { RolesService } from '../roles/roles.service';
 
 @Injectable()
 export class UserAuthService {
@@ -26,7 +27,7 @@ export class UserAuthService {
     private refreshTokenModel: Model<RefreshToken>,
 
     private jwtService: JwtService,
-    // private roleService: RolesService,
+    private roleService: RolesService,
   ) {}
 
   async create(createUserDto: CreateUserAuthDto) {
@@ -132,5 +133,17 @@ export class UserAuthService {
       throw new UnauthorizedException('Refresh Token is invalid');
     }
     return this.generateUserTokens(token.userId);
+  }
+
+  async getUserPermissions(userId: string) {
+    const user = await this.userAuthModel.findById(userId);
+    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+
+    const role = await this.roleService.findRoleById(user.roleId.toString());
+    return role.permissions;
+  }
+
+  async findById(userId: string) {
+    return await this.userAuthModel.findById(userId).select('-password').exec();
   }
 }

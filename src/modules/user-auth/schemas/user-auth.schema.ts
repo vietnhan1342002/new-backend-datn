@@ -13,7 +13,12 @@ export class UserAuth extends Document {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ required: false, type: Types.ObjectId, ref: Role.name })
+  @Prop({
+    required: false,
+    type: Types.ObjectId,
+    ref: Role.name,
+    default: new Types.ObjectId('67244680e47e013129b68d3a'),
+  })
   roleId: Types.ObjectId; // Liên kết người dùng với Role
 
   @Prop()
