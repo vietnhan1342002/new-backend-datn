@@ -63,6 +63,11 @@ export class UserAuthController {
     return this.userAuthService.remove(id);
   }
 
+  @Get('department/:id')
+  async getUsersByDepartment(@Param('id') id: string): Promise<any> {
+    return this.userAuthService.getUsersByDepartment(id);
+  }
+
   //Test
   @UseGuards(JwtAuthGuard)
   @Permissions([{ resource: Resource.USER, actions: [Action.all] }])

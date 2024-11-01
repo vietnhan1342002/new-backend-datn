@@ -15,6 +15,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RolesService } from '../roles/roles.service';
 import { RolesModule } from '../roles/roles.module';
+import { DepartmentsModule } from '../departments/departments.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { RolesModule } from '../roles/roles.module';
     ]),
     PassportModule,
     RolesModule,
+    DepartmentsModule,
   ],
   controllers: [UserAuthController],
   providers: [UserAuthService, LocalStrategy, JwtStrategy],
