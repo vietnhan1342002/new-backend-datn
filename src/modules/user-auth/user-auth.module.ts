@@ -16,6 +16,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RolesService } from '../roles/roles.service';
 import { RolesModule } from '../roles/roles.module';
 import { DepartmentsModule } from '../departments/departments.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './guard/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -35,7 +37,15 @@ import { DepartmentsModule } from '../departments/departments.module';
     DepartmentsModule,
   ],
   controllers: [UserAuthController],
-  providers: [UserAuthService, LocalStrategy, JwtStrategy],
+  providers: [
+    UserAuthService,
+    LocalStrategy,
+    JwtStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
   exports: [UserAuthService],
 })
 export class UserAuthModule {}
