@@ -24,12 +24,14 @@ import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 export class UserAuthController {
   constructor(private readonly userAuthService: UserAuthService) {}
 
+  //Part auth
   @UseGuards(LocalStrategy)
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.userAuthService.login(loginDto);
   }
 
+  //Part User
   @UseGuards(JwtAuthGuard)
   @Permissions([{ resource: Resource.USER, actions: [Action.all] }])
   @Post()
@@ -61,6 +63,7 @@ export class UserAuthController {
     return this.userAuthService.remove(id);
   }
 
+  //Test
   @UseGuards(JwtAuthGuard)
   @Permissions([{ resource: Resource.USER, actions: [Action.all] }])
   @Get('profile')
