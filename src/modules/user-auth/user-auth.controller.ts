@@ -19,10 +19,19 @@ import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { Permissions } from '@/decorator/permission.decorator';
 import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
+import { RoleGuard } from './guard/role.guard';
 
 @Controller('user-auth')
 export class UserAuthController {
   constructor(private readonly userAuthService: UserAuthService) {}
+
+  //Test
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Permissions([{ resource: Resource.PATIENT, actions: [Action.CREAT] }])
+  @Get('profile')
+  getProfile(@Request() req) {
+    return req.user;
+  }
 
   //Part auth
   @UseGuards(LocalStrategy)
@@ -32,11 +41,17 @@ export class UserAuthController {
   }
 
   //Part User
-  @UseGuards(JwtAuthGuard)
-  @Permissions([{ resource: Resource.USER, actions: [Action.all] }])
+
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Permissions([{ resource: Resource.USER, actions: [Action.ALL] }])
   @Post()
   create(@Body() createUserAuthDto: CreateUserAuthDto) {
     return this.userAuthService.create(createUserAuthDto);
+  }
+
+  @Get('department/:id')
+  async getUsersByDepartment(@Param('id') id: string): Promise<any> {
+    return this.userAuthService.getUsersByDepartment(id);
   }
 
   @Get()
@@ -61,18 +76,5 @@ export class UserAuthController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userAuthService.remove(id);
-  }
-
-  @Get('department/:id')
-  async getUsersByDepartment(@Param('id') id: string): Promise<any> {
-    return this.userAuthService.getUsersByDepartment(id);
-  }
-
-  //Test
-  @UseGuards(JwtAuthGuard)
-  @Permissions([{ resource: Resource.USER, actions: [Action.all] }])
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
   }
 }
