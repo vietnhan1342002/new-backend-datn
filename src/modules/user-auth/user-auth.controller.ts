@@ -8,6 +8,7 @@ import {
   Query,
   Param,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { UserAuthService } from './user-auth.service';
 import { CreateUserAuthDto } from './dto/create-user-auth.dto';
@@ -45,9 +46,19 @@ export class UserAuthController {
     return this.userAuthService.findAll(query, +current, +pageSize);
   }
 
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    return this.userAuthService.findById(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserAuthDto) {
     return this.userAuthService.update(id, updateUserDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.userAuthService.remove(id);
   }
 
   @UseGuards(JwtAuthGuard)

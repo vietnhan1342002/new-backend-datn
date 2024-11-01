@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserAuthDto } from './dto/create-user-auth.dto';
@@ -169,7 +170,11 @@ export class UserAuthService {
   }
 
   async findById(userId: string) {
-    return await this.userAuthModel.findById(userId).select('-password').exec();
+    const user = await this.userAuthModel
+      .findOne({ _id: userId })
+      .select('-password');
+    if (!user) throw new NotFoundException('Không có người dùng này');
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserAuthDto) {
@@ -182,4 +187,32 @@ export class UserAuthService {
       { fullName, phoneNumber, departmentID: objectIdDepartmentID },
     );
   }
+
+  async remove(id: string) {
+    const result = await this.userAuthModel.deleteOne({ _id: id });
+
+    if (result.deletedCount === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return { message: `User with ID ${id} deleted successfully` };
+  }
+
+  // async getUsersByDepartment(departmentName: string): Promise<UserAuth[]> {
+  //   const department = await this.departmentModel
+  //     .findOne({ departmentName })
+  //     .exec();
+  //   if (!department) {
+  //     throw new NotFoundException('Không có phòng này');
+  //   }
+
+  //   return await this.userAuthModel
+  //     .find({ departmentID: department._id })
+  //     .populate({
+  //       path: 'departmentID',
+  //       select: 'departmentName',
+  //     }) // Populate thông tin của phòng ban
+  //     .select('fullName departmentName')
+  //     .exec();
+  // }
 }
