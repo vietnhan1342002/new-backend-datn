@@ -20,6 +20,7 @@ import { LoginDto } from './dto/login.dto';
 import { RolesService } from '../roles/roles.service';
 import aqp from 'api-query-params';
 import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
+import { DepartmentsService } from '../departments/departments.service';
 
 @Injectable()
 export class UserAuthService {
@@ -31,6 +32,7 @@ export class UserAuthService {
 
     private jwtService: JwtService,
     private roleService: RolesService,
+    private departmentService: DepartmentsService,
   ) {}
 
   async create(createUserDto: CreateUserAuthDto) {
@@ -198,21 +200,22 @@ export class UserAuthService {
     return { message: `User with ID ${id} deleted successfully` };
   }
 
-  // async getUsersByDepartment(departmentName: string): Promise<UserAuth[]> {
-  //   const department = await this.departmentModel
-  //     .findOne({ departmentName })
-  //     .exec();
-  //   if (!department) {
-  //     throw new NotFoundException('Không có phòng này');
-  //   }
+  async getUsersByDepartment(id: string): Promise<UserAuth[]> {
+    const department = await this.departmentService.findOne(id);
+    if (!department) {
+      throw new NotFoundException('Không có phòng này');
+    }
+    const user = await this.userAuthModel
+      .find({ departmentID: department._id })
+      .populate({
+        path: 'departmentID',
+        select: 'departmentName',
+      }) // Populate thông tin của phòng ban
+      .select('fullName departmentName')
+      .exec();
 
-  //   return await this.userAuthModel
-  //     .find({ departmentID: department._id })
-  //     .populate({
-  //       path: 'departmentID',
-  //       select: 'departmentName',
-  //     }) // Populate thông tin của phòng ban
-  //     .select('fullName departmentName')
-  //     .exec();
-  // }
+    if (user.length === 0) throw new NotFoundException('Không có nhân viên');
+
+    return user;
+  }
 }
