@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { UserAuthService } from '../user-auth.service';
 import { PERMISSIONS_KEY } from '@/decorator/permission.decorator';
 import { Permission } from '@/modules/roles/dto/create-role.dto';
+import { IS_PUBLIC_KEY } from './public.guard';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -17,6 +18,15 @@ export class RoleGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true; // Nếu route là @Public, bỏ qua RoleGuard
+    }
+
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
