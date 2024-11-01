@@ -35,31 +35,6 @@ export class UserAuthService {
     private departmentService: DepartmentsService,
   ) {}
 
-  async create(createUserDto: CreateUserAuthDto) {
-    const { email, password, fullName, phoneNumber } = createUserDto;
-
-    const emailExists = await isExistHelper({ email }, this.userAuthModel);
-
-    if (emailExists) {
-      throw new BadRequestException(
-        `Email : ${email} Đã tồn tại. Vui lòng dùng email khác!`,
-      );
-    }
-
-    const hashPassword = await hashPasswordHelper(password);
-
-    const user = await this.userAuthModel.create({
-      email,
-      password: hashPassword,
-      fullName,
-      phoneNumber,
-    });
-
-    return {
-      _id: user.id,
-    };
-  }
-
   async validateUser(email: string, password: string): Promise<any> {
     // Tìm người dùng theo email
     const user = await this.userAuthModel.findOne({ email }); // Chỉ định kiểu rõ ràng cho user
@@ -116,7 +91,7 @@ export class UserAuthService {
     // Calculate expiry date 3 days from now
     const expiryDate = new Date();
     expiryDate.setDate(
-      expiryDate.getDate() + +process.env.JWT_REFRESH_TOKEN_EXPIRED,
+      expiryDate.getDate() + Number(process.env.JWT_REFRESH_TOKEN_EXPIRED || 3),
     );
 
     await this.refreshTokenModel.updateOne(
@@ -146,6 +121,33 @@ export class UserAuthService {
 
     const role = await this.roleService.findRoleById(user.roleId.toString());
     return role.permissions;
+  }
+
+  //--------------------------------------Part for User------------------------------------------------------------//
+
+  async create(createUserDto: CreateUserAuthDto) {
+    const { email, password, fullName, phoneNumber } = createUserDto;
+
+    const emailExists = await isExistHelper({ email }, this.userAuthModel);
+
+    if (emailExists) {
+      throw new BadRequestException(
+        `Email : ${email} Đã tồn tại. Vui lòng dùng email khác!`,
+      );
+    }
+
+    const hashPassword = await hashPasswordHelper(password);
+
+    const user = await this.userAuthModel.create({
+      email,
+      password: hashPassword,
+      fullName,
+      phoneNumber,
+    });
+
+    return {
+      _id: user.id,
+    };
   }
 
   async findAll(query: string, current: number, pageSize: number) {

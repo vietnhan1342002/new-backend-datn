@@ -20,6 +20,7 @@ import { Action } from '../roles/enum/action.enum';
 import { Permissions } from '@/decorator/permission.decorator';
 import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 import { RoleGuard } from './guard/role.guard';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('user-auth')
 export class UserAuthController {
@@ -27,7 +28,7 @@ export class UserAuthController {
 
   //Test
   @UseGuards(JwtAuthGuard, RoleGuard)
-  @Permissions([{ resource: Resource.PATIENT, actions: [Action.CREAT] }])
+  @Permissions([{ resource: Resource.PATIENT, actions: [Action.ALL] }])
   @Get('profile')
   getProfile(@Request() req) {
     return req.user;
@@ -38,6 +39,10 @@ export class UserAuthController {
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.userAuthService.login(loginDto);
+  }
+  @Post('refresh')
+  async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.userAuthService.refreshTokens(refreshTokenDto.refreshToken);
   }
 
   //Part User
