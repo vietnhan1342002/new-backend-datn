@@ -7,7 +7,7 @@ import { CreateUserAuthDto } from './dto/create-user-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserAuth, UserAuthDocument } from './schemas/user-auth.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   comparePasswordHelper,
   hashPasswordHelper,
@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { LoginDto } from './dto/login.dto';
 import { RolesService } from '../roles/roles.service';
 import aqp from 'api-query-params';
+import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 
 @Injectable()
 export class UserAuthService {
@@ -169,5 +170,16 @@ export class UserAuthService {
 
   async findById(userId: string) {
     return await this.userAuthModel.findById(userId).select('-password').exec();
+  }
+
+  async update(id: string, updateUserDto: UpdateUserAuthDto) {
+    const { fullName, phoneNumber, departmentID } = updateUserDto;
+
+    const objectIdDepartmentID = new Types.ObjectId(departmentID);
+
+    return await this.userAuthModel.updateOne(
+      { _id: id },
+      { fullName, phoneNumber, departmentID: objectIdDepartmentID },
+    );
   }
 }
