@@ -24,7 +24,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './guard/public.guard';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
+@Permissions([{ resource: Resource.PATIENT, actions: [Action.READ] }])
 @Controller('user-auth')
 export class UserAuthController {
   constructor(private readonly userAuthService: UserAuthService) {}
@@ -53,12 +53,6 @@ export class UserAuthController {
   create(@Body() createUserAuthDto: CreateUserAuthDto) {
     return this.userAuthService.create(createUserAuthDto);
   }
-
-  @Get('department/:id')
-  async getUsersByDepartment(@Param('id') id: string): Promise<any> {
-    return this.userAuthService.getUsersByDepartment(id);
-  }
-
   @Get()
   async findAll(
     @Query() query: string,

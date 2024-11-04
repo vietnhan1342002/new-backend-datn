@@ -7,15 +7,21 @@ import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Department } from './schemas/department.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { isExistHelper } from '@/helpers/utils';
 import aqp from 'api-query-params';
+import { UserAuth } from '../user-auth/schemas/user-auth.schema';
+import { UserAuthService } from '../user-auth/user-auth.service';
 
 @Injectable()
 export class DepartmentsService {
   constructor(
     @InjectModel(Department.name)
     private departmentModel: Model<Department>,
+
+    // @InjectModel(UserAuth.name)
+    // private userAuthModel: Model<UserAuth>,
+    private userAuthService: UserAuthService,
   ) {}
 
   async create(createDepartmentDto: CreateDepartmentDto) {
@@ -90,5 +96,18 @@ export class DepartmentsService {
     }
 
     return { message: `Department with ID ${id} deleted successfully` };
+  }
+
+  async getUsersByDepartment(id: string) {
+    const department = await this.findOne(id);
+    if (!department) {
+      throw new NotFoundException('Không có phòng này');
+    }
+
+    console.log('revert merge');
+
+    return await this.userAuthService.findByDepartment(
+      department._id.toString(),
+    );
   }
 }

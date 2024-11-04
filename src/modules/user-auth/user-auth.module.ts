@@ -13,9 +13,7 @@ import { jwtConfig } from '@/config/auth.config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { RolesService } from '../roles/roles.service';
 import { RolesModule } from '../roles/roles.module';
-import { DepartmentsModule } from '../departments/departments.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
 
@@ -34,7 +32,6 @@ import { JwtAuthGuard } from './guard/jwt-auth.guard';
     ]),
     PassportModule,
     RolesModule,
-    DepartmentsModule,
   ],
   controllers: [UserAuthController],
   providers: [
