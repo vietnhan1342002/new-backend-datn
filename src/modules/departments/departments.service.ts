@@ -104,22 +104,8 @@ export class DepartmentsService {
       throw new NotFoundException('Không có phòng này');
     }
 
-    console.log(
-      await this.userAuthService.findByDepartment(department._id.toString()),
+    return await this.userAuthService.findByDepartment(
+      department._id.toString(),
     );
-
-    // const users = await this.userAuthModel
-    //   .find({ departmentID: departmentId._id })
-    //   .populate({
-    //     path: 'departmentID',
-    //     select: 'departmentName',
-    //   }) // Populate để lấy thông tin của `Department`
-    //   .select('fullName email departmentID')
-    //   .exec();
-
-    // if (!users || users.length === 0) {
-    //   throw new NotFoundException('Không có nhân viên nào trong phòng ban này');
-    // }
-    // return users;
   }
 }

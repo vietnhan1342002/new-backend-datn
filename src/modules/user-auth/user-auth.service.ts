@@ -8,7 +8,7 @@ import { CreateUserAuthDto } from './dto/create-user-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserAuth, UserAuthDocument } from './schemas/user-auth.schema';
-import { Model, Types } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import {
   comparePasswordHelper,
   hashPasswordHelper,
@@ -182,9 +182,11 @@ export class UserAuthService {
   }
 
   async findByDepartment(departmentId: string) {
+    const objectId = new Types.ObjectId(departmentId);
     const users = await this.userAuthModel
-      .find({ departmentID: departmentId })
-      .select('-password'); // Ẩn thuộc tính password
+      .find({ departmentID: objectId })
+      .populate({ path: 'departmentID', select: 'departmentName' })
+      .select('fullName');
 
     if (users.length === 0) {
       throw new NotFoundException('Không có người dùng trong phòng ban này');
