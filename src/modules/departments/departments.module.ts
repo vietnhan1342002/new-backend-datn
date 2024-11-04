@@ -12,6 +12,7 @@ import { UserAuthModule } from '../user-auth/user-auth.module';
       { name: Department.name, schema: DepartmentSchema },
     ]),
     UserAuthModule,
+
   ],
 
   controllers: [DepartmentsController],
