@@ -16,8 +16,10 @@ import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
 import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
+import { RoleGuard } from '../user-auth/guard/role.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RoleGuard)
+@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @Controller('departments')
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
@@ -26,7 +28,7 @@ export class DepartmentsController {
   create(@Body() createDepartmentDto: CreateDepartmentDto) {
     return this.departmentsService.create(createDepartmentDto);
   }
-  @Permissions([{ resource: Resource.PATIENT, actions: [Action.ALL] }])
+
   @Get()
   async findAll(
     @Query() query: string,
