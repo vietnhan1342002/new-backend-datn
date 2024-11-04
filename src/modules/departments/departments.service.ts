@@ -104,6 +104,8 @@ export class DepartmentsService {
       throw new NotFoundException('Không có phòng này');
     }
 
+    console.log('revert merge');
+
     return await this.userAuthService.findByDepartment(
       department._id.toString(),
     );
