@@ -9,6 +9,8 @@ import { UserAuthService } from '../user-auth.service';
 import { PERMISSIONS_KEY } from '@/decorator/permission.decorator';
 import { Permission } from '@/modules/roles/dto/create-role.dto';
 import { IS_PUBLIC_KEY } from './public.guard';
+import { Resource } from '@/modules/roles/enum/resource.enum';
+import { Action } from '@/modules/roles/enum/action.enum';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -44,6 +46,16 @@ export class RoleGuard implements CanActivate {
     const userPermissions = await this.userAuthService.getUserPermissions(
       user._id,
     );
+
+    // Kiểm tra nếu user có quyền truy cập mọi tài nguyên (Resource.ALL)
+    if (
+      userPermissions.some(
+        (perm) =>
+          perm.resource === Resource.ALL && perm.actions.includes(Action.ALL),
+      )
+    ) {
+      return true;
+    }
 
     this.checkPermissions(routePermissions, userPermissions);
 
