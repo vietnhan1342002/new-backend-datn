@@ -34,7 +34,7 @@ export class DepartmentsService {
 
     if (departmentExists) {
       throw new BadRequestException(
-        `Phòng : ${departmentName} Đã tồn tại. Vui lòng đặt tên khác!`,
+        `Department : ${departmentName} already exists. Please enter another name!`,
       );
     }
 
@@ -65,7 +65,8 @@ export class DepartmentsService {
       .skip(skip)
       .sort(sort as any);
 
-    if (result.length === 0) throw new NotFoundException('Không có phòng nào');
+    if (result.length === 0)
+      throw new NotFoundException('No departments available');
 
     return { result, totalPages };
   }
@@ -101,7 +102,7 @@ export class DepartmentsService {
   async getUsersByDepartment(id: string) {
     const department = await this.findOne(id);
     if (!department) {
-      throw new NotFoundException('Không có phòng này');
+      throw new NotFoundException('This department is not available.');
     }
 
     return await this.userAuthService.findByDepartment(

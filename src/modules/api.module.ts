@@ -16,6 +16,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './user-auth/guard/jwt-auth.guard';
 import { JwtStrategy } from './user-auth/strategies/jwt.strategy';
+import { DoctorsModule } from './doctors/doctors.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { JwtStrategy } from './user-auth/strategies/jwt.strategy';
     SchedulesModule,
     ScheduleStatusModule,
     ShiftsModule,
+    DoctorsModule,
   ],
   providers: [JwtStrategy],
   exports: [JwtModule],
