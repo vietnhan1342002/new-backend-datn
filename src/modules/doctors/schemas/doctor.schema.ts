@@ -1,4 +1,5 @@
 import { Department } from '@/modules/departments/schemas/department.schema';
+import { Specialty } from '@/modules/specialties/schemas/specialty.schema';
 import { UserAuth } from '@/modules/user-auth/schemas/user-auth.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, HydratedDocument, Types } from 'mongoose';
@@ -15,6 +16,9 @@ export class Doctor extends Document {
 
   @Prop({ required: true })
   yearsOfExperience: number;
+
+  @Prop({ type: Types.ObjectId, ref: Specialty.name, required: true })
+  specialtyId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: Department.name, required: true })
   departmentId: Types.ObjectId;
