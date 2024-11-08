@@ -196,13 +196,11 @@ export class UserAuthService {
   }
 
   async update(id: string, updateUserDto: UpdateUserAuthDto) {
-    const { fullName, phoneNumber, departmentID } = updateUserDto;
-
-    const objectIdDepartmentID = new Types.ObjectId(departmentID);
+    const { fullName, phoneNumber } = updateUserDto;
 
     return await this.userAuthModel.updateOne(
       { _id: id },
-      { fullName, phoneNumber, departmentID: objectIdDepartmentID },
+      { fullName, phoneNumber },
     );
   }
 

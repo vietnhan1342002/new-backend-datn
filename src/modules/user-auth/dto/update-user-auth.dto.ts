@@ -9,9 +9,4 @@ export class UpdateUserAuthDto extends PartialType(CreateUserAuthDto) {
   @Length(10)
   @IsOptional()
   phoneNumber: string;
-
-  @IsOptional()
-  @IsNotEmpty({ message: '_id phòng ban không được để trống' })
-  @IsMongoId({ message: '_id phòng ban không hợp lệ' })
-  departmentID: string;
 }
