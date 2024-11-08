@@ -95,6 +95,10 @@ export class DoctorsService {
           path: 'departmentId',
           select: 'departmentName',
         }) // Lấy thêm thông tin từ bảng Department
+        .populate({
+          path: 'specialtyId',
+          select: 'name',
+        }) // Lấy thêm thông tin từ bảng Department
         .exec();
 
       if (!doctor) {
