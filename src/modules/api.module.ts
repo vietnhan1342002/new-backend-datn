@@ -5,13 +5,15 @@ import { PatientsModule } from './patients/patients.module';
 import { MedicalRecordsModule } from './medical_records/medical_records.module';
 import { DepartmentsModule } from './departments/departments.module';
 
+import { DoctorSchedulesModule } from '@/modules/doctor-schedules/doctor-schedules.module';
+import { ShiftsModule } from '@/modules/shifts/shifts.module';
+import { SpecialtiesModule } from '@/modules/specialties/specialties.module';
+import { AppointmentsModule } from '@/modules/appointments/appointments.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { mongooseConfig } from '@/config/mongoose.config';
 import { jwtConfig } from '@/config/auth.config';
 import { JwtModule } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './user-auth/guard/jwt-auth.guard';
 import { JwtStrategy } from './user-auth/strategies/jwt.strategy';
 import { DoctorsModule } from './doctors/doctors.module';
 
@@ -38,6 +40,10 @@ import { DoctorsModule } from './doctors/doctors.module';
     MedicalRecordsModule,
     DepartmentsModule,
     DoctorsModule,
+    DoctorSchedulesModule,
+    ShiftsModule,
+    SpecialtiesModule,
+    AppointmentsModule,
   ],
   providers: [JwtStrategy],
   exports: [JwtModule],
