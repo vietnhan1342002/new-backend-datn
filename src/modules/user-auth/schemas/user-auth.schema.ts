@@ -1,4 +1,3 @@
-import { Department } from '@/modules/departments/schemas/department.schema';
 import { Role } from '@/modules/roles/schemas/role.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, HydratedDocument, Types } from 'mongoose';
@@ -26,9 +25,6 @@ export class UserAuth extends Document {
 
   @Prop()
   phoneNumber: string;
-
-  @Prop({ type: Types.ObjectId, ref: Department.name })
-  departmentID: Types.ObjectId; // Liên kết người dùng với Department
 }
 
 export const UserAuthSchema = SchemaFactory.createForClass(UserAuth);
