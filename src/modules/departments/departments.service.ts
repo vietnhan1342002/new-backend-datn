@@ -10,33 +10,30 @@ import { Department } from './schemas/department.schema';
 import { Model, Types } from 'mongoose';
 import { isExistHelper } from '@/helpers/utils';
 import aqp from 'api-query-params';
-import { UserAuth } from '../user-auth/schemas/user-auth.schema';
-import { UserAuthService } from '../user-auth/user-auth.service';
 
 @Injectable()
 export class DepartmentsService {
   constructor(
     @InjectModel(Department.name)
     private departmentModel: Model<Department>,
-
-    // @InjectModel(UserAuth.name)
-    // private userAuthModel: Model<UserAuth>,
-    private userAuthService: UserAuthService,
   ) {}
+
+  private async checkDepartmentExistence(name: string) {
+    const departmentExists = await isExistHelper(
+      { name },
+      this.departmentModel,
+    );
+    if (departmentExists) {
+      throw new BadRequestException(
+        `Specialty: ${name} already exists. Please enter another name!`,
+      );
+    }
+  }
 
   async create(createDepartmentDto: CreateDepartmentDto) {
     const { departmentName, description } = createDepartmentDto;
 
-    const departmentExists = await isExistHelper(
-      { departmentName },
-      this.departmentModel,
-    );
-
-    if (departmentExists) {
-      throw new BadRequestException(
-        `Department : ${departmentName} already exists. Please enter another name!`,
-      );
-    }
+    await this.checkDepartmentExistence(departmentName);
 
     const department = await this.departmentModel.create({
       departmentName,
@@ -71,42 +68,30 @@ export class DepartmentsService {
     return { result, totalPages };
   }
 
-  async findOne(id: string) {
+  async findOne(_id: string) {
     const result = await this.departmentModel
-      .findById({ _id: id })
+      .findById({ _id })
       .select('departmentName description');
     if (!result) {
-      throw new NotFoundException(`Department with ID ${id} not found`);
+      throw new NotFoundException(`Department with ID ${_id} not found`);
     }
     return result;
   }
 
-  async update(id: string, updateDepartmentDto: UpdateDepartmentDto) {
+  async update(_id: string, updateDepartmentDto: UpdateDepartmentDto) {
+    const department = await this.findOne(_id);
     const { departmentName, description } = updateDepartmentDto;
+    await this.checkDepartmentExistence(departmentName);
     return await this.departmentModel.updateOne(
-      { _id: id },
+      { _id },
       { departmentName, description },
     );
   }
 
-  async remove(id: number) {
-    const result = await this.departmentModel.deleteOne({ _id: id });
+  async remove(_id: string) {
+    const department = await this.findOne(_id);
+    await this.departmentModel.deleteOne({ _id });
 
-    if (result.deletedCount === 0) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    return { message: `Department with ID ${id} deleted successfully` };
-  }
-
-  async getUsersByDepartment(id: string) {
-    const department = await this.findOne(id);
-    if (!department) {
-      throw new NotFoundException('This department is not available.');
-    }
-
-    return await this.userAuthService.findByDepartment(
-      department._id.toString(),
-    );
+    return { message: `Department with ID ${_id} deleted successfully` };
   }
 }
