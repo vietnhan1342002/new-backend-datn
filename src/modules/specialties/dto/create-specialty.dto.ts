@@ -5,5 +5,9 @@ export class CreateSpecialtyDto {
   name: string;
 
   @IsNotEmpty({ message: 'description không được để trống' })
-  description: string;
+  description: {
+    introduction: string;
+    qualifications: string[];
+    relatedDiseases: string[];
+  };
 }
