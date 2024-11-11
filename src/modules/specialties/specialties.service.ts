@@ -1,11 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Specialty } from './schemas/specialty.schema';
+import { Model } from 'mongoose';
+import { isExistHelper } from '@/helpers/utils';
 
 @Injectable()
 export class SpecialtiesService {
-  create(createSpecialtyDto: CreateSpecialtyDto) {
-    return 'This action adds a new specialty';
+  constructor(
+    @InjectModel(Specialty.name)
+    private specialtyModel: Model<Specialty>,
+  ) {}
+
+  async create(createSpecialtyDto: CreateSpecialtyDto) {
+    try {
+      const { name, description } = createSpecialtyDto;
+
+      const specialtyExists = await isExistHelper(
+        { name },
+        this.specialtyModel,
+      );
+
+      if (specialtyExists) {
+        throw new BadRequestException(
+          `Specialty : ${specialtyExists} already exists. Please enter another name!`,
+        );
+      }
+
+      const specialty = await this.specialtyModel.create({
+        name,
+        description,
+      });
+      return { _id: specialty.id };
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException(
+        'Cannot create specialty, please check the data format.',
+      );
+    }
   }
 
   findAll() {

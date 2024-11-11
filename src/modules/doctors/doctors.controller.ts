@@ -18,6 +18,7 @@ import { RoleGuard } from '../user-auth/guard/role.guard';
 import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
+import { Public } from '../user-auth/guard/public.guard';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -30,6 +31,7 @@ export class DoctorsController {
     return this.doctorsService.create(createDoctorDto);
   }
 
+  @Public()
   @Get()
   async findAll(
     @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
@@ -52,6 +54,7 @@ export class DoctorsController {
     return parsedValue;
   }
 
+  @Public()
   @Get(':_id')
   findOne(@Param('_id') _id: string) {
     return this.doctorsService.findOne(_id);
