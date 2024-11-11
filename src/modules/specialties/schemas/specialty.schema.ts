@@ -9,8 +9,20 @@ export class Specialty extends Document {
   @Prop({ required: true, unique: true })
   name: string; // Tên chuyên khoa
 
-  @Prop({ required: false })
-  description: string; // Mô tả chuyên khoa
+  @Prop({
+    type: {
+      introduction: String,
+      qualifications: [String],
+      relatedDiseases: [String],
+    },
+    required: true,
+  })
+  description: {
+    introduction: string;
+    qualifications: string[];
+    relatedDiseases: string[];
+  };
+  // Mô tả chuyên khoa
 }
 
 export const SpecialtySchema = SchemaFactory.createForClass(Specialty);
