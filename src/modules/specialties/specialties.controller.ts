@@ -7,20 +7,18 @@ import {
   Param,
   Delete,
   Query,
-  NotFoundException,
-  BadRequestException,
   UseGuards,
 } from '@nestjs/common';
 import { SpecialtiesService } from './specialties.service';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
 import { Public } from '../user-auth/guard/public.guard';
-import { Specialty } from './schemas/specialty.schema';
 import { Permissions } from '@/decorator/permission.decorator';
 import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
 import { RoleGuard } from '../user-auth/guard/role.guard';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
+import { parseQueryParam } from '@/helpers/utils';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -40,20 +38,11 @@ export class SpecialtiesController {
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
   ) {
-    const currentPage = this.parseQueryParam(current);
-    const pageLimit = this.parseQueryParam(pageSize);
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
 
     // Tìm tất cả bác sĩ hoặc theo query
     return this.specialtiesService.findAll(query, currentPage, pageLimit);
-  }
-
-  // Hàm phụ trợ để kiểm tra và phân tích các tham số
-  private parseQueryParam(value: string): number {
-    const parsedValue = parseInt(value, 10);
-    if (isNaN(parsedValue) || parsedValue < 1) {
-      throw new BadRequestException('Invalid parameter');
-    }
-    return parsedValue;
   }
 
   @Public()
@@ -61,7 +50,7 @@ export class SpecialtiesController {
   findOne(@Param('_id') _id: string) {
     return this.specialtiesService.findOne(_id);
   }
-
+  @Public()
   @Patch(':_id')
   update(
     @Param('_id') _id: string,
