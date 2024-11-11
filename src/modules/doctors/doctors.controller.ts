@@ -7,15 +7,20 @@ import {
   Param,
   Delete,
   Query,
-  NotFoundException,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { DoctorsService } from './doctors.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
-import { Public } from '../user-auth/guard/public.guard';
+import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
+import { RoleGuard } from '../user-auth/guard/role.guard';
+import { Permissions } from '@/decorator/permission.decorator';
+import { Resource } from '../roles/enum/resource.enum';
+import { Action } from '../roles/enum/action.enum';
 
-@Public()
+@UseGuards(JwtAuthGuard, RoleGuard)
+@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @Controller('doctors')
 export class DoctorsController {
   constructor(private readonly doctorsService: DoctorsService) {}
