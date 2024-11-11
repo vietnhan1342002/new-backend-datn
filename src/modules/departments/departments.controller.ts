@@ -17,6 +17,7 @@ import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { RoleGuard } from '../user-auth/guard/role.guard';
+import { Public } from '../user-auth/guard/public.guard';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -29,6 +30,7 @@ export class DepartmentsController {
     return this.departmentsService.create(createDepartmentDto);
   }
 
+  @Public()
   @Get()
   async findAll(
     @Query() query: string,
@@ -38,26 +40,22 @@ export class DepartmentsController {
     return this.departmentsService.findAll(query, +current, +pageSize);
   }
 
-  @Get('/users/:id')
-  async getUsersByDepartment(@Param('id') id: string): Promise<any> {
-    return this.departmentsService.getUsersByDepartment(id);
+  @Public()
+  @Get(':_id')
+  findOne(@Param('_id') _id: string) {
+    return this.departmentsService.findOne(_id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.departmentsService.findOne(id);
-  }
-
-  @Patch(':id')
+  @Patch(':_id')
   update(
-    @Param('id') id: string,
+    @Param('_id') _id: string,
     @Body() updateDepartmentDto: UpdateDepartmentDto,
   ) {
-    return this.departmentsService.update(id, updateDepartmentDto);
+    return this.departmentsService.update(_id, updateDepartmentDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.departmentsService.remove(+id);
+  @Delete(':_id')
+  remove(@Param('_id') _id: string) {
+    return this.departmentsService.remove(_id);
   }
 }
