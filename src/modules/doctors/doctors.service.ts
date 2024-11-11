@@ -72,6 +72,18 @@ export class DoctorsService {
       .limit(pageSize)
       .skip(skip)
       .sort(sort as any)
+      .populate({
+        path: 'userId',
+        select: 'fullName',
+      }) // Lấy thêm thông tin từ bảng (collection) UserAuth
+      .populate({
+        path: 'departmentId',
+        select: 'departmentName',
+      }) // Lấy thêm thông tin từ bảng Department
+      .populate({
+        path: 'specialtyId',
+        select: 'name',
+      }) // Lấy thêm thông tin từ bảng Department
       .exec();
 
     // Nếu không có dữ liệu, ném ngoại lệ
