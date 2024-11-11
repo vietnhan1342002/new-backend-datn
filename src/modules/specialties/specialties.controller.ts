@@ -14,6 +14,7 @@ import { SpecialtiesService } from './specialties.service';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
 import { Public } from '../user-auth/guard/public.guard';
+import { Specialty } from './schemas/specialty.schema';
 
 @Public()
 @Controller('specialties')

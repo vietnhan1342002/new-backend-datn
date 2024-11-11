@@ -14,31 +14,21 @@ export class SpecialtiesService {
   ) {}
 
   async create(createSpecialtyDto: CreateSpecialtyDto) {
-    try {
-      const { name, description } = createSpecialtyDto;
+    const { name, description } = createSpecialtyDto;
 
-      const specialtyExists = await isExistHelper(
-        { name },
-        this.specialtyModel,
-      );
+    const specialtyExists = await isExistHelper({ name }, this.specialtyModel);
 
-      if (specialtyExists) {
-        throw new BadRequestException(
-          `Specialty : ${specialtyExists} already exists. Please enter another name!`,
-        );
-      }
-
-      const specialty = await this.specialtyModel.create({
-        name,
-        description,
-      });
-      return { _id: specialty.id };
-    } catch (error) {
-      console.error(error);
+    if (specialtyExists) {
       throw new BadRequestException(
-        'Cannot create specialty, please check the data format.',
+        `Specialty : ${name} already exists. Please enter another name!`,
       );
     }
+
+    const specialty = await this.specialtyModel.create({
+      name,
+      description,
+    });
+    return { _id: specialty.id };
   }
 
   findAll() {
