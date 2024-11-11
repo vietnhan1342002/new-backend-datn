@@ -9,14 +9,21 @@ import {
   Query,
   NotFoundException,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { SpecialtiesService } from './specialties.service';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
 import { Public } from '../user-auth/guard/public.guard';
 import { Specialty } from './schemas/specialty.schema';
+import { Permissions } from '@/decorator/permission.decorator';
+import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
+import { RoleGuard } from '../user-auth/guard/role.guard';
+import { Resource } from '../roles/enum/resource.enum';
+import { Action } from '../roles/enum/action.enum';
 
-@Public()
+@UseGuards(JwtAuthGuard, RoleGuard)
+@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @Controller('specialties')
 export class SpecialtiesController {
   constructor(private readonly specialtiesService: SpecialtiesService) {}
@@ -26,6 +33,7 @@ export class SpecialtiesController {
     return this.specialtiesService.create(createSpecialtyDto);
   }
 
+  @Public()
   @Get()
   async findAll(
     @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
@@ -48,6 +56,7 @@ export class SpecialtiesController {
     return parsedValue;
   }
 
+  @Public()
   @Get(':_id')
   findOne(@Param('_id') _id: string) {
     return this.specialtiesService.findOne(_id);
