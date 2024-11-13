@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  BadRequestException,
   UseGuards,
 } from '@nestjs/common';
 import { DoctorsService } from './doctors.service';
@@ -19,6 +18,7 @@ import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { Public } from '../user-auth/guard/public.guard';
+import { parseQueryParam } from '@/helpers/utils';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -38,20 +38,11 @@ export class DoctorsController {
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
   ) {
-    const currentPage = this.parseQueryParam(current);
-    const pageLimit = this.parseQueryParam(pageSize);
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
 
     // Tìm tất cả bác sĩ hoặc theo query
     return this.doctorsService.findAll(query, currentPage, pageLimit);
-  }
-
-  // Hàm phụ trợ để kiểm tra và phân tích các tham số
-  private parseQueryParam(value: string): number {
-    const parsedValue = parseInt(value, 10);
-    if (isNaN(parsedValue) || parsedValue < 1) {
-      throw new BadRequestException('Invalid parameter');
-    }
-    return parsedValue;
   }
 
   @Public()
