@@ -19,9 +19,6 @@ export class Doctor extends Document {
 
   @Prop({ type: Types.ObjectId, ref: Specialty.name, required: true })
   specialtyId: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: Department.name, required: true })
-  departmentId: Types.ObjectId;
 }
 
 export const DoctorSchema = SchemaFactory.createForClass(Doctor);

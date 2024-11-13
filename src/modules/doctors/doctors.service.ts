@@ -29,11 +29,11 @@ export class DoctorsService {
 
   // Tạo dữ liệu bác sĩ với ObjectId
   private createDoctorData(createDoctorDto: CreateDoctorDto) {
-    const { userId, departmentId, licenseNumber, yearsOfExperience } =
+    const { userId, specialtyId, licenseNumber, yearsOfExperience } =
       createDoctorDto;
     return {
       userId: new Types.ObjectId(userId),
-      departmentId: new Types.ObjectId(departmentId),
+      specialtyId: new Types.ObjectId(specialtyId),
       licenseNumber,
       yearsOfExperience,
     };
