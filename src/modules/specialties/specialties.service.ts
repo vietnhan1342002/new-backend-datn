@@ -7,7 +7,7 @@ import { CreateSpecialtyDto } from './dto/create-specialty.dto';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Specialty } from './schemas/specialty.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   isExistHelper,
   preparePaginationFilter,
@@ -32,7 +32,7 @@ export class SpecialtiesService {
   }
 
   async create(createSpecialtyDto: CreateSpecialtyDto) {
-    const { name, description } = createSpecialtyDto;
+    const { name, departmentId, description } = createSpecialtyDto;
 
     // Kiểm tra nếu specialty đã tồn tại
     await this.checkSpecialtyExistence(name);
@@ -40,6 +40,7 @@ export class SpecialtiesService {
     // Tạo specialty mới
     const specialty = await this.specialtyModel.create({
       name,
+      departmentId: new Types.ObjectId(departmentId),
       description,
     });
     return { _id: specialty.id };
@@ -64,6 +65,7 @@ export class SpecialtiesService {
       .limit(pageSize)
       .skip(skip)
       .sort(sort as any)
+      .populate({ path: 'departmentId', select: 'departmentName' })
       .exec();
 
     if (result.length === 0) {
@@ -74,7 +76,10 @@ export class SpecialtiesService {
   }
 
   async findOne(_id: string): Promise<Specialty> {
-    const specialty = await this.specialtyModel.findById(_id).exec();
+    const specialty = await this.specialtyModel
+      .findById(_id)
+      .populate({ path: 'departmentId', select: 'departmentName' })
+      .exec();
 
     if (!specialty) {
       throw new BadRequestException('Specialty not found');
@@ -83,14 +88,11 @@ export class SpecialtiesService {
   }
 
   async update(_id: string, updateSpecialtyDto: UpdateSpecialtyDto) {
-    // Kiểm tra và cập nhật specialty
-    const specialty = await this.findOne(_id);
-
-    await this.checkSpecialtyExistence(updateSpecialtyDto.name);
     const updatedSpecialty = await this.specialtyModel.findByIdAndUpdate(
       _id,
       { $set: updateSpecialtyDto },
-      { new: true }, // Trả về bản ghi đã cập nhật
+
+      { upsert: false, new: true }, // Trả về bản ghi đã cập nhật
     );
 
     return updatedSpecialty;
