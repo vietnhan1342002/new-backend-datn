@@ -11,7 +11,7 @@ export class CreateDoctorDto {
   @IsNotEmpty({ message: 'yearsOfExperience không được để trống' })
   yearsOfExperience: number;
 
-  @IsMongoId({ message: 'departmentId không hợp lệ' })
-  @IsNotEmpty({ message: 'departmentId không được để trống' })
-  departmentId: string;
+  @IsMongoId({ message: 'specialtyId không hợp lệ' })
+  @IsNotEmpty({ message: 'specialtyId không được để trống' })
+  specialtyId: string;
 }

@@ -11,7 +11,7 @@ export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
   @Min(1, { message: 'yearsOfExperience phải lớn hơn 0' }) // Kiểm tra số năm kinh nghiệm phải > 0
   yearsOfExperience: number;
 
-  @IsMongoId({ message: 'departmentId không hợp lệ' })
-  @IsNotEmpty({ message: 'departmentId không được để trống' })
-  departmentId: string;
+  @IsNotEmpty({ message: 'specialtyId không được để trống' })
+  @IsMongoId({ message: 'specialtyId không hợp lệ' })
+  specialty: string;
 }
