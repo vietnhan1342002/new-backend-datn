@@ -7,7 +7,7 @@ export type SpecialtyDocument = HydratedDocument<Specialty>;
 
 @Schema({ timestamps: true })
 export class Specialty extends Document {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   name: string; // Tên chuyên khoa
 
   @Prop({ type: Types.ObjectId, ref: Department.name, required: true })

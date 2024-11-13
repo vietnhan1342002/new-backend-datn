@@ -9,11 +9,7 @@ import { Model, Types } from 'mongoose';
 import { Doctor } from './schemas/doctor.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import aqp from 'api-query-params';
-import {
-  calculateSkip,
-  preparePaginationFilter,
-  validatePagination,
-} from '@/helpers/utils';
+import { calculateSkip, preparePaginationFilter } from '@/helpers/utils';
 
 @Injectable()
 export class DoctorsService {
