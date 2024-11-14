@@ -4,14 +4,14 @@ import { IsMongoId, IsNotEmpty } from 'class-validator';
 
 export class UpdateSpecialtyDto extends PartialType(CreateSpecialtyDto) {
   @IsNotEmpty({ message: 'name cannot be empty' })
-  name: string;
+  name?: string;
 
   @IsNotEmpty({ message: 'departmentId cannot be empty' })
   @IsMongoId({ message: 'departmentId invalid' })
-  departmentId: string;
+  departmentId?: string;
 
   @IsNotEmpty({ message: 'description cannot be empty' })
-  description: {
+  description?: {
     introduction: string;
     qualifications: string[];
     relatedDiseases: string[];

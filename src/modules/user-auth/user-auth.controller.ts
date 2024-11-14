@@ -75,9 +75,9 @@ export class UserAuthController {
     return this.userAuthService.findById(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserAuthDto) {
-    return this.userAuthService.update(id, updateUserDto);
+  @Patch(':_id')
+  update(@Param('_id') _id: string, @Body() updateUserDto: UpdateUserAuthDto) {
+    return this.userAuthService.update(_id, updateUserDto);
   }
 
   @Delete(':id')
