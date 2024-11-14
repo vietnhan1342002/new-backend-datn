@@ -13,7 +13,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     console.log('INSIDE AUTHEN');
     const user = await this.userAuthService.validateUser(email, password);
     if (!user) {
-      throw new UnauthorizedException('Email / Password không hợp lệ');
+      throw new UnauthorizedException('Email / Password invalid');
     }
     return user;
   }

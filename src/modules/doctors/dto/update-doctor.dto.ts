@@ -3,15 +3,15 @@ import { CreateDoctorDto } from './create-doctor.dto';
 import { IsMongoId, IsNotEmpty, IsString, Min } from 'class-validator';
 
 export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
-  @IsNotEmpty({ message: 'licenseNumber không được để trống' })
+  @IsNotEmpty({ message: 'licenseNumber cannot be empty' })
   @IsString({ message: 'licenseNumber phải là một chuỗi' })
   licenseNumber: string;
 
-  @IsNotEmpty({ message: 'yearsOfExperience không được để trống' })
+  @IsNotEmpty({ message: 'yearsOfExperience cannot be empty' })
   @Min(1, { message: 'yearsOfExperience phải lớn hơn 0' }) // Kiểm tra số năm kinh nghiệm phải > 0
   yearsOfExperience: number;
 
-  @IsNotEmpty({ message: 'specialtyId không được để trống' })
-  @IsMongoId({ message: 'specialtyId không hợp lệ' })
+  @IsNotEmpty({ message: 'specialtyId cannot be empty' })
+  @IsMongoId({ message: 'specialtyId invalid' })
   specialty: string;
 }
