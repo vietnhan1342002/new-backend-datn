@@ -215,25 +215,11 @@ export class UserAuthService {
     return user;
   }
 
-  async findByDepartment(departmentId: string) {
-    const objectId = new Types.ObjectId(departmentId);
-    const users = await this.userAuthModel
-      .find({ departmentID: objectId })
-      .populate({ path: 'departmentID', select: 'departmentName' })
-      .select('fullName');
-
-    if (users.length === 0) {
-      throw new NotFoundException('Không có người dùng trong phòng ban này');
-    }
-
-    return users;
-  }
-
-  async update(id: string, updateUserDto: UpdateUserAuthDto) {
+  async update(_id: string, updateUserDto: UpdateUserAuthDto) {
     const { fullName, phoneNumber } = updateUserDto;
 
     return await this.userAuthModel.updateOne(
-      { _id: id },
+      { _id },
       { fullName, phoneNumber },
     );
   }
