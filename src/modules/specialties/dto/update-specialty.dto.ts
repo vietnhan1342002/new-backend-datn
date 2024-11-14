@@ -3,14 +3,14 @@ import { CreateSpecialtyDto } from './create-specialty.dto';
 import { IsMongoId, IsNotEmpty } from 'class-validator';
 
 export class UpdateSpecialtyDto extends PartialType(CreateSpecialtyDto) {
-  @IsNotEmpty({ message: 'name không được để trống' })
+  @IsNotEmpty({ message: 'name cannot be empty' })
   name: string;
 
-  @IsNotEmpty({ message: 'departmentId không được để trống' })
-  @IsMongoId({ message: 'departmentId không hợp lệ' })
+  @IsNotEmpty({ message: 'departmentId cannot be empty' })
+  @IsMongoId({ message: 'departmentId invalid' })
   departmentId: string;
 
-  @IsNotEmpty({ message: 'description không được để trống' })
+  @IsNotEmpty({ message: 'description cannot be empty' })
   description: {
     introduction: string;
     qualifications: string[];
