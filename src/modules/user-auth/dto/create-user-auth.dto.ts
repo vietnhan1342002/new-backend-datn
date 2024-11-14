@@ -8,6 +8,6 @@ export class CreateUserAuthDto {
   @IsNotEmpty({ message: 'Password cannot be empty' })
   password: string;
 
-  fullName: string;
-  phoneNumber: string;
+  fullName?: string;
+  phoneNumber?: string;
 }
