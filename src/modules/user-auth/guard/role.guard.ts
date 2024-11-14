@@ -1,23 +1,15 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserAuthService } from '../user-auth.service';
-import { PERMISSIONS_KEY } from '@/decorator/permission.decorator';
-import { Permission } from '@/modules/roles/dto/create-role.dto';
 import { IS_PUBLIC_KEY } from './public.guard';
-import { Resource } from '@/modules/roles/enum/resource.enum';
-import { Action } from '@/modules/roles/enum/action.enum';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-    private readonly userAuthService: UserAuthService,
-  ) {}
+  constructor(private readonly reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -36,56 +28,28 @@ export class RoleGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const routePermissions = this.reflector.getAllAndOverride<Permission[]>(
-      PERMISSIONS_KEY,
+    // Kiểm tra nếu user là admin thì cấp toàn quyền
+    if (user.roleId.nameRole === 'admin') {
+      return true; // Admin có quyền toàn bộ
+    }
+
+    // Lấy nameRole từ reflector
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+      'roles', // Tên key của decorator @Role
       [context.getHandler(), context.getClass()],
     );
 
-    if (!routePermissions) return true;
-
-    const userPermissions = await this.userAuthService.getUserPermissions(
-      user._id,
-    );
-
-    // Kiểm tra nếu user có quyền truy cập mọi tài nguyên (Resource.ALL)
-    if (
-      userPermissions.some(
-        (perm) =>
-          perm.resource === Resource.ALL && perm.actions.includes(Action.ALL),
-      )
-    ) {
-      return true;
+    if (!requiredRoles) {
+      return true; // Nếu không có yêu cầu role, cho phép truy cập
     }
 
-    this.checkPermissions(routePermissions, userPermissions);
+    // Kiểm tra xem user có role đúng hay không
+    if (!requiredRoles.includes(user.roleId.nameRole)) {
+      throw new ForbiddenException(
+        `Insufficient ${user.roleId.nameRole} role permission for action`,
+      );
+    }
 
     return true;
-  }
-
-  private checkPermissions(
-    routePermissions: Permission[],
-    userPermissions: Permission[],
-  ) {
-    for (const routePermission of routePermissions) {
-      const userPermission = userPermissions.find(
-        (perm) => perm.resource === routePermission.resource,
-      );
-
-      if (!userPermission) {
-        throw new ForbiddenException(
-          `No permission for resource: ${routePermission.resource}`,
-        );
-      }
-
-      const hasAllActions = routePermission.actions.every((requiredAction) =>
-        userPermission.actions.includes(requiredAction),
-      );
-
-      if (!hasAllActions) {
-        throw new ForbiddenException(
-          `Missing actions for resource: ${routePermission.resource}`,
-        );
-      }
-    }
   }
 }
