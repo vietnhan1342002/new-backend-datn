@@ -35,6 +35,14 @@ export class UserAuthController {
     return req.user;
   }
 
+  //------Register for patient------------------------//
+  // @Public()
+  // @Post('register')
+  // async register(@Body() createUserAuthDto: CreateUserAuthDto) {
+  //   return this.userAuthService.register(createUserAuthDto);
+  // }
+  //------Register for patient------------------------//
+
   //Part auth
   @Public()
   @UseGuards(LocalStrategy)

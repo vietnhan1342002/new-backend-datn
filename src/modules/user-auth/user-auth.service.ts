@@ -41,7 +41,7 @@ export class UserAuthService {
 
     // Kiểm tra xem người dùng có tồn tại không
     if (!user) {
-      throw new BadRequestException('Email / Password không hợp lệ'); // Ném lỗi nếu không tìm thấy người dùng
+      throw new BadRequestException('Email / Password invalid'); // Ném lỗi nếu không tìm thấy người dùng
     }
 
     // Kiểm tra mật khẩu
@@ -51,11 +51,44 @@ export class UserAuthService {
     );
 
     if (!isValidPassword) {
-      throw new BadRequestException('Email / Password không hợp lệ'); // Ném lỗi nếu mật khẩu không đúng
+      throw new BadRequestException('Email / Password invalid'); // Ném lỗi nếu mật khẩu không đúng
     }
 
     return user; // Trả về người dùng nếu xác thực thành công
   }
+
+  //------Register for patient------------------------//
+  // async register(createUserDto: CreateUserAuthDto) {
+  //   const { email, password, fullName, phoneNumber } = createUserDto;
+
+  //   // Kiểm tra xem email đã tồn tại hay chưa
+  //   const emailExists = await isExistHelper({ email }, this.userAuthModel);
+  //   if (emailExists) {
+  //     throw new BadRequestException(
+  //       `Email : ${email} Đã tồn tại. Vui lòng dùng email khác!`,
+  //     );
+  //   }
+
+  //   // Mã hóa mật khẩu
+  //   const hashPassword = await hashPasswordHelper(password);
+
+  //   // Gán role mặc định là 'patient'
+  //   const defaultRole = 'patient';
+
+  //   // Tạo người dùng mới
+  //   const user = await this.userAuthModel.create({
+  //     email,
+  //     password: hashPassword,
+  //     fullName,
+  //     phoneNumber,
+  //     role: defaultRole, // Gán role mặc định
+  //   });
+
+  //   return {
+  //     _id: user.id,
+  //   };
+  // }
+  //------Register for patient------------------------//
 
   async login(loginDto: LoginDto) {
     const { email } = loginDto;
