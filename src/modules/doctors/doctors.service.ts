@@ -103,10 +103,7 @@ export class DoctorsService {
 
   async remove(_id: string) {
     // Kiểm tra xem bác sĩ có tồn tại hay không
-    const doctor = await this.findOne(_id);
-    if (!doctor) {
-      throw new NotFoundException(`Doctor with ID ${_id} not found`);
-    }
+    await this.checkDoctorExists(_id);
 
     // Xóa bác sĩ khỏi cơ sở dữ liệu
     await this.doctorModel.findByIdAndDelete(_id);
