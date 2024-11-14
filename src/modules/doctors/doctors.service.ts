@@ -118,7 +118,6 @@ export class DoctorsService {
   private populateDoctorQuery(query: any) {
     return query
       .populate({ path: 'userId', select: 'fullName phoneNumber' })
-      .populate({ path: 'departmentId', select: 'departmentName' })
       .populate({ path: 'specialtyId', select: 'name' });
   }
 }
