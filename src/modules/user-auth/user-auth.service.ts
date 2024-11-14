@@ -176,6 +176,7 @@ export class UserAuthService {
   async findById(userId: string) {
     const user = await this.userAuthModel
       .findOne({ _id: userId })
+      .populate({ path: 'roleId', select: 'nameRole' })
       .select('-password');
     if (!user) throw new NotFoundException('Không có người dùng này');
     return user;

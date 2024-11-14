@@ -13,15 +13,14 @@ import { SpecialtiesService } from './specialties.service';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto';
 import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
 import { Public } from '../user-auth/guard/public.guard';
-import { Permissions } from '@/decorator/permission.decorator';
 import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
 import { RoleGuard } from '../user-auth/guard/role.guard';
-import { Resource } from '../roles/enum/resource.enum';
-import { Action } from '../roles/enum/action.enum';
+
 import { parseQueryParam } from '@/helpers/utils';
+import { Roles } from '@/decorator/role.decorator';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
+@Roles('admin')
 @Controller('specialties')
 export class SpecialtiesController {
   constructor(private readonly specialtiesService: SpecialtiesService) {}
@@ -50,7 +49,7 @@ export class SpecialtiesController {
   findOne(@Param('_id') _id: string) {
     return this.specialtiesService.findOne(_id);
   }
-  @Public()
+
   @Patch(':_id')
   update(
     @Param('_id') _id: string,
