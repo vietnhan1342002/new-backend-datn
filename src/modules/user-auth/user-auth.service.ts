@@ -21,6 +21,7 @@ import { RolesService } from '../roles/roles.service';
 import aqp from 'api-query-params';
 import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 import { Patient } from '../patients/schemas/patient.schema';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class UserAuthService {
@@ -69,6 +70,31 @@ export class UserAuthService {
       ...tokens,
       userId: user._id,
     };
+  }
+
+  async updatePassword(_id: string, updatePasswordDto: UpdatePasswordDto) {
+    const { currentPassword, newPassword } = updatePasswordDto;
+
+    // Lấy người dùng theo _id
+    const user = await this.userAuthModel.findById({ _id });
+    if (!user) {
+      throw new NotFoundException(`User not found : ${_id}`);
+    }
+
+    // Kiểm tra mật khẩu hiện tại
+    const isValidPassword = await comparePasswordHelper(
+      currentPassword,
+      user.password,
+    );
+    if (!isValidPassword) {
+      throw new UnauthorizedException(`Current password is incorrect`);
+    }
+
+    // Cập nhật mật khẩu mới sau khi hash
+    user.password = await hashPasswordHelper(newPassword);
+    await user.save();
+
+    return { message: 'Password updated successfully' };
   }
 
   async generateUserTokens(userId) {

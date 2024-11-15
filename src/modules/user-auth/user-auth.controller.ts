@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { UserAuthService } from './user-auth.service';
 import { CreateUserAuthDto } from './dto/create-user-auth.dto';
@@ -22,6 +23,7 @@ import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 import { RoleGuard } from './guard/role.guard';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './guard/public.guard';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -46,6 +48,19 @@ export class UserAuthController {
   @Post('refresh')
   async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.userAuthService.refreshTokens(refreshTokenDto.refreshToken);
+  }
+
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Permissions([{ resource: Resource.PASSWORD, actions: [Action.UPDATE] }])
+  @Patch('update-password/')
+  async updatePassword(
+    @Request() req, // Lấy thông tin user từ token
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    console.log(req.user);
+
+    const _id = req.user._id;
+    return this.userAuthService.updatePassword(_id, updatePasswordDto);
   }
 
   //Part User
