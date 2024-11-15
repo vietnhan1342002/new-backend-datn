@@ -36,7 +36,6 @@ export class PatientsService {
       const createdPatient = await this.patientModel.create(patientData);
       return createdPatient;
     } catch (error) {
-      console.error(error);
       throw new BadRequestException(
         'Cannot create doctor, please check the data format.',
       );
