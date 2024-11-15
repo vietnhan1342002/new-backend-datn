@@ -60,8 +60,8 @@ export class UserAuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
-    const user = await this.validateUser(email, password);
+    const { emailOrPhone, password } = loginDto;
+    const user = await this.validateUser(emailOrPhone, password);
 
     //Generate JWT tokens
     const tokens = await this.generateUserTokens(user._id);
@@ -215,15 +215,21 @@ export class UserAuthService {
   }
 
   //-------------------------HELPER--------------------------------------------//
-  async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.userAuthModel.findOne({ email });
+  async validateUser(emailOrPhone: string, password: string): Promise<any> {
+    const user = await this.userAuthModel.findOne({
+      $or: [{ email: emailOrPhone }, { phoneNumber: emailOrPhone }],
+    });
+
+    if (!user) {
+      throw new BadRequestException('Email / Password invalid');
+    }
 
     const isValidPassword = await comparePasswordHelper(
       password,
       user.password,
     );
 
-    if (!isValidPassword || !user) {
+    if (!isValidPassword) {
       throw new BadRequestException('Email / Password invalid');
     }
 
