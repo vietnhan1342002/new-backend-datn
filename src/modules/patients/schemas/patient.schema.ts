@@ -15,10 +15,10 @@ export class Patient {
   @Prop({ type: Types.ObjectId, ref: UserAuth.name, required: true })
   userId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({})
   dateOfBirth: Date;
 
-  @Prop({ required: true })
+  @Prop({})
   address: string;
 
   @Prop({ enum: Gender })

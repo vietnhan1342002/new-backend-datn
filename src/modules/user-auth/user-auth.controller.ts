@@ -29,19 +29,11 @@ import { Public } from './guard/public.guard';
 export class UserAuthController {
   constructor(private readonly userAuthService: UserAuthService) {}
 
-  //Test
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  @Public()
+  @Post('register')
+  async register(@Body() createUserAuthDto: CreateUserAuthDto) {
+    return this.userAuthService.register(createUserAuthDto);
   }
-
-  //------Register for patient------------------------//
-  // @Public()
-  // @Post('register')
-  // async register(@Body() createUserAuthDto: CreateUserAuthDto) {
-  //   return this.userAuthService.register(createUserAuthDto);
-  // }
-  //------Register for patient------------------------//
 
   //Part auth
   @Public()
