@@ -90,6 +90,12 @@ export class UserAuthService {
       throw new UnauthorizedException(`Current password is incorrect`);
     }
 
+    if (newPassword === currentPassword) {
+      throw new BadRequestException(
+        'New password cannot be the same as the current password',
+      );
+    }
+
     // Cập nhật mật khẩu mới sau khi hash
     user.password = await hashPasswordHelper(newPassword);
     await user.save();
