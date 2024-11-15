@@ -16,18 +16,22 @@ import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
 import { Roles } from '@/decorator/role.decorator';
 import { parseQueryParam } from '@/helpers/utils';
 import { UpdatePatientUserDto } from './dto/update-patient-user.dto';
+import { Permissions } from '@/decorator/permission.decorator';
+import { Resource } from '../roles/enum/resource.enum';
+import { Action } from '../roles/enum/action.enum';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Roles('patient')
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
+
+  @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
   @Post()
   create(@Body() createPatientDto: CreatePatientDto) {
     return this.patientsService.create(createPatientDto);
   }
 
-  @Roles('admin', 'doctor')
+  @Permissions([{ resource: Resource.PATIENT, actions: [Action.READ] }])
   @Get()
   async findAll(
     @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
@@ -41,12 +45,13 @@ export class PatientsController {
     return this.patientsService.findAll(query, currentPage, pageLimit);
   }
 
-  @Roles('doctor')
+  @Permissions([{ resource: Resource.PATIENT, actions: [Action.READ] }])
   @Get(':_id')
   findOne(@Param('_id') _id: string) {
     return this.patientsService.findOne(_id);
   }
 
+  @Permissions([{ resource: Resource.PATIENT, actions: [Action.UPDATE] }])
   @Patch(':_id')
   update(
     @Param('_id') _id: string,
@@ -59,7 +64,7 @@ export class PatientsController {
     );
   }
 
-  @Roles('admin')
+  @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
   @Delete(':_id')
   remove(@Param('_id') _id: string) {
     return this.patientsService.remove(_id);

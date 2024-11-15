@@ -24,7 +24,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './guard/public.guard';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Permissions([{ resource: Resource.PATIENT, actions: [Action.READ] }])
+@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @Controller('user-auth')
 export class UserAuthController {
   constructor(private readonly userAuthService: UserAuthService) {}
@@ -50,7 +50,7 @@ export class UserAuthController {
   async login(@Body() loginDto: LoginDto) {
     return this.userAuthService.login(loginDto);
   }
-  @Public()
+
   @Post('refresh')
   async refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.userAuthService.refreshTokens(refreshTokenDto.refreshToken);
