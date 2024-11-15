@@ -20,7 +20,7 @@ import { LoginDto } from './dto/login.dto';
 import { RolesService } from '../roles/roles.service';
 import aqp from 'api-query-params';
 import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
-// import { DepartmentsService } from '../departments/departments.service';
+import { Patient } from '../patients/schemas/patient.schema';
 
 @Injectable()
 export class UserAuthService {
@@ -29,74 +29,39 @@ export class UserAuthService {
     private userAuthModel: Model<UserAuthDocument>,
     @InjectModel(RefreshToken.name)
     private refreshTokenModel: Model<RefreshToken>,
+    @InjectModel(Patient.name)
+    private patientModel: Model<Patient>,
 
     private jwtService: JwtService,
     private roleService: RolesService,
-    // private departmentService: DepartmentsService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    // Tìm người dùng theo email
-    const user = await this.userAuthModel.findOne({ email }); // Chỉ định kiểu rõ ràng cho user
+  //-------------------------------------------------------------------------//
 
-    // Kiểm tra xem người dùng có tồn tại không
-    if (!user) {
-      throw new BadRequestException('Email / Password invalid'); // Ném lỗi nếu không tìm thấy người dùng
+  async register(createUserDto: CreateUserAuthDto) {
+    const user = await this.createUser(createUserDto);
+
+    // Set default role to 'patient'
+    user.roleId = new Types.ObjectId('67356ba52a541b6fc4ecf1a4');
+    await user.save();
+
+    // Create Patient record with only userId (no other information required)
+    if (user.roleId.toString() === '67356ba52a541b6fc4ecf1a4') {
+      const newPatient = new this.patientModel({
+        userId: user._id,
+      });
+      await newPatient.save();
     }
 
-    // Kiểm tra mật khẩu
-    const isValidPassword = await comparePasswordHelper(
-      password,
-      user.password,
-    );
-
-    if (!isValidPassword) {
-      throw new BadRequestException('Email / Password invalid'); // Ném lỗi nếu mật khẩu không đúng
-    }
-
-    return user; // Trả về người dùng nếu xác thực thành công
+    return {
+      _id: user.id,
+    };
   }
 
-  //------Register for patient------------------------//
-  // async register(createUserDto: CreateUserAuthDto) {
-  //   const { email, password, fullName, phoneNumber } = createUserDto;
-
-  //   // Kiểm tra xem email đã tồn tại hay chưa
-  //   const emailExists = await isExistHelper({ email }, this.userAuthModel);
-  //   if (emailExists) {
-  //     throw new BadRequestException(
-  //       `Email : ${email} Đã tồn tại. Vui lòng dùng email khác!`,
-  //     );
-  //   }
-
-  //   // Mã hóa mật khẩu
-  //   const hashPassword = await hashPasswordHelper(password);
-
-  //   // Gán role mặc định là 'patient'
-  //   const defaultRole = 'patient';
-
-  //   // Tạo người dùng mới
-  //   const user = await this.userAuthModel.create({
-  //     email,
-  //     password: hashPassword,
-  //     fullName,
-  //     phoneNumber,
-  //     role: defaultRole, // Gán role mặc định
-  //   });
-
-  //   return {
-  //     _id: user.id,
-  //   };
-  // }
-  //------Register for patient------------------------//
-
   async login(loginDto: LoginDto) {
-    const { email } = loginDto;
+    const { email, password } = loginDto;
+    const user = await this.validateUser(email, password);
 
-    const user = await this.userAuthModel.findOne({ email });
-    if (!user) {
-      throw new UnauthorizedException('Không có người dùng với email: ', email);
-    }
     //Generate JWT tokens
     const tokens = await this.generateUserTokens(user._id);
 
@@ -150,7 +115,7 @@ export class UserAuthService {
 
   async getUserPermissions(userId: string) {
     const user = await this.userAuthModel.findById(userId);
-    if (!user) throw new BadRequestException('Người dùng không tồn tại');
+    if (!user) throw new BadRequestException('User does not exist');
 
     const role = await this.roleService.findRoleById(user.roleId.toString());
     return role.permissions;
@@ -159,24 +124,7 @@ export class UserAuthService {
   //--------------------------------------Part for User------------------------------------------------------------//
 
   async create(createUserDto: CreateUserAuthDto) {
-    const { email, password, fullName, phoneNumber } = createUserDto;
-
-    const emailExists = await isExistHelper({ email }, this.userAuthModel);
-
-    if (emailExists) {
-      throw new BadRequestException(
-        `Email : ${email} Đã tồn tại. Vui lòng dùng email khác!`,
-      );
-    }
-
-    const hashPassword = await hashPasswordHelper(password);
-
-    const user = await this.userAuthModel.create({
-      email,
-      password: hashPassword,
-      fullName,
-      phoneNumber,
-    });
+    const user = await this.createUser(createUserDto);
 
     return {
       _id: user.id,
@@ -185,7 +133,7 @@ export class UserAuthService {
 
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
-
+    // Trả về true nếu đúng, false nếu không
     if (filter.current) delete filter.current;
     if (filter.pageSize) delete filter.pageSize;
 
@@ -211,7 +159,7 @@ export class UserAuthService {
       .findOne({ _id: userId })
       .populate({ path: 'roleId', select: 'nameRole' })
       .select('-password');
-    if (!user) throw new NotFoundException('Không có người dùng này');
+    if (!user) throw new NotFoundException('User does not exist');
     return user;
   }
 
@@ -232,5 +180,45 @@ export class UserAuthService {
     }
 
     return { message: `User with ID ${id} deleted successfully` };
+  }
+
+  //-------------------------HELPER--------------------------------------------//
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.userAuthModel.findOne({ email });
+
+    const isValidPassword = await comparePasswordHelper(
+      password,
+      user.password,
+    );
+
+    if (!isValidPassword || !user) {
+      throw new BadRequestException('Email / Password invalid');
+    }
+
+    return user;
+  }
+
+  async createUser(createUserDto: CreateUserAuthDto) {
+    const { email, password, fullName, phoneNumber } = createUserDto;
+
+    const emailExists = await isExistHelper({ email }, this.userAuthModel);
+    if (emailExists) {
+      throw new BadRequestException(
+        `Email : ${email} Already exists. Please use another email!`,
+      );
+    }
+
+    // Mã hóa mật khẩu
+    const hashPassword = await hashPasswordHelper(password);
+
+    // Tạo người dùng mới
+    const user = await this.userAuthModel.create({
+      email,
+      password: hashPassword,
+      fullName,
+      phoneNumber,
+    });
+
+    return user;
   }
 }

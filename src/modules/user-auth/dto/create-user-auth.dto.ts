@@ -1,4 +1,10 @@
-import { IsEmail, IsEmpty, IsNotEmpty, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsEmpty,
+  IsMongoId,
+  IsNotEmpty,
+  Length,
+} from 'class-validator';
 
 export class CreateUserAuthDto {
   @IsEmail()
@@ -8,6 +14,9 @@ export class CreateUserAuthDto {
   @IsNotEmpty({ message: 'Password cannot be empty' })
   password: string;
 
-  fullName?: string;
-  phoneNumber?: string;
+  @IsNotEmpty({ message: 'fullName cannot be empty' })
+  fullName: string;
+
+  @IsNotEmpty({ message: 'phoneNumber cannot be empty' })
+  phoneNumber: string;
 }

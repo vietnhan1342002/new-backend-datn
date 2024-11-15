@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UserAuthService } from './user-auth.service';
 import { UserAuthController } from './user-auth.controller';
 import { PassportModule } from '@nestjs/passport';
@@ -16,6 +16,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RolesModule } from '../roles/roles.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
+import { PatientsModule } from '../patients/patients.module';
+import { Patient, PatientSchema } from '../patients/schemas/patient.schema';
 
 @Module({
   imports: [
@@ -29,9 +31,11 @@ import { JwtAuthGuard } from './guard/jwt-auth.guard';
     MongooseModule.forFeature([
       { name: UserAuth.name, schema: UserAuthSchema },
       { name: RefreshToken.name, schema: RefreshTokenSchema },
+      { name: Patient.name, schema: PatientSchema },
     ]),
     PassportModule,
     RolesModule,
+    forwardRef(() => PatientsModule),
   ],
   controllers: [UserAuthController],
   providers: [

@@ -12,7 +12,6 @@ import aqp from 'api-query-params';
 import { UserAuthService } from '../user-auth/user-auth.service';
 import { UpdateUserAuthDto } from '../user-auth/dto/update-user-auth.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
-import { UpdatePatientUserDto } from './dto/update-patient-user.dto';
 
 @Injectable()
 export class PatientsService {
@@ -30,6 +29,7 @@ export class PatientsService {
       gender,
     };
   }
+
   async create(createPatientDto: CreatePatientDto) {
     try {
       const patientData = this.createPatientData(createPatientDto);
