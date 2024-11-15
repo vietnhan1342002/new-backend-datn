@@ -28,3 +28,5 @@ export class UserAuth extends Document {
 }
 
 export const UserAuthSchema = SchemaFactory.createForClass(UserAuth);
+
+UserAuthSchema.index({ email: 1 }, { unique: true });
