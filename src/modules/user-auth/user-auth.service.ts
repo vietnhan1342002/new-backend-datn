@@ -240,9 +240,13 @@ export class UserAuthService {
     const { email, password, fullName, phoneNumber } = createUserDto;
 
     const emailExists = await isExistHelper({ email }, this.userAuthModel);
-    if (emailExists) {
+    const phoneNumberExists = await isExistHelper(
+      { phoneNumber },
+      this.userAuthModel,
+    );
+    if (emailExists || phoneNumberExists) {
       throw new BadRequestException(
-        `Email : ${email} Already exists. Please use another email!`,
+        `Email : ${email} or ${phoneNumberExists} Already exists. Please use another email or another phone number!`,
       );
     }
 

@@ -20,13 +20,14 @@ export class UserAuth extends Document {
   })
   roleId: Types.ObjectId; // Liên kết người dùng với Role
 
-  @Prop()
+  @Prop({ required: true })
   fullName: string;
 
-  @Prop()
+  @Prop({ required: true, unique: true })
   phoneNumber: string;
 }
 
 export const UserAuthSchema = SchemaFactory.createForClass(UserAuth);
 
 UserAuthSchema.index({ email: 1 }, { unique: true });
+UserAuthSchema.index({ phoneNumber: 1 }, { unique: true });
