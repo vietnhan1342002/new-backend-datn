@@ -7,10 +7,16 @@ export type RefreshTokenDocument = HydratedDocument<RefreshToken>;
 export class RefreshToken extends Document {
   @Prop({ required: true })
   token: string;
+
   @Prop({ required: true, type: mongoose.Types.ObjectId })
   userId: mongoose.Types.ObjectId;
+
   @Prop({ required: true })
   expiryDate: Date;
 }
 
+// Tạo schema cho RefreshToken
 export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
+
+// Thêm chỉ mục TTL vào trường expiryDate
+RefreshTokenSchema.index({ expiryDate: 1 }, { expireAfterSeconds: 0 });
