@@ -57,8 +57,6 @@ export class UserAuthController {
     @Request() req, // Lấy thông tin user từ token
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
-    console.log(req.user);
-
     const _id = req.user._id;
     return this.userAuthService.updatePassword(_id, updatePasswordDto);
   }
