@@ -50,7 +50,6 @@ export class UserAuthController {
     return this.userAuthService.refreshTokens(refreshTokenDto.refreshToken);
   }
 
-  @UseGuards(JwtAuthGuard, RoleGuard)
   @Permissions([{ resource: Resource.PASSWORD, actions: [Action.UPDATE] }])
   @Patch('update-password/')
   async updatePassword(
