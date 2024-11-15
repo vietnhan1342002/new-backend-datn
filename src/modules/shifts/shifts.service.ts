@@ -1,26 +1,101 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateShiftDto } from './dto/create-shift.dto';
 import { UpdateShiftDto } from './dto/update-shift.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Shift } from './schemas/shift.schema';
+import { Model } from 'mongoose';
+import aqp from 'api-query-params';
 
 @Injectable()
 export class ShiftsService {
-  create(createShiftDto: CreateShiftDto) {
-    return 'This action adds a new shift';
+  constructor(
+    @InjectModel(Shift.name)
+    private shiftModel: Model<Shift>,
+  ) {}
+
+  private async checkShiftExistence(startTime: string, endTime: string) {
+    const shiftExists = await this.shiftModel.findOne({
+      startTime,
+      endTime,
+    });
+    if (shiftExists) {
+      throw new BadRequestException(
+        `Shift from ${startTime} to ${endTime} already exists. Please choose different times.`,
+      );
+    }
   }
 
-  findAll() {
-    return `This action returns all shifts`;
+  async create(createShiftDto: CreateShiftDto) {
+    const { startTime, endTime } = createShiftDto;
+
+    // Kiểm tra ca làm việc có tồn tại không
+    await this.checkShiftExistence(startTime, endTime);
+
+    const shift = await this.shiftModel.create({
+      name: `${startTime} - ${endTime}`,
+      startTime,
+      endTime,
+    });
+
+    return { _id: shift.id };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} shift`;
+  async findAll(query: string, current: number, pageSize: number) {
+    const { filter, sort } = aqp(query);
+
+    if (filter.current) delete filter.current;
+    if (filter.pageSize) delete filter.pageSize;
+
+    if (!current) current = 1;
+    if (!pageSize) pageSize = 10;
+
+    const totalItems = (await this.shiftModel.find(filter)).length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    const skip = (current - 1) * pageSize;
+
+    const result = await this.shiftModel
+      .find(filter)
+      .limit(pageSize)
+      .skip(skip)
+      .sort(sort as any);
+
+    if (result.length === 0) throw new NotFoundException('No shifts available');
+
+    return { result, totalPages };
   }
 
-  update(id: number, updateShiftDto: UpdateShiftDto) {
-    return `This action updates a #${id} shift`;
+  async findOne(_id: string) {
+    const result = await this.shiftModel
+      .findById({ _id })
+      .select('name startTime endTime');
+    if (!result) {
+      throw new NotFoundException(`Shift with ID ${_id} not found`);
+    }
+    return result;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} shift`;
+  async update(_id: string, updateShiftDto: UpdateShiftDto) {
+    const shift = await this.findOne(_id);
+    const { name, startTime, endTime } = updateShiftDto;
+
+    // Kiểm tra xem ca làm việc mới có trùng không
+    await this.checkShiftExistence(startTime, endTime);
+
+    return await this.shiftModel.updateOne(
+      { _id },
+      { name, startTime, endTime },
+    );
+  }
+
+  async remove(_id: string) {
+    const shift = await this.findOne(_id);
+    await this.shiftModel.deleteOne({ _id });
+
+    return { message: `Shift with ID ${_id} deleted successfully` };
   }
 }
