@@ -1,14 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { Document, HydratedDocument, Types } from 'mongoose';
 
 export type ShiftDocument = HydratedDocument<Shift>;
 
 @Schema({ timestamps: true })
-export class Shift {
+export class Shift extends Document {
   @Prop({ required: true })
   name: string;
+
   @Prop({ required: true })
   startTime: string;
+
   @Prop({ required: true })
   endTime: string;
 }
