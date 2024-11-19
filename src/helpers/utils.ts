@@ -24,6 +24,12 @@ export const comparePasswordHelper = async (
   return await bcrypt.compare(plainPassword, hashPassword);
 };
 
+export function formatDate(date: Date | string): string {
+  const formattedDate = new Date(date).toISOString().split('T')[0];
+  return formattedDate;
+}
+
+//----------------------------------------Pagination--------------------------------------------------//
 // Hàm phụ trợ để kiểm tra và phân tích các tham số
 export const parseQueryParam = (value: string): number => {
   const parsedValue = parseInt(value, 10);
