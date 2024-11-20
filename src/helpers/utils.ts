@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { Model } from 'mongoose';
 const saltOrRounds = 10;
 
 export const hashPasswordHelper = async (plainPassword: string) => {
@@ -67,3 +68,29 @@ export const preparePaginationFilter = async (
 
   return { totalItems, totalPages };
 };
+
+export async function paginateAndPopulate(
+  model: any,
+  options: {
+    filter: Record<string, any>;
+    sort: Record<string, any>;
+    current: number;
+    pageSize: number;
+    populateQuery: (query: any) => any;
+  },
+) {
+  const { filter, sort, current, pageSize, populateQuery } = options;
+
+  const totalItems = await model.countDocuments(filter);
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  const skip = (current - 1) * pageSize;
+  let query = model.find(filter).limit(pageSize).skip(skip).sort(sort);
+
+  if (populateQuery) {
+    query = populateQuery(query);
+  }
+
+  const result = await query.exec();
+  return { result, totalPages, totalItems };
+}

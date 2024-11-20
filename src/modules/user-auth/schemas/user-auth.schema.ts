@@ -16,7 +16,7 @@ export class UserAuth extends Document {
     required: false,
     type: Types.ObjectId,
     ref: Role.name,
-    default: new Types.ObjectId('67244680e47e013129b68d3a'),
+    default: new Types.ObjectId('673d935335e97c832bfa6356'),
   })
   roleId: Types.ObjectId; // Liên kết người dùng với Role
 

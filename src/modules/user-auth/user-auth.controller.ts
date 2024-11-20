@@ -61,6 +61,7 @@ export class UserAuthController {
   }
 
   //Part User
+  @Public()
   @Post()
   create(@Body() createUserAuthDto: CreateUserAuthDto) {
     return this.userAuthService.create(createUserAuthDto);
