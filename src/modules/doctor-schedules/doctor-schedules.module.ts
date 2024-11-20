@@ -17,5 +17,6 @@ import { DoctorSchedulesService } from './doctor-schedules.service';
   ],
   controllers: [DoctorSchedulesController],
   providers: [DoctorSchedulesService],
+  exports: [DoctorSchedulesService],
 })
 export class DoctorSchedulesModule {}

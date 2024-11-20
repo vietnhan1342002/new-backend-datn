@@ -20,7 +20,7 @@ export class DoctorSchedule {
   @Prop({ type: Date, required: true })
   date: Date;
 
-  @Prop({ enum: Status, required: true })
+  @Prop({ enum: Status, required: true, default: Status.ACTIVE })
   status: Status;
 }
 

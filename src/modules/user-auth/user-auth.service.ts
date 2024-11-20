@@ -237,7 +237,7 @@ export class UserAuthService {
   }
 
   async createUser(createUserDto: CreateUserAuthDto) {
-    const { email, password, fullName, phoneNumber } = createUserDto;
+    const { email, password, fullName, phoneNumber, roleId } = createUserDto;
 
     const emailExists = await isExistHelper({ email }, this.userAuthModel);
     const phoneNumberExists = await isExistHelper(
@@ -259,6 +259,7 @@ export class UserAuthService {
       password: hashPassword,
       fullName,
       phoneNumber,
+      roleId: new Types.ObjectId(roleId),
     });
 
     return user;

@@ -1,0 +1,30 @@
+[
+    {
+        "email": "receptionist1@gmail.com",
+        "password": "123456",
+        "fullName": "Lễ tân 1",
+        "phoneNumber": "0938182375",
+        "roleId": "673d938c35e97c832b"
+    },
+    {
+        "email": "receptionist2@gmail.com",
+        "password": "123456",
+        "fullName": "Lễ tân 2",
+        "phoneNumber": "0938182376",
+        "roleId": "673d938c35e97c832b"
+    },
+    {
+        "email": "receptionist3@gmail.com",
+        "password": "123456",
+        "fullName": "Lễ tân 3",
+        "phoneNumber": "0938182377",
+        "roleId": "673d938c35e97c832b"
+    },
+    {
+        "email": "receptionist4@gmail.com",
+        "password": "123456",
+        "fullName": "Lễ tân 4",
+        "phoneNumber": "0938182378",
+        "roleId": "673d938c35e97c832b"
+    }
+]

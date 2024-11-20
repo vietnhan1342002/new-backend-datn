@@ -3,6 +3,7 @@ import {
   IsEmpty,
   IsMongoId,
   IsNotEmpty,
+  IsOptional,
   Length,
 } from 'class-validator';
 
@@ -19,4 +20,7 @@ export class CreateUserAuthDto {
 
   @IsNotEmpty({ message: 'phoneNumber cannot be empty' })
   phoneNumber: string;
+
+  @IsOptional()
+  roleId: string;
 }
