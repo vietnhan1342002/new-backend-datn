@@ -11,13 +11,13 @@ export class Doctor extends Document {
   @Prop({ type: Types.ObjectId, ref: UserAuth.name, required: true })
   userId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({})
   licenseNumber: string;
 
-  @Prop({ required: true })
+  @Prop({})
   yearsOfExperience: number;
 
-  @Prop({ type: Types.ObjectId, ref: Specialty.name, required: true })
+  @Prop({ type: Types.ObjectId, ref: Specialty.name })
   specialtyId: Types.ObjectId;
 }
 
