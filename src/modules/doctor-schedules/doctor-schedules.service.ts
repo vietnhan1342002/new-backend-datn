@@ -8,7 +8,6 @@ import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { DoctorSchedule } from './schemas/doctor-schedule.schema';
 import { Model, Types } from 'mongoose';
-import { formatDate, isExistHelper } from '@/helpers/utils';
 import aqp from 'api-query-params';
 
 @Injectable()
@@ -29,10 +28,6 @@ export class DoctorSchedulesService {
       shiftId,
       date,
     });
-
-    // Log để kiểm tra
-    console.log('Input:', { doctorId, shiftId, date });
-    console.log('Existing Schedule:', scheduleExists);
 
     if (scheduleExists) {
       throw new BadRequestException(

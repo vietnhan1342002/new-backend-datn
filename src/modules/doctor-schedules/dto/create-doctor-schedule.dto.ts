@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsDateString, IsEnum, IsMongoId, IsNotEmpty } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+} from 'class-validator';
 import { Status } from '../schemas/doctor-schedule.schema';
 
 export class CreateDoctorScheduleDto {
@@ -15,9 +21,9 @@ export class CreateDoctorScheduleDto {
   @Type(() => Date) // Chuyển đổi kiểu từ string thành Date
   date: Date; // Ngày của lịch trình, kiểu Date
 
-  @IsNotEmpty({ message: 'status cannot be empty' })
+  @IsOptional()
   @IsEnum(Status, {
     message: 'status must be active or inactive',
   })
-  status: Status;
+  status?: Status;
 }
