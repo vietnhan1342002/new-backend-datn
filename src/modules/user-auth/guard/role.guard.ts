@@ -113,6 +113,8 @@ export class RoleGuard implements CanActivate {
     routePermissions: Permission[],
     userPermissions: Permission[],
   ) {
+    console.log('Route permissions:', routePermissions);
+    console.log('User permissions:', userPermissions);
     for (const routePermission of routePermissions) {
       const userPermission = userPermissions.find(
         (perm) => perm.resource === routePermission.resource,
@@ -122,10 +124,11 @@ export class RoleGuard implements CanActivate {
           `No permission for resource: ${routePermission.resource}`,
         );
       }
-      const hasAllActions = routePermission.actions.every((requiredAction) =>
+      const hasAnyAction = routePermission.actions.some((requiredAction) =>
         userPermission.actions.includes(requiredAction),
       );
-      if (!hasAllActions) {
+
+      if (!hasAnyAction) {
         throw new ForbiddenException(
           `Missing actions for resource: ${routePermission.resource}`,
         );
