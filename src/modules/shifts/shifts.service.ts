@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Shift } from './schemas/shift.schema';
 import { Model } from 'mongoose';
 import aqp from 'api-query-params';
+import { paginateAndPopulate } from '@/helpers/utils';
 
 @Injectable()
 export class ShiftsService {
@@ -47,26 +48,20 @@ export class ShiftsService {
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    if (filter.current) delete filter.current;
-    if (filter.pageSize) delete filter.pageSize;
-
-    if (!current) current = 1;
-    if (!pageSize) pageSize = 10;
-
-    const totalItems = (await this.shiftModel.find(filter)).length;
-    const totalPages = Math.ceil(totalItems / pageSize);
-
-    const skip = (current - 1) * pageSize;
-
-    const result = await this.shiftModel
-      .find(filter)
-      .limit(pageSize)
-      .skip(skip)
-      .sort(sort as any);
+    const { result, totalPages, totalItems } = await paginateAndPopulate(
+      this.shiftModel,
+      {
+        filter,
+        sort,
+        current,
+        pageSize,
+        populateQuery: undefined,
+      },
+    );
 
     if (result.length === 0) throw new NotFoundException('No shifts available');
 
-    return { result, totalPages };
+    return { result, totalItems, totalPages };
   }
 
   async findOne(_id: string) {
