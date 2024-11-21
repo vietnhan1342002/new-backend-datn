@@ -18,6 +18,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
 import { PatientsModule } from '../patients/patients.module';
 import { Patient, PatientSchema } from '../patients/schemas/patient.schema';
+import { Doctor, DoctorSchema } from '../doctors/schemas/doctor.schema';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { Patient, PatientSchema } from '../patients/schemas/patient.schema';
       { name: UserAuth.name, schema: UserAuthSchema },
       { name: RefreshToken.name, schema: RefreshTokenSchema },
       { name: Patient.name, schema: PatientSchema },
+      { name: Doctor.name, schema: DoctorSchema },
     ]),
     PassportModule,
     RolesModule,

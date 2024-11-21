@@ -22,6 +22,7 @@ import aqp from 'api-query-params';
 import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 import { Patient } from '../patients/schemas/patient.schema';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { Doctor } from '../doctors/schemas/doctor.schema';
 
 @Injectable()
 export class UserAuthService {
@@ -33,6 +34,9 @@ export class UserAuthService {
     @InjectModel(Patient.name)
     private patientModel: Model<Patient>,
 
+    @InjectModel(Doctor.name)
+    private doctorModel: Model<Doctor>,
+
     private jwtService: JwtService,
     private roleService: RolesService,
   ) {}
@@ -43,11 +47,11 @@ export class UserAuthService {
     const user = await this.createUser(createUserDto);
 
     // Set default role to 'patient'
-    user.roleId = new Types.ObjectId('67356ba52a541b6fc4ecf1a4');
+    user.roleId = new Types.ObjectId('673d931c35e97c832bfa6351');
     await user.save();
 
     // Create Patient record with only userId (no other information required)
-    if (user.roleId.toString() === '67356ba52a541b6fc4ecf1a4') {
+    if (user.roleId.toString() === '673d931c35e97c832bfa6351') {
       const newPatient = new this.patientModel({
         userId: user._id,
       });
@@ -157,6 +161,13 @@ export class UserAuthService {
 
   async create(createUserDto: CreateUserAuthDto) {
     const user = await this.createUser(createUserDto);
+    // Create Patient record with only userId (no other information required)
+    if (user.roleId.toString() === '673d935335e97c832bfa6356') {
+      const newDoctor = new this.doctorModel({
+        userId: user._id,
+      });
+      await newDoctor.save();
+    }
 
     return {
       _id: user.id,
