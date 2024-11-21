@@ -18,6 +18,7 @@ import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { RoleGuard } from '../user-auth/guard/role.guard';
 import { Public } from '../user-auth/guard/public.guard';
+import { parseQueryParam } from '@/helpers/utils';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 // @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -34,11 +35,15 @@ export class ShiftsController {
   @Public()
   @Get()
   async findAll(
-    @Query() query: string,
-    @Param('current') current: string,
-    @Param('pageSize') pageSize: string,
+    @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
   ) {
-    return this.shiftsService.findAll(query, +current, +pageSize);
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
+
+    // Tìm tất cả bác sĩ hoặc theo query
+    return this.shiftsService.findAll(query, currentPage, pageLimit);
   }
 
   @Public()
