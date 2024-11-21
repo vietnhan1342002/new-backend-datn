@@ -76,6 +76,21 @@ export class UserAuthService {
     };
   }
 
+  async logout(refreshToken: string) {
+    // Xóa refresh token khỏi cơ sở dữ liệu
+    const result = await this.refreshTokenModel.deleteOne({
+      token: refreshToken,
+    });
+
+    if (result.deletedCount === 0) {
+      throw new BadRequestException(
+        'Refresh Token không hợp lệ hoặc đã hết hạn',
+      );
+    }
+
+    return { message: 'Đã đăng xuất thành công' };
+  }
+
   async updatePassword(_id: string, updatePasswordDto: UpdatePasswordDto) {
     const { currentPassword, newPassword } = updatePasswordDto;
 

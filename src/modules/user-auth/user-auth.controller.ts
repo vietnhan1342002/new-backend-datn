@@ -10,6 +10,7 @@ import {
   Patch,
   Delete,
   Put,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UserAuthService } from './user-auth.service';
 import { CreateUserAuthDto } from './dto/create-user-auth.dto';
@@ -43,6 +44,19 @@ export class UserAuthController {
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.userAuthService.login(loginDto);
+  }
+
+  @Post('logout')
+  async logout(@Body() body: { refreshToken: string }) {
+    const { refreshToken } = body;
+
+    // Kiểm tra refresh token có hợp lệ hay không trước khi logout
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
+
+    // Gọi phương thức logout từ service
+    return this.userAuthService.logout(refreshToken);
   }
 
   @Post('refresh')
