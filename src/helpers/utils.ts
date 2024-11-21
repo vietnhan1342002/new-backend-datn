@@ -76,7 +76,7 @@ export async function paginateAndPopulate(
     sort: Record<string, any>;
     current: number;
     pageSize: number;
-    populateQuery: (query: any) => any;
+    populateQuery?: (query: any) => any;
   },
 ) {
   const { filter, sort, current, pageSize, populateQuery } = options;
