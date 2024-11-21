@@ -7,15 +7,22 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { Public } from '../user-auth/guard/public.guard';
+import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
+import { RoleGuard } from '../user-auth/guard/role.guard';
+import { Permissions } from '@/decorator/permission.decorator';
+import { Resource } from '../roles/enum/resource.enum';
+import { Action } from '../roles/enum/action.enum';
 import { parseQueryParam } from '@/helpers/utils';
 
-@Public()
+@UseGuards(JwtAuthGuard, RoleGuard)
+@Permissions([{ resource: Resource.APPOINTMENT, actions: [Action.ALL] }])
 @Controller('appointments')
+@Permissions([{ resource: Resource.APPOINTMENT, actions: [Action.ALL] }])
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
@@ -26,30 +33,34 @@ export class AppointmentsController {
 
   @Get()
   async findAll(
-    @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
+    @Query('query') query: string = '',
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
   ) {
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
-
-    // Tìm tất cả bác sĩ hoặc theo query
     return this.appointmentsService.findAll(query, currentPage, pageLimit);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.appointmentsService.findOne(+id);
+  @Permissions([
+    { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.READ] }, // Patient có quyền 'read'
+  ])
+  @Get(':_id')
+  findOne(@Param('_id') _id: string) {
+    return this.appointmentsService.findOne(_id);
   }
 
-  @Patch(':id')
+  @Patch(':_id')
   update(
-    @Param('id') id: string,
+    @Param('_id') _id: string,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ) {
-    return this.appointmentsService.update(+id, updateAppointmentDto);
+    return this.appointmentsService.update(_id, updateAppointmentDto);
   }
 
+  @Permissions([
+    { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.DELETE] }, // Receptionist có quyền 'all'
+  ])
   @Delete(':_id')
   remove(@Param('_id') _id: string) {
     return this.appointmentsService.remove(_id);

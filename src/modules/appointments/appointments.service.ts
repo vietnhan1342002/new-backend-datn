@@ -16,104 +16,54 @@ import aqp from 'api-query-params';
 export class AppointmentsService {
   constructor(
     @InjectConnection() private readonly connection: mongoose.Connection,
-
-    @InjectModel(Appointment.name) private appointmentModel: Model<Appointment>,
-    private doctorScheduleService: DoctorSchedulesService,
+    @InjectModel(Appointment.name)
+    private readonly appointmentModel: Model<Appointment>,
+    private readonly doctorScheduleService: DoctorSchedulesService,
   ) {}
 
-  // private async checkAppointmentExistence(
-  //   doctorScheduleId: string,
-  //   patientId: string,
-  // ) {
-  //   // Tìm lịch trình có cùng doctorId, shiftId và date
-  //   const appointmentExists = await this.appointmentModel.findOne({
-  //     doctorScheduleId,
-  //     patientId,
-  //   });
-
-  //   // Log để kiểm tra
-  //   console.log('Input:', { doctorScheduleId, patientId });
-  //   console.log('Existing Schedule:', appointmentExists);
-
-  //   if (appointmentExists) {
-  //     throw new BadRequestException(
-  //       `Doctor schedule for DoctorSchedule ID: ${doctorScheduleId}, Patient ID: ${patientId}`,
-  //     );
-  //   }
-  // }
-
+  // ------------------------- CREATE APPOINTMENT -------------------------
   async create(createAppointmentDto: CreateAppointmentDto) {
     const { patientId, doctorId, doctorScheduleId } = createAppointmentDto;
 
-    const transactionSession = await this.connection.startSession();
-    transactionSession.startTransaction();
+    const session = await this.connection.startSession();
+    session.startTransaction();
 
     try {
       const schedule =
         await this.doctorScheduleService.findOne(doctorScheduleId);
-
       if (!schedule) {
         throw new NotFoundException(
           'No available schedule for this doctor on this date',
         );
       }
 
-      if (schedule.result.status === 'inactive') {
-        throw new BadRequestException(
-          'This doctor schedule is no longer available.',
-        );
-      }
+      this.validateSchedule(schedule.result, doctorId);
 
-      if (schedule.result.doctorId._id.toString() !== doctorId) {
-        throw new BadRequestException('Doctor ID does not match the schedule.');
-      }
-
+      // Mark schedule as inactive
       schedule.result.status = 'inactive';
-      await schedule.result.save({ transactionSession });
+      await schedule.result.save({ session });
 
-      const formattedAppointmentDate = `${schedule.result.date.toISOString().split('T')[0]} ${schedule.result.shiftId.name}`;
+      // Format appointment date
+      const appointmentDate = this.formatAppointmentDate(schedule.result);
 
-      const appointment = await this.appointmentModel.create(
-        [
-          {
-            patientId,
-            doctorId,
-            doctorScheduleId,
-            appointmentDate: formattedAppointmentDate,
-          },
-        ],
-        { transactionSession },
+      // Create appointment
+      const [appointment] = await this.appointmentModel.create(
+        [{ patientId, doctorId, doctorScheduleId, appointmentDate }],
+        { session },
       );
 
-      await transactionSession.commitTransaction();
-      return { _id: appointment[0] };
+      await session.commitTransaction();
+      return { _id: appointment._id };
     } catch (error) {
-      await transactionSession.abortTransaction();
+      await session.abortTransaction();
       throw error;
     } finally {
-      await transactionSession.endSession();
+      session.endSession();
     }
   }
 
+  // ------------------------- FIND ALL APPOINTMENTS -------------------------
   async findAll(query: string, current: number, pageSize: number) {
-    const populateFields = (query) =>
-      query
-        .populate({
-          path: 'patientId',
-          select: 'userId',
-          populate: {
-            path: 'userId',
-            select: 'fullName',
-          },
-        })
-        .populate({
-          path: 'doctorId',
-          select: 'userId',
-          populate: {
-            path: 'userId',
-            select: 'fullName',
-          },
-        });
     const { filter, sort } = aqp(query);
 
     const { result, totalPages, totalItems } = await paginateAndPopulate(
@@ -123,56 +73,150 @@ export class AppointmentsService {
         sort,
         current,
         pageSize,
-        populateQuery: populateFields,
+        populateQuery: this.populateAppointmentQuery,
       },
     );
 
-    if (result.length === 0)
+    if (result.length === 0) {
       throw new NotFoundException('No appointments available');
+    }
 
     return { result, totalItems, totalPages };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} appointment`;
+  // ------------------------- FIND ONE APPOINTMENT -------------------------
+  async findOne(_id: string) {
+    const appointment = await this.populateAppointmentQuery(
+      this.appointmentModel.findById(_id),
+    );
+    if (!appointment) {
+      throw new NotFoundException(`Appointment with ID ${_id} not found`);
+    }
+    return { result: appointment };
   }
 
-  update(id: number, updateAppointmentDto: UpdateAppointmentDto) {
-    return `This action updates a #${id} appointment`;
+  // ------------------------- UPDATE APPOINTMENT -------------------------
+  async update(_id: string, updateAppointmentDto: UpdateAppointmentDto) {
+    const appointment = await this.findOne(_id);
+    const { patientId, doctorId, doctorScheduleId, reason, status } =
+      updateAppointmentDto;
+
+    if (doctorScheduleId) {
+      const schedule =
+        await this.doctorScheduleService.findOne(doctorScheduleId);
+      if (!schedule) {
+        throw new NotFoundException(
+          'No available schedule for this doctor on this date',
+        );
+      }
+      await this.validateSchedule(schedule.result, doctorId);
+    }
+
+    // Prepare update data with only provided fields
+    const updateData = this.prepareUpdateData(updateAppointmentDto);
+
+    // Update appointment with the filtered data
+    return await this.appointmentModel.updateOne({ _id }, { $set: updateData });
   }
 
+  // ------------------------- REMOVE APPOINTMENT -------------------------
   async remove(id: string) {
-    const transactionSession = await this.connection.startSession();
-    transactionSession.startTransaction();
+    const session = await this.connection.startSession();
+    session.startTransaction();
 
     try {
       const appointment = await this.appointmentModel.findById(id);
-
       if (!appointment) {
         throw new NotFoundException(`Appointment with ID ${id} not found`);
       }
 
-      const doctorScheduleId = appointment.doctorScheduleId;
-
       const schedule = await this.doctorScheduleService.findOne(
-        doctorScheduleId.toString(),
+        appointment.doctorScheduleId.toString(),
       );
-
-      // Xóa lịch hẹn
       await this.appointmentModel.findByIdAndDelete(id);
 
       if (schedule && schedule.result.status === 'inactive') {
         schedule.result.status = 'active';
-        await schedule.result.save({ session: transactionSession });
+        await schedule.result.save({ session });
       }
 
-      await transactionSession.commitTransaction();
+      await session.commitTransaction();
       return { message: `Appointment with ID ${id} has been removed` };
     } catch (error) {
-      await transactionSession.abortTransaction();
+      await session.abortTransaction();
       throw error;
     } finally {
-      await transactionSession.endSession();
+      session.endSession();
     }
+  }
+
+  // ------------------------- HELPERS -------------------------
+
+  private populateAppointmentQuery = (query: any) => {
+    const fields = [
+      {
+        path: 'patientId',
+        select: 'userId',
+        nestedPath: 'userId',
+        nestedSelect: 'fullName',
+      },
+      {
+        path: 'doctorId',
+        select: 'userId',
+        nestedPath: 'userId',
+        nestedSelect: 'fullName',
+      },
+    ];
+    return this.populateFieldsForQuery(query, fields);
+  };
+
+  private populateFieldsForQuery(
+    query: any,
+    fields: {
+      path: string;
+      select: string;
+      nestedPath: string;
+      nestedSelect: string;
+    }[],
+  ) {
+    fields.forEach((field) => {
+      query.populate({
+        path: field.path,
+        select: field.select,
+        populate: { path: field.nestedPath, select: field.nestedSelect },
+      });
+    });
+    return query;
+  }
+
+  private validateSchedule(schedule: any, doctorId: string) {
+    if (schedule.doctorId._id.toString() !== doctorId) {
+      throw new BadRequestException('Doctor ID does not match the schedule.');
+    }
+    if (schedule.status === 'inactive') {
+      throw new BadRequestException(
+        'This doctor schedule is no longer available.',
+      );
+    }
+  }
+
+  private formatAppointmentDate(schedule: any): string {
+    const date = schedule.date.toISOString().split('T')[0];
+    const shiftName = schedule.shiftId.name;
+    return `${date} ${shiftName}`;
+  }
+
+  private prepareUpdateData(updateAppointmentDto: UpdateAppointmentDto) {
+    const updateData: any = {};
+    const { patientId, doctorId, doctorScheduleId, reason, status } =
+      updateAppointmentDto;
+
+    if (patientId) updateData.patientId = patientId;
+    if (doctorId) updateData.doctorId = doctorId;
+    if (doctorScheduleId) updateData.doctorScheduleId = doctorScheduleId;
+    if (reason) updateData.reason = reason;
+    if (status) updateData.status = status;
+
+    return updateData;
   }
 }
