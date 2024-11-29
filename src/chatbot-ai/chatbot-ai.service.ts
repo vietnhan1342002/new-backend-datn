@@ -49,17 +49,23 @@ export class ChatbotAiService {
 
       });
       // Thêm phản hồi của chatbot vào lịch sử
+      const assistantResponse = chatCompletion.choices[0].message.content;
       conversation.messages.push({
         role: 'assistant',
-        content: chatCompletion.choices[0].message.content,
+        content: assistantResponse,
       });
 
-      // Lưu lại cuộc hội thoại vào bộ nhớ tạm
-      this.conversations.set(conversationId, conversation);
-
+      // Kiểm tra nếu phản hồi chứa chẩn đoán, xóa lịch sử cuộc hội thoại
+      if (assistantResponse.includes('"diagnosis":')) {
+        this.conversations.delete(conversationId);  // Xóa lịch sử cuộc hội thoại sau khi có chẩn đoán
+        conversationId = ''; // Xóa conversationId để chuẩn bị cho cuộc hội thoại mới
+      } else {
+        // Lưu lại cuộc hội thoại vào bộ nhớ tạm
+        this.conversations.set(conversationId, conversation);
+      }
       // Trả phản hồi
       return {
-        "conversations": this.conversations,
+        "conversation": conversation,
         "conversationId": conversationId,
         "response": chatCompletion.choices[0].message.content,
       };
