@@ -16,6 +16,7 @@ import { jwtConfig } from '@/config/auth.config';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './user-auth/strategies/jwt.strategy';
 import { DoctorsModule } from './doctors/doctors.module';
+import { FilterModule } from './filter/filter.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { DoctorsModule } from './doctors/doctors.module';
     ShiftsModule,
     SpecialtiesModule,
     AppointmentsModule,
+    FilterModule,
   ],
   providers: [JwtStrategy],
   exports: [JwtModule],
