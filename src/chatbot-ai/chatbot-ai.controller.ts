@@ -1,21 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
-import { Public } from '@/modules/user-auth/guard/public.guard';
-import { CreateChatbotAiDto } from './dto/create-chatbot-ai.dto';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ChatbotAiService } from './chatbot-ai.service';
+import { Public } from '@/modules/user-auth/guard/public.guard';
 
 @Public()
-@Controller('chatbot-ai')
-export class ChatbotAiController {
-  constructor(private readonly chatbotAiService: ChatbotAiService) { }
+@Controller('chat')
+export class ChatBotAiController {
+  constructor(private readonly chatbotAiService: ChatbotAiService) {}
 
-  @Post('chat')
-  async handleChat(@Body() createChatbotAiDto: CreateChatbotAiDto) {
-    try {
-
-      const response = await this.chatbotAiService.getChatResponse(createChatbotAiDto);
-      return { response };
-    } catch (error) {
-      return { error: error.message };
-    }
+  @Post('ask')
+  async ask(@Body('prompt') prompt: string) {
+    return this.chatbotAiService.askGPT(prompt);
   }
 }
