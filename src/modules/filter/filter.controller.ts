@@ -7,7 +7,7 @@ import { Public } from '../user-auth/guard/public.guard';
 @Public()
 @Controller('filter')
 export class FilterController {
-  constructor(private readonly filterService: FilterService) {}
+  constructor(private readonly filterService: FilterService) { }
 
   // Lấy lịch bác sĩ đơn giản
   @Get('doctor-schedules')
@@ -27,5 +27,13 @@ export class FilterController {
     @Query('status') status?: string,
   ) {
     return this.filterService.filterDoctorSchedulesWithDetails({ doctorId, date, status });
+  }
+
+  // Lấy lịch bác sĩ đơn giản
+  @Get('specialties')
+  async getFilteredSpecialties(
+    @Query('departmentId') departmentId?: string,
+  ) {
+    return this.filterService.filterSpecialties({ departmentId });
   }
 }
