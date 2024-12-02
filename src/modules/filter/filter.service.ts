@@ -44,10 +44,8 @@ export class FilterService {
   }
 
   async filterSpecialties(filterCriteria: { departmentId?: string }) {
-
     const filter: any = {};
     if (filterCriteria.departmentId) filter.departmentId = new Types.ObjectId(filterCriteria.departmentId);
-
     return this.specialtyModel.find(filter).exec();
   }
 }
