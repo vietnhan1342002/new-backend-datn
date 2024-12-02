@@ -10,12 +10,21 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) { }
 
   @Get('search-doctors')
-  async search(
+  async searchDoctor(
+    @Query('query') query: string,
+    @Query('limit') limit = 3, // Mặc định là 10
+    @Query('page') page = 1, // Mặc định là trang 1
+  ) {
+    return this.searchService.searchDoctors(query, +page, +limit);
+  }
+
+  @Get('search-doctors')
+  async searchUser(
     @Query('query') query: string,
     // @Query('limit') limit = 10, // Mặc định là 10
     // @Query('page') page = 1, // Mặc định là trang 1
   ) {
-    return this.searchService.searchDoctors(query,);
+    return this.searchService.searchUsers(query,);
   }
 
 
