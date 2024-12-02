@@ -6,7 +6,7 @@ export type UserAuthDocument = HydratedDocument<UserAuth>;
 
 @Schema()
 export class UserAuth extends Document {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   email: string;
 
   @Prop({ required: true })
@@ -23,11 +23,12 @@ export class UserAuth extends Document {
   @Prop({ required: true })
   fullName: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   phoneNumber: string;
 }
 
 export const UserAuthSchema = SchemaFactory.createForClass(UserAuth);
 
 UserAuthSchema.index({ email: 1 }, { unique: true });
+UserAuthSchema.index({ fullName: 1 }, { unique: true });
 UserAuthSchema.index({ phoneNumber: 1 }, { unique: true });

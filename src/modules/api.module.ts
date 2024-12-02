@@ -17,6 +17,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './user-auth/strategies/jwt.strategy';
 import { DoctorsModule } from './doctors/doctors.module';
 import { FilterModule } from './filter/filter.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { FilterModule } from './filter/filter.module';
     SpecialtiesModule,
     AppointmentsModule,
     FilterModule,
+    SearchModule,
   ],
   providers: [JwtStrategy],
   exports: [JwtModule],
