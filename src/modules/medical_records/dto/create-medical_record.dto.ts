@@ -15,7 +15,6 @@ export class CreateMedicalRecordDto {
     appointmentId: Types.ObjectId;
 
     @IsString()
-
     diagnosis: string;
 
     @IsString()

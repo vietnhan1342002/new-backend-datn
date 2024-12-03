@@ -21,6 +21,9 @@ export class MedicalRecord {
 
   @Prop({})
   note: string;
+
+  isDeleted: { type: Boolean, default: false } // Thêm trường này
+  deletedAt: { type: Date, default: null }
 }
 
 export type MedicalRecordDocument = HydratedDocument<MedicalRecord>;

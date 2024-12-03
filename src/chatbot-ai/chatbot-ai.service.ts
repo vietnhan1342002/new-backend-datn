@@ -43,7 +43,7 @@ export class ChatbotAiService {
         this.resetQuestionCount();
         const followUpQuestion =
           '\nWould you like to discuss another symptom or ask additional questions? (Yes/No)';
-        return response.choices[0].message?.content + followUpQuestion || 'No response. Do you want to ask about another symptom?';
+        return JSON.parse(response.choices[0].message?.content + followUpQuestion) || 'No response. Do you want to ask about another symptom?';
       }
 
       const response = await this.chatGroq.completionWithRetry({
@@ -63,7 +63,7 @@ export class ChatbotAiService {
       });
 
       return (
-        response.choices[0].message?.content ||
+        JSON.parse(response.choices[0].message?.content) ||
         'No response. Do you want to ask about another symptom?'
       );
     } catch (error) {
