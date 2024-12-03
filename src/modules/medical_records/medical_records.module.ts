@@ -15,5 +15,6 @@ import { MedicalRecordsController } from './medical_records.controller';
   ],
   controllers: [MedicalRecordsController],
   providers: [MedicalRecordsService],
+  exports: [MedicalRecordsService]
 })
-export class MedicalRecordsModule {}
+export class MedicalRecordsModule { }

@@ -6,11 +6,14 @@ import {
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Appointment } from './schemas/appointment.schema';
-import mongoose, { Model } from 'mongoose';
+import { Appointment, Status } from './schemas/appointment.schema';
+import mongoose, { Model, Types } from 'mongoose';
 import { DoctorSchedulesService } from '../doctor-schedules/doctor-schedules.service';
 import { isExistHelper, paginateAndPopulate } from '@/helpers/utils';
 import aqp from 'api-query-params';
+import { MedicalRecordsService } from '../medical_records/medical_records.service';
+import { CreateMedicalRecordDto } from '../medical_records/dto/create-medical_record.dto';
+import { UpdateStatusAppointmentDto } from './dto/update-status.dto';
 
 @Injectable()
 export class AppointmentsService {
@@ -19,7 +22,8 @@ export class AppointmentsService {
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<Appointment>,
     private readonly doctorScheduleService: DoctorSchedulesService,
-  ) {}
+    private readonly medicalRecordsService: MedicalRecordsService,
+  ) { }
 
   // ------------------------- CREATE APPOINTMENT -------------------------
   async create(createAppointmentDto: CreateAppointmentDto) {
@@ -93,6 +97,35 @@ export class AppointmentsService {
       throw new NotFoundException(`Appointment with ID ${_id} not found`);
     }
     return { result: appointment };
+  }
+
+  //-------------------------- UPDATE STATUS -----------------------------
+  async updateStatus(id: string, status: UpdateStatusAppointmentDto): Promise<Appointment> {
+    const appointment = await this.appointmentModel.findById(id);
+    if (!appointment) {
+      throw new NotFoundException(`Appointment with ID ${id} not found`);
+    }
+
+    // Cập nhật trạng thái
+    appointment.status = status.status;
+    await appointment.save();
+
+    // Tạo Medical Record nếu trạng thái là CONFIRMED hoặc COMPLETED
+    if (status.status === Status.CONFIRMED || status.status === Status.COMPLETED) {
+      const existingRecord = await this.medicalRecordsService.findOneByAppointmentId(appointment._id);
+      if (!existingRecord) {
+        const createMedicalRecordDto: CreateMedicalRecordDto = {
+          patientId: new Types.ObjectId(appointment.patientId),
+          doctorId: new Types.ObjectId(appointment.doctorId),
+          appointmentId: new Types.ObjectId(appointment._id),
+          diagnosis: '', // Để trống ban đầu
+          note: '',      // Để trống ban đầu
+        };
+        await this.medicalRecordsService.create(createMedicalRecordDto);
+      }
+    }
+
+    return appointment;
   }
 
   // ------------------------- UPDATE APPOINTMENT -------------------------
