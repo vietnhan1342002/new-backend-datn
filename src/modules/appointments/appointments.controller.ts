@@ -18,13 +18,18 @@ import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { parseQueryParam } from '@/helpers/utils';
+import { Status } from './schemas/appointment.schema';
+import { UpdateStatusAppointmentDto } from './dto/update-status.dto';
+import { Public } from '../user-auth/guard/public.guard';
 
-@UseGuards(JwtAuthGuard, RoleGuard)
-@Permissions([{ resource: Resource.APPOINTMENT, actions: [Action.ALL] }])
+// @UseGuards(JwtAuthGuard, RoleGuard)
+// @Permissions([{ resource: Resource.APPOINTMENT, actions: [Action.ALL] }])
+
+@Public()
 @Controller('appointments')
 @Permissions([{ resource: Resource.APPOINTMENT, actions: [Action.ALL] }])
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(private readonly appointmentsService: AppointmentsService) { }
 
   @Post()
   create(@Body() createAppointmentDto: CreateAppointmentDto) {
@@ -56,6 +61,14 @@ export class AppointmentsController {
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ) {
     return this.appointmentsService.update(_id, updateAppointmentDto);
+  }
+
+  @Patch('/status/:_id')
+  updateStatus(
+    @Param('_id') _id: string,
+    @Body() status: UpdateStatusAppointmentDto,
+  ) {
+    return this.appointmentsService.updateStatus(_id, status);
   }
 
   @Permissions([

@@ -14,7 +14,8 @@ export enum Status {
 export type AppointmentDocument = HydratedDocument<Appointment>;
 
 @Schema({ timestamps: true })
-export class Appointment extends Document {
+export class Appointment {
+
   @Prop({ type: Types.ObjectId, ref: Patient.name, required: true })
   patientId: Types.ObjectId;
 

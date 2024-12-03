@@ -1,20 +1,21 @@
 import { IsString, IsNotEmpty, IsMongoId, IsOptional } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateMedicalRecordDto {
     @IsMongoId()
     @IsNotEmpty({ message: 'patientId is not empty' })
-    patientId: string;
+    patientId: Types.ObjectId;
 
     @IsMongoId()
     @IsNotEmpty({ message: 'doctorId is not empty' })
-    doctorId: string;
+    doctorId: Types.ObjectId;
 
     @IsMongoId()
     @IsNotEmpty({ message: 'appointmentId is not empty' })
-    appointmentId: string;
+    appointmentId: Types.ObjectId;
 
     @IsString()
-    @IsNotEmpty({ message: 'diagnosis is not empty' })
+
     diagnosis: string;
 
     @IsString()

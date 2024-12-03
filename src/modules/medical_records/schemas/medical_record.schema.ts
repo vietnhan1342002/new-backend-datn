@@ -16,10 +16,10 @@ export class MedicalRecord {
   @Prop({ type: Types.ObjectId, ref: Appointment.name, required: true })
   appointmentId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({})
   diagnosis: string;
 
-  @Prop({ required: true })
+  @Prop({})
   note: string;
 }
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateMedicalRecordDto } from './dto/create-medical_record.dto';
 import { UpdateMedicalRecordDto } from './dto/update-medical_record.dto';
 import { MedicalRecord } from './schemas/medical_record.schema';
-import { Model } from 'mongoose';
+import { Model, ObjectId, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
@@ -19,6 +19,11 @@ export class MedicalRecordsService {
       appointmentId, doctorId, patientId, diagnosis, note
     });
     return { _id: medical_record.id };
+  }
+
+  // Tìm một Medical Record dựa trên appointmentId
+  async findOneByAppointmentId(appointmentId: Types.ObjectId): Promise<MedicalRecord | null> {
+    return await this.medicalRecordModel.findOne({ appointmentId });
   }
 
   findAll() {
