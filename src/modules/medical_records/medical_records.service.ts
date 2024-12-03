@@ -1,11 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMedicalRecordDto } from './dto/create-medical_record.dto';
 import { UpdateMedicalRecordDto } from './dto/update-medical_record.dto';
+import { MedicalRecord } from './schemas/medical_record.schema';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class MedicalRecordsService {
-  create(createMedicalRecordDto: CreateMedicalRecordDto) {
-    return 'This action adds a new medicalRecord';
+  constructor(
+    @InjectModel(MedicalRecord.name)
+    private medicalRecordModel: Model<MedicalRecord>,
+  ) { }
+
+  async create(createMedicalRecordDto: CreateMedicalRecordDto) {
+    const { appointmentId, doctorId, patientId, diagnosis, note } = createMedicalRecordDto;
+
+    const medical_record = await this.medicalRecordModel.create({
+      appointmentId, doctorId, patientId, diagnosis, note
+    });
+    return { _id: medical_record.id };
   }
 
   findAll() {
