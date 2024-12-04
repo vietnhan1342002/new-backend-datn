@@ -7,12 +7,15 @@ import { calculateSkip, preparePaginationFilter } from '@/helpers/utils';
 import { DetailMedicalRecord } from './schemas/detail-medical-record.schema';
 import { CreateDetailMedicalRecordDto } from './dto/create-detail-medical-record.dto';
 import { UpdateDetailMedicalRecordDto } from './dto/update-detail-medical-record.dto';
+import { PrescriptionsService } from '../prescriptions/prescriptions.service';
 
 @Injectable()
 export class DetailMedicalRecordService {
   constructor(
     @InjectModel(DetailMedicalRecord.name)
     private detailMedicalRecordModel: Model<DetailMedicalRecord>,
+
+    private prescriptionsService: PrescriptionsService
   ) { }
 
 
@@ -119,7 +122,6 @@ export class DetailMedicalRecordService {
 
   async softDeleteByMedicalRecordId(medicalRecordId: string, session: any) {
     const objectId = new Types.ObjectId(medicalRecordId);
-
     const details = await this.detailMedicalRecordModel.find({ medicalRecordId: objectId }).session(session);
 
     if (!details || details.length === 0) {
@@ -131,9 +133,9 @@ export class DetailMedicalRecordService {
       { $set: { isDeleted: true, deletedAt: new Date() } },
       { session }
     );
+
+    await this.prescriptionsService.softDeleteByDetailMedicalRecordId(objectId, session)
   }
-
-
 
   //------------------------------------------------------//
   // Kiểm tra xem một Detail Medical Record có tồn tại không
