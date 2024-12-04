@@ -105,8 +105,6 @@ export class MedicalRecordsService {
         throw new NotFoundException('Medical record not found');
       }
 
-
-
       medicalRecord.isDeleted = true;
       medicalRecord.deletedAt = new Date();
       await medicalRecord.save({ session });
