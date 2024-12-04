@@ -9,17 +9,18 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Status } from '../schemas/doctor-schedule.schema';
+import { Types } from 'mongoose';
 
 export class UpdateDoctorScheduleDto extends PartialType(
   CreateDoctorScheduleDto,
 ) {
   @IsOptional()
   @IsMongoId({ message: 'doctorId invalid' })
-  doctorId?: string;
+  doctorId?: Types.ObjectId;
 
   @IsOptional()
   @IsMongoId({ message: 'shiftId invalid' })
-  shiftId?: string;
+  shiftId?: Types.ObjectId;
 
   @IsOptional()
   @Type(() => Date) // Chuyển đổi kiểu từ string thành Date
