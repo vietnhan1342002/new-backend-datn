@@ -19,6 +19,8 @@ import { DoctorsModule } from './doctors/doctors.module';
 import { FilterModule } from './filter/filter.module';
 import { SearchModule } from './search/search.module';
 import { DetailMedicalRecordModule } from './detail-medical-record/detail-medical-record.module';
+import { PrescriptionsModule } from './prescriptions/prescriptions.module';
+import { MedicationsModule } from './medications/medications.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { DetailMedicalRecordModule } from './detail-medical-record/detail-medica
     FilterModule,
     SearchModule,
     DetailMedicalRecordModule,
+    PrescriptionsModule,
+    MedicationsModule,
   ],
   providers: [JwtStrategy],
   exports: [JwtModule],
