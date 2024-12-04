@@ -1,17 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMedicalRecordDto } from './dto/create-medical_record.dto';
 import { UpdateMedicalRecordDto } from './dto/update-medical_record.dto';
 import { MedicalRecord } from './schemas/medical_record.schema';
-import { Model, ObjectId, Types } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
+import mongoose, { Model, ObjectId, Types } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import aqp from 'api-query-params';
 import { calculateSkip, preparePaginationFilter } from '@/helpers/utils';
+import { DetailMedicalRecordService } from '../detail-medical-record/detail-medical-record.service';
 
 @Injectable()
 export class MedicalRecordsService {
   constructor(
+    @InjectConnection() private readonly connection: mongoose.Connection,
     @InjectModel(MedicalRecord.name)
     private medicalRecordModel: Model<MedicalRecord>,
+
+    private detailMedicalRecordService: DetailMedicalRecordService
   ) { }
 
   async create(createMedicalRecordDto: CreateMedicalRecordDto) {
@@ -86,21 +90,43 @@ export class MedicalRecordsService {
     return updatedMedicalRecord;
   }
 
-  async softDeleteMedicalRecord(_id) {
-    const updatedMedicalRecord = await this.medicalRecordModel.findByIdAndUpdate(
-      _id,
-      {
-        $set: {
-          isDeleted: true,         // Đánh dấu bản ghi là đã bị xóa
-          deletedAt: new Date(),   // Lưu thời gian xóa (tuỳ chọn)
-        }
-      },
-      { new: true }  // Trả về bản ghi đã được cập nhật
-    );
-    return updatedMedicalRecord;
-  };
+  async softDeleteMedicalRecord(_id: string) {
 
-  async findAllDelete(query: string, current: number, pageSize: number) {
+    const session = await this.connection.startSession();
+    session.startTransaction();
+
+    try {
+      await this.checkIfMedicalRecordIsDeleted(_id);
+
+      const objectId = new Types.ObjectId(_id);
+
+      const medicalRecord = await this.medicalRecordModel.findById(objectId).session(session);
+      if (!medicalRecord) {
+        throw new NotFoundException('Medical record not found');
+      }
+
+
+
+      medicalRecord.isDeleted = true;
+      medicalRecord.deletedAt = new Date();
+      await medicalRecord.save({ session });
+
+      await this.detailMedicalRecordService.softDeleteByMedicalRecordId(_id, session);
+
+
+      await session.commitTransaction();
+      return { message: 'Medical record soft deleted successfully' };
+    } catch (error) {
+
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  }
+
+
+  async findAllSoftDelete(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
     // Thêm điều kiện để chỉ lấy các bản ghi chưa bị xóa (isDeleted: false)
@@ -166,6 +192,19 @@ export class MedicalRecordsService {
           select: 'appointmentDate',
         },
       ]);
+  }
+  async checkIfMedicalRecordIsDeleted(_id: string): Promise<void> {
+    const objectId = new Types.ObjectId(_id);
+
+    const medicalRecord = await this.medicalRecordModel.findById(objectId);
+
+    if (!medicalRecord) {
+      throw new NotFoundException('Medical record not found');
+    }
+
+    if (medicalRecord.isDeleted) {
+      throw new BadRequestException('This medical record has already been soft deleted');
+    }
   }
 
 }

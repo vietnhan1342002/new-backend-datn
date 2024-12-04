@@ -18,6 +18,7 @@ import { JwtStrategy } from './user-auth/strategies/jwt.strategy';
 import { DoctorsModule } from './doctors/doctors.module';
 import { FilterModule } from './filter/filter.module';
 import { SearchModule } from './search/search.module';
+import { DetailMedicalRecordModule } from './detail-medical-record/detail-medical-record.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { SearchModule } from './search/search.module';
     AppointmentsModule,
     FilterModule,
     SearchModule,
+    DetailMedicalRecordModule,
   ],
   providers: [JwtStrategy],
   exports: [JwtModule],
