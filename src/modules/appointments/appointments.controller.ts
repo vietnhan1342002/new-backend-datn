@@ -21,6 +21,7 @@ import { parseQueryParam } from '@/helpers/utils';
 import { Status } from './schemas/appointment.schema';
 import { UpdateStatusAppointmentDto } from './dto/update-status.dto';
 import { Public } from '../user-auth/guard/public.guard';
+import { Types } from 'mongoose';
 
 // @UseGuards(JwtAuthGuard, RoleGuard)
 // @Permissions([{ resource: Resource.APPOINTMENT, actions: [Action.ALL] }])
@@ -51,13 +52,13 @@ export class AppointmentsController {
     { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.READ] }, // Patient có quyền 'read'
   ])
   @Get(':_id')
-  findOne(@Param('_id') _id: string) {
+  findOne(@Param('_id') _id: Types.ObjectId) {
     return this.appointmentsService.findOne(_id);
   }
 
   @Patch(':_id')
   update(
-    @Param('_id') _id: string,
+    @Param('_id') _id: Types.ObjectId,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ) {
     return this.appointmentsService.update(_id, updateAppointmentDto);
@@ -65,7 +66,7 @@ export class AppointmentsController {
 
   @Patch('/status/:_id')
   updateStatus(
-    @Param('_id') _id: string,
+    @Param('_id') _id: Types.ObjectId,
     @Body() status: UpdateStatusAppointmentDto,
   ) {
     return this.appointmentsService.updateStatus(_id, status);
@@ -75,7 +76,7 @@ export class AppointmentsController {
     { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.DELETE] }, // Receptionist có quyền 'all'
   ])
   @Delete(':_id')
-  remove(@Param('_id') _id: string) {
+  remove(@Param('_id') _id: Types.ObjectId) {
     return this.appointmentsService.remove(_id);
   }
 }

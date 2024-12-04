@@ -1,24 +1,23 @@
-import {
-  IsNotEmpty,
-  IsEnum,
-  IsString,
-  IsDate,
-  IsOptional,
-  IsMongoId,
-} from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsMongoId, IsOptional } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateAppointmentDto {
   @IsNotEmpty()
   @IsMongoId()
-  patientId: string; // ID của bệnh nhân
+  @Type(() => Types.ObjectId) // Ánh xạ chuỗi thành ObjectId
+  patientId: Types.ObjectId; // ID của bệnh nhân
 
   @IsNotEmpty()
   @IsMongoId()
-  doctorId: string; // ID của bác sĩ
+  @Type(() => Types.ObjectId) // Ánh xạ chuỗi thành ObjectId
+  doctorId: Types.ObjectId; // ID của bác sĩ
 
   @IsNotEmpty()
   @IsMongoId()
-  doctorScheduleId: string; // ID của lịch làm việc bác sĩ
+  @Type(() => Types.ObjectId) // Ánh xạ chuỗi thành ObjectId
+  doctorScheduleId: Types.ObjectId; // ID của lịch làm việc bác sĩ
+
 
   @IsOptional()
   reason?: string;

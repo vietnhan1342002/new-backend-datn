@@ -19,6 +19,7 @@ import { Public } from '../user-auth/guard/public.guard';
 import { DoctorSchedulesService } from './doctor-schedules.service';
 import { CreateDoctorScheduleDto } from './dto/create-doctor-schedule.dto';
 import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
+import { Types } from 'mongoose';
 
 // @UseGuards(JwtAuthGuard, RoleGuard)
 // @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -27,7 +28,7 @@ import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
 export class DoctorSchedulesController {
   constructor(
     private readonly doctorSchedulesService: DoctorSchedulesService,
-  ) {}
+  ) { }
 
   @Post()
   create(@Body() createDoctorScheduleDto: CreateDoctorScheduleDto) {
@@ -46,20 +47,20 @@ export class DoctorSchedulesController {
 
   @Public()
   @Get(':_id')
-  findOne(@Param('_id') _id: string) {
+  findOne(@Param('_id') _id: Types.ObjectId) {
     return this.doctorSchedulesService.findOne(_id);
   }
 
   @Patch(':_id')
   update(
-    @Param('_id') _id: string,
+    @Param('_id') _id: Types.ObjectId,
     @Body() updateDoctorScheduleDto: UpdateDoctorScheduleDto,
   ) {
     return this.doctorSchedulesService.update(_id, updateDoctorScheduleDto);
   }
 
   @Delete(':_id')
-  remove(@Param('_id') _id: string) {
+  remove(@Param('_id') _id: Types.ObjectId) {
     return this.doctorSchedulesService.remove(_id);
   }
 }

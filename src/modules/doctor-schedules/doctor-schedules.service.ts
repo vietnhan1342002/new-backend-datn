@@ -15,11 +15,11 @@ export class DoctorSchedulesService {
   constructor(
     @InjectModel(DoctorSchedule.name)
     private doctorScheduleModel: Model<DoctorSchedule>,
-  ) {}
+  ) { }
 
   private async checkDoctorScheduleExistence(
-    doctorId: string,
-    shiftId: string,
+    doctorId: Types.ObjectId,
+    shiftId: Types.ObjectId,
     date: Date,
   ) {
     // Tìm lịch trình có cùng doctorId, shiftId và date
@@ -81,7 +81,7 @@ export class DoctorSchedulesService {
     return { result, totalPages };
   }
 
-  async findOne(_id: string) {
+  async findOne(_id: Types.ObjectId) {
     const result = await this.populateDoctorScheduleQuery(
       this.doctorScheduleModel
         .findById({ _id })
@@ -96,7 +96,7 @@ export class DoctorSchedulesService {
     };
   }
 
-  async update(_id: string, updateDoctorScheduleDto: UpdateDoctorScheduleDto) {
+  async update(_id: Types.ObjectId, updateDoctorScheduleDto: UpdateDoctorScheduleDto) {
     const schedule = await this.findOne(_id);
     const { doctorId, shiftId, date, status } = updateDoctorScheduleDto;
 
@@ -109,7 +109,7 @@ export class DoctorSchedulesService {
     );
   }
 
-  async remove(_id: string) {
+  async remove(_id: Types.ObjectId) {
     const schedule = await this.findOne(_id);
     await this.doctorScheduleModel.deleteOne({ _id });
 

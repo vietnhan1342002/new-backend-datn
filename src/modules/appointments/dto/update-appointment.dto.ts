@@ -2,22 +2,23 @@ import { PartialType } from '@nestjs/mapped-types';
 import { CreateAppointmentDto } from './create-appointment.dto';
 import { IsNotEmpty, IsEnum, IsOptional, IsMongoId } from 'class-validator';
 import { Status } from '../schemas/appointment.schema';
+import { Types } from 'mongoose';
 
 export class UpdateAppointmentDto extends PartialType(CreateAppointmentDto) {
   @IsOptional()
   @IsMongoId()
   @IsNotEmpty({ message: 'patientId cannot be empty or null' })
-  patientId: string;
+  patientId: Types.ObjectId;
 
   @IsOptional()
   @IsMongoId()
   @IsNotEmpty({ message: 'doctorId cannot be empty or null' })
-  doctorId: string;
+  doctorId: Types.ObjectId;
 
   @IsOptional()
   @IsMongoId()
   @IsNotEmpty({ message: 'doctorScheduleId cannot be empty or null' })
-  doctorScheduleId: string;
+  doctorScheduleId: Types.ObjectId;
 
   @IsOptional()
   reason?: string;

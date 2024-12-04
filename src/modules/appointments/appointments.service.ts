@@ -29,6 +29,11 @@ export class AppointmentsService {
   async create(createAppointmentDto: CreateAppointmentDto) {
     const { patientId, doctorId, doctorScheduleId } = createAppointmentDto;
 
+    // Chuyển chuỗi thành ObjectId (Mongoose tự động chuyển khi lưu vào DB)
+    const patientObjectId = new Types.ObjectId(patientId); // Chuyển chuỗi thành ObjectId
+    const doctorObjectId = new Types.ObjectId(doctorId);   // Chuyển chuỗi thành ObjectId
+    const doctorScheduleObjectId = new Types.ObjectId(doctorScheduleId); // Chuyển chuỗi thành ObjectId
+
     const session = await this.connection.startSession();
     session.startTransaction();
 
@@ -43,16 +48,13 @@ export class AppointmentsService {
 
       this.validateSchedule(schedule.result, doctorId);
 
-      // Mark schedule as inactive
       schedule.result.status = 'inactive';
       await schedule.result.save({ session });
 
-      // Format appointment date
       const appointmentDate = this.formatAppointmentDate(schedule.result);
 
-      // Create appointment
       const [appointment] = await this.appointmentModel.create(
-        [{ patientId, doctorId, doctorScheduleId, appointmentDate }],
+        [{ patientId: patientObjectId, doctorId: doctorObjectId, doctorScheduleId: doctorScheduleObjectId, appointmentDate }],
         { session },
       );
 
@@ -89,7 +91,7 @@ export class AppointmentsService {
   }
 
   // ------------------------- FIND ONE APPOINTMENT -------------------------
-  async findOne(_id: string) {
+  async findOne(_id: Types.ObjectId) {
     const appointment = await this.populateAppointmentQuery(
       this.appointmentModel.findById(_id),
     );
@@ -100,7 +102,7 @@ export class AppointmentsService {
   }
 
   //-------------------------- UPDATE STATUS -----------------------------
-  async updateStatus(id: string, status: UpdateStatusAppointmentDto): Promise<Appointment> {
+  async updateStatus(id: Types.ObjectId, status: UpdateStatusAppointmentDto): Promise<Appointment> {
     const appointment = await this.appointmentModel.findById(id);
     if (!appointment) {
       throw new NotFoundException(`Appointment with ID ${id} not found`);
@@ -129,7 +131,7 @@ export class AppointmentsService {
   }
 
   // ------------------------- UPDATE APPOINTMENT -------------------------
-  async update(_id: string, updateAppointmentDto: UpdateAppointmentDto) {
+  async update(_id: Types.ObjectId, updateAppointmentDto: UpdateAppointmentDto) {
     const appointment = await this.findOne(_id);
     const { patientId, doctorId, doctorScheduleId, reason, status } =
       updateAppointmentDto;
@@ -153,7 +155,7 @@ export class AppointmentsService {
   }
 
   // ------------------------- REMOVE APPOINTMENT -------------------------
-  async remove(id: string) {
+  async remove(id: Types.ObjectId) {
     const session = await this.connection.startSession();
     session.startTransaction();
 
@@ -164,7 +166,7 @@ export class AppointmentsService {
       }
 
       const schedule = await this.doctorScheduleService.findOne(
-        appointment.doctorScheduleId.toString(),
+        appointment.doctorScheduleId,
       );
       await this.appointmentModel.findByIdAndDelete(id);
 
@@ -222,7 +224,7 @@ export class AppointmentsService {
     return query;
   }
 
-  private validateSchedule(schedule: any, doctorId: string) {
+  private validateSchedule(schedule: any, doctorId: Types.ObjectId) {
     if (schedule.doctorId._id.toString() !== doctorId) {
       throw new BadRequestException('Doctor ID does not match the schedule.');
     }
