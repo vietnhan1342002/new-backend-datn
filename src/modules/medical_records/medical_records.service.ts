@@ -67,7 +67,9 @@ export class MedicalRecordsService {
     const medical_record = await this.populateMedicalRecordQuery(
       this.medicalRecordModel.findById(new Types.ObjectId(_id)),
     ).exec();
-
+    if (medical_record.isDeleted === true) {
+      throw new NotFoundException('No medical record available');
+    }
     return medical_record;
   }
 
@@ -98,7 +100,38 @@ export class MedicalRecordsService {
     return updatedMedicalRecord;
   };
 
+  async findAllDelete(query: string, current: number, pageSize: number) {
+    const { filter, sort } = aqp(query);
 
+    // Thêm điều kiện để chỉ lấy các bản ghi chưa bị xóa (isDeleted: false)
+    filter.isDeleted = filter.isDeleted !== true;
+
+    const { totalItems, totalPages } = await preparePaginationFilter(
+      this.medicalRecordModel,
+      filter,
+      current,
+      pageSize,
+    );
+
+    // Tính toán skip để phân trang
+    const skip = calculateSkip(current, pageSize);
+
+    // Truy vấn các bản ghi với phân trang và sắp xếp
+    const result = await this.populateMedicalRecordQuery(
+      this.medicalRecordModel
+        .find(filter)
+        .limit(pageSize)
+        .skip(skip)
+        .sort(sort as any),
+    ).exec();
+
+    // Nếu không có dữ liệu, ném ngoại lệ
+    if (result.length === 0) {
+      throw new NotFoundException('No medical record is deleted available');
+    }
+
+    return { result, totalItems, totalPages };
+  }
 
   //------------------------------------------------------//
   private async checkMedicalRecordExists(_id: string) {

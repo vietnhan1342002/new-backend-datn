@@ -28,6 +28,18 @@ export class MedicalRecordsController {
     // Tìm tất cả bác sĩ hoặc theo query
     return this.medicalRecordsService.findAll(query, currentPage, pageLimit);
   }
+  @Get('soft-delete')
+  async getSoftDelete(
+    @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
+  ) {
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
+
+    // Tìm tất cả bác sĩ hoặc theo query
+    return this.medicalRecordsService.findAllDelete(query, currentPage, pageLimit);
+  }
 
   @Get(':_id')
   findOne(@Param('_id') _id: string) {
@@ -43,4 +55,6 @@ export class MedicalRecordsController {
   remove(@Param('_id') _id: string) {
     return this.medicalRecordsService.softDeleteMedicalRecord(_id);
   }
+
+
 }
