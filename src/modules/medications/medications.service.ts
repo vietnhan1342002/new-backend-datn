@@ -13,18 +13,11 @@ export class MedicationsService {
   private medicationModel: Model<Medication>,) { }
 
 
+
   async create(createMedicationDto: CreateMedicationDto) {
     const { name } = createMedicationDto;
 
-    const medicationExists = await isExistHelper(
-      { name },
-      this.medicationModel,
-    );
-    if (medicationExists) {
-      throw new BadRequestException(
-        `Medication: ${name} already exists. Please enter another name!`,
-      );
-    }
+    await this.checkNameExists(name);
 
     const medication = await this.medicationModel.create(
       createMedicationDto
@@ -50,7 +43,7 @@ export class MedicationsService {
     // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await this.medicationModel
       .find(filter)
-      .select('-_id -__v -createdAt -updatedAt')
+      .select('-__v -createdAt -updatedAt')
       .limit(pageSize)
       .skip(skip)
       .sort(sort as any)
@@ -67,19 +60,89 @@ export class MedicationsService {
   async findOne(_id: Types.ObjectId) {
 
     const prescription = await this.medicationModel.findById(new Types.ObjectId(_id))
+    .select('-__v -createdAt -updatedAt')
+
     if (!prescription) {
       throw new NotFoundException(`Prescription with ID ${_id} not found`);
     }
     return prescription;
   }
 
-  update(_id: Types.ObjectId, updateMedicationDto: UpdateMedicationDto) {
-    return
+  async update(_id: Types.ObjectId, updateMedicationDto: UpdateMedicationDto) {
+    await this.checkNameExists(updateMedicationDto.name);
+    const updatedMedication = await this.medicationModel.findByIdAndUpdate(
+      _id,
+      updateMedicationDto,
+      { new: true, runValidators: true } 
+    );
+    return {_id: updatedMedication.id}
   }
 
-  remove(_id: Types.ObjectId) {
-    return
-  }
+  async updateMedicationQuantity(
+    medicationId: Types.ObjectId,
+    quantity: number,
+  ){
+    const medication = await this.findOne(medicationId);
+    if (!medication) {
+      throw new Error('Medication not found');
+    }
 
-  //------------------------------------------------------------------------
+    
+    
+    // Kiểm tra nếu số lượng không đủ
+    if (quantity > medication.quantity) {
+      throw new BadRequestException('Not enough medication in stock');
+    }
+
+    const remainingQuantity = medication.quantity - quantity;
+
+    let warningMessage = '';
+    if (remainingQuantity <= medication.minQuantity){
+        warningMessage = `Warning: The amount of medicine has reached the minimum level (${medication.minQuantity}).`
+      }
+
+    await this.medicationModel.findByIdAndUpdate(medicationId,
+      {quantity: remainingQuantity},
+      {new:true}
+    )
+    return {
+      status: 'success',
+      warningMessage,
+      quantity: remainingQuantity,
+    };
+  }
+  
+
+  async remove(_id: Types.ObjectId) {
+    try {
+      const deletedItem = await this.medicationModel.findByIdAndDelete(_id);
+  
+      if (!deletedItem) {
+        throw new BadRequestException('Item not found');
+      }
+  
+      return {
+        message: 'Item successfully deleted',
+        data: deletedItem,
+      };
+    } catch (error) {
+      // Xử lý lỗi (tùy chỉnh theo yêu cầu)
+      throw new BadRequestException(`Failed to delete item: ${error.message}`);
+    }
+  }
+  
+
+  //------------------------------------------------------------------------//
+
+  async checkNameExists(name:string){
+    const medicationExists = await isExistHelper(
+      { name },
+      this.medicationModel,
+    );
+    if (medicationExists) {
+      throw new BadRequestException(
+        `Medication: ${name} already exists. Please enter another name!`,
+      );
+    }
+  }
 }

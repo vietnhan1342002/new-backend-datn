@@ -113,8 +113,8 @@ export class RoleGuard implements CanActivate {
     routePermissions: Permission[],
     userPermissions: Permission[],
   ) {
-    console.log('Route permissions:', routePermissions);
-    console.log('User permissions:', userPermissions);
+    // console.log('Route permissions:', routePermissions);
+    // console.log('User permissions:', userPermissions);
     for (const routePermission of routePermissions) {
       const userPermission = userPermissions.find(
         (perm) => perm.resource === routePermission.resource,

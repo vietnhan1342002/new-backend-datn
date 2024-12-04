@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, Query, BadRequestException } from '@nestjs/common';
 import { MedicationsService } from './medications.service';
 import { CreateMedicationDto } from './dto/create-medication.dto';
 import { UpdateMedicationDto } from './dto/update-medication.dto';
 import { Public } from '../user-auth/guard/public.guard';
 import { parseQueryParam } from '@/helpers/utils';
 import { Types } from 'mongoose';
+import { UpdateQuantityMedicationDto } from './dto/update-quantity-medication.dto';
 
 @Public()
 @Controller('medications')
@@ -33,10 +34,22 @@ export class MedicationsController {
     return this.medicationsService.findOne(_id);
   }
 
+  @Patch('/updateQuantity/:_id')
+  updateQuantity(@Param('_id') _id: Types.ObjectId, @Body() updateQuantityMedicationDto: UpdateQuantityMedicationDto) {
+    const { quantity } = updateQuantityMedicationDto; 
+    if (isNaN(quantity)) {
+      throw new BadRequestException('Invalid medication quantity');
+    }
+
+    return this.medicationsService.updateMedicationQuantity(_id, quantity);
+
+  }
+
   @Patch(':_id')
   update(@Param('_id') _id: Types.ObjectId, @Body() updateMedicationDto: UpdateMedicationDto) {
     return this.medicationsService.update(_id, updateMedicationDto);
   }
+
 
   @Delete(':_id')
   remove(@Param('_id') _id: Types.ObjectId) {

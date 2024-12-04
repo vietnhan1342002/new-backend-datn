@@ -26,7 +26,6 @@ export class DetailMedicalRecordController {
   ) {
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
-    console.log(1);
 
     // Tìm tất cả bác sĩ hoặc theo query
     return this.detailMedicalRecordService.findAll(query, currentPage, pageLimit);

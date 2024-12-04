@@ -77,7 +77,6 @@ export class SearchService {
 
   async searchUsers(query: string, page: number = 1, pageSize: number = 10) {
     const skip = (page - 1) * pageSize;
-    console.log(query);
 
     const users = await this.userAuthModel
       .find({
