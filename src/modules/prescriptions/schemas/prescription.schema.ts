@@ -1,6 +1,5 @@
 
 import { DetailMedicalRecord } from '@/modules/detail-medical-record/schemas/detail-medical-record.schema';
-import { Medication } from '@/modules/medications/schemas/medication.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
