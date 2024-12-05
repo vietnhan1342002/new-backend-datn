@@ -12,8 +12,6 @@ export class MedicationsService {
   constructor(@InjectModel(Medication.name)
   private medicationModel: Model<Medication>,) { }
 
-
-
   async create(createMedicationDto: CreateMedicationDto) {
     const { name } = createMedicationDto;
 
@@ -25,6 +23,7 @@ export class MedicationsService {
 
     return { _id: medication.id };;
   }
+
 
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
@@ -58,14 +57,15 @@ export class MedicationsService {
   }
 
   async findOne(_id: Types.ObjectId) {
+    console.log(_id);
 
-    const prescription = await this.medicationModel.findById(new Types.ObjectId(_id))
-    .select('-__v -createdAt -updatedAt')
+    const medication = await this.medicationModel.findById(new Types.ObjectId(_id))
+    // .select('-__v -createdAt -updatedAt')
 
-    if (!prescription) {
-      throw new NotFoundException(`Prescription with ID ${_id} not found`);
+    if (!medication) {
+      throw new NotFoundException(`Medication with ID ${_id} not found`);
     }
-    return prescription;
+    return medication;
   }
 
   async update(_id: Types.ObjectId, updateMedicationDto: UpdateMedicationDto) {
@@ -73,22 +73,20 @@ export class MedicationsService {
     const updatedMedication = await this.medicationModel.findByIdAndUpdate(
       _id,
       updateMedicationDto,
-      { new: true, runValidators: true } 
+      { new: true, runValidators: true }
     );
-    return {_id: updatedMedication.id}
+    return { _id: updatedMedication.id }
   }
 
   async updateMedicationQuantity(
     medicationId: Types.ObjectId,
     quantity: number,
-  ){
+  ) {
     const medication = await this.findOne(medicationId);
     if (!medication) {
       throw new Error('Medication not found');
     }
 
-    
-    
     // Kiểm tra nếu số lượng không đủ
     if (quantity > medication.quantity) {
       throw new BadRequestException('Not enough medication in stock');
@@ -97,30 +95,60 @@ export class MedicationsService {
     const remainingQuantity = medication.quantity - quantity;
 
     let warningMessage = '';
-    if (remainingQuantity <= medication.minQuantity){
-        warningMessage = `Warning: The amount of medicine has reached the minimum level (${medication.minQuantity}).`
-      }
+    if (remainingQuantity <= medication.minQuantity) {
+      warningMessage = `Warning: The amount of medicine has reached the minimum level (${medication.minQuantity}).`
+    }
 
     await this.medicationModel.findByIdAndUpdate(medicationId,
-      {quantity: remainingQuantity},
-      {new:true}
+      { quantity: remainingQuantity },
+      { new: true }
     )
+
     return {
       status: 'success',
       warningMessage,
       quantity: remainingQuantity,
     };
   }
-  
+
+  async addMedicationQuantity(
+    medicationId: Types.ObjectId,
+    quantity: number,
+  ) {
+    console.log(medicationId);
+
+    const medication = await this.findOne(medicationId);
+    if (!medication) {
+      throw new Error('Medication not found');
+    }
+
+    const newQuantity = medication.quantity + quantity;
+
+    console.log(newQuantity);
+
+
+    let warningMessage = '';
+
+    await this.medicationModel.findByIdAndUpdate(medicationId,
+      { quantity: newQuantity },
+      { new: true }
+    )
+
+    return {
+      status: 'success',
+      warningMessage,
+      quantity: newQuantity,
+    };
+  }
 
   async remove(_id: Types.ObjectId) {
     try {
       const deletedItem = await this.medicationModel.findByIdAndDelete(_id);
-  
+
       if (!deletedItem) {
         throw new BadRequestException('Item not found');
       }
-  
+
       return {
         message: 'Item successfully deleted',
         data: deletedItem,
@@ -130,11 +158,11 @@ export class MedicationsService {
       throw new BadRequestException(`Failed to delete item: ${error.message}`);
     }
   }
-  
+
 
   //------------------------------------------------------------------------//
 
-  async checkNameExists(name:string){
+  async checkNameExists(name: string) {
     const medicationExists = await isExistHelper(
       { name },
       this.medicationModel,
