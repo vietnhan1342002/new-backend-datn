@@ -21,6 +21,7 @@ import { SearchModule } from './search/search.module';
 import { DetailMedicalRecordModule } from './detail-medical-record/detail-medical-record.module';
 import { PrescriptionsModule } from './prescriptions/prescriptions.module';
 import { MedicationsModule } from './medications/medications.module';
+import { PrescriptionDetailsModule } from './prescription-details/prescription-details.module';
 
 @Module({
   imports: [
@@ -54,8 +55,9 @@ import { MedicationsModule } from './medications/medications.module';
     DetailMedicalRecordModule,
     PrescriptionsModule,
     MedicationsModule,
+    PrescriptionDetailsModule,
   ],
   providers: [JwtStrategy],
   exports: [JwtModule],
 })
-export class ApiModule {}
+export class ApiModule { }
