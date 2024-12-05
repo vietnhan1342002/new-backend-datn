@@ -1,14 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ValidationPipe, UsePipes } from '@nestjs/common';
 import { PrescriptionsService } from './prescriptions.service';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto';
 import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
 import { parseQueryParam } from '@/helpers/utils';
 import { Types } from 'mongoose';
+import { Public } from '../user-auth/guard/public.guard';
 
+@Public()
 @Controller('prescriptions')
 export class PrescriptionsController {
   constructor(private readonly prescriptionsService: PrescriptionsService) { }
 
+  @UsePipes(new ValidationPipe())
   @Post()
   create(@Body() createPrescriptionDto: CreatePrescriptionDto) {
     return this.prescriptionsService.create(createPrescriptionDto);
@@ -43,6 +46,7 @@ export class PrescriptionsController {
     return this.prescriptionsService.findOne(_id);
   }
 
+  @UsePipes(new ValidationPipe())
   @Patch(':_id')
   update(@Param('_id') _id: Types.ObjectId, @Body() updatePrescriptionDto: UpdatePrescriptionDto) {
     return this.prescriptionsService.update(_id, updatePrescriptionDto);
