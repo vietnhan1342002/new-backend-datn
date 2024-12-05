@@ -8,14 +8,14 @@ export class CreatePrescriptionDto {
     @Type(() => Types.ObjectId)
     detailMedicalRecordId: Types.ObjectId; // Liên kết đến bệnh án chi tiết
 
-    @IsMongoId()
-    @IsNotEmpty()
-    @Type(() => Types.ObjectId)
-    medicationId: Types.ObjectId; // Liên kết đến thuốc
-
-    @IsNumber()
-    @IsNotEmpty()
-    @Type(() => Types.ObjectId)
-    quantityPrescribed: number; // Số lượng thuốc được kê
-
 }
+
+// @IsMongoId()
+// @IsNotEmpty()
+// @Type(() => Types.ObjectId)
+// medicationId: Types.ObjectId; // Liên kết đến thuốc
+
+// @IsNumber()
+// @IsNotEmpty()
+// @Type(() => Types.ObjectId)
+// quantityPrescribed: number; // Số lượng thuốc được kê

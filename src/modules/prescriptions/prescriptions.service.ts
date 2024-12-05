@@ -19,12 +19,10 @@ export class PrescriptionsService {
   ) { }
 
   async create(createPrescriptionDto: CreatePrescriptionDto) {
-    const { detailMedicalRecordId, medicationId, quantityPrescribed } = createPrescriptionDto;
+    const { detailMedicalRecordId } = createPrescriptionDto;
 
     const prescription = await this.prescriptionModel.create({
       detailMedicalRecordId: new Types.ObjectId(detailMedicalRecordId),
-      medicationId: new Types.ObjectId(medicationId),
-      quantityPrescribed
     });
 
     return { _id: prescription.id };
@@ -52,13 +50,13 @@ export class PrescriptionsService {
     const skip = calculateSkip(current, pageSize);
 
     // Truy vấn các bản ghi với phân trang và sắp xếp
-    const result = await this.populatePrescriptionQuery(
+    const result = await
       this.prescriptionModel
         .find(filter)
+        .select("_id detailMedicalRecordId")
         .limit(pageSize)
         .skip(skip)
-        .sort(sort as any),
-    ).exec();
+        .sort(sort as any)
 
     // Nếu không có dữ liệu, ném ngoại lệ
     if (result.length === 0) {
@@ -71,9 +69,8 @@ export class PrescriptionsService {
   async findOne(_id: Types.ObjectId) {
     await this.checkPrescriptionExists(_id);
 
-    const prescription = await this.populatePrescriptionQuery(
-      this.prescriptionModel.findById(new Types.ObjectId(_id)),
-    ).exec();
+    const prescription = await this.prescriptionModel.findById(new Types.ObjectId(_id))
+      .select("_id detailMedicalRecordId")
 
     if (prescription.isDeleted === true) {
       throw new NotFoundException('No prescription available');
@@ -95,15 +92,17 @@ export class PrescriptionsService {
   }
 
   async softDeleteByDetailMedicalRecordId(detailMedicalRecordId: Types.ObjectId, session: any) {
-    if (!detailMedicalRecordId) {
-      return;
+    const detailMedicalRecordInPrescriptions = await this.prescriptionModel.find({ detailMedicalRecordId }).session(session);
+    if (!detailMedicalRecordInPrescriptions) {
+      throw new NotFoundException('No detail medical records found');
     }
 
     await this.prescriptionModel.updateMany(
-      { detailMedicalRecordId: { $in: detailMedicalRecordId } },
+      { detailMedicalRecordId },
       { $set: { isDeleted: true, deletedAt: new Date() } },
       { session }
     );
+
   }
 
   async findAllSoftDelete(query: string, current: number, pageSize: number) {
@@ -123,16 +122,15 @@ export class PrescriptionsService {
     const skip = calculateSkip(current, pageSize);
 
     // Truy vấn các bản ghi với phân trang và sắp xếp
-    const result = await this.populatePrescriptionQuery(
-      this.prescriptionModel
-        .find(filter)
-        .limit(pageSize)
-        .skip(skip)
-        .sort(sort as any),
-    ).exec();
+    const result = this.prescriptionModel
+      .find(filter)
+      .select("_id detailMedicalRecordId")
+      .limit(pageSize)
+      .skip(skip)
+      .sort(sort as any)
 
     // Nếu không có dữ liệu, ném ngoại lệ
-    if (result.length === 0) {
+    if (!result) {
       throw new NotFoundException('No prescriptions found');
     }
 
@@ -148,16 +146,6 @@ export class PrescriptionsService {
     return prescription;
   }
 
-  private populatePrescriptionQuery(query: any) {
-    return query
-      .populate([
-        {
-          path: 'medication_id',
-          select: 'name dosage',
-        },
-
-      ]);
-  }
 
   async checkIfPrescriptionIsDeleted(_id: Types.ObjectId): Promise<void> {
     const objectId = new Types.ObjectId(_id);

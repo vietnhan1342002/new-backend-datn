@@ -7,14 +7,7 @@ import { HydratedDocument, Types } from 'mongoose';
 @Schema({ timestamps: true })
 export class Prescription {
     @Prop({ type: Types.ObjectId, ref: DetailMedicalRecord.name, required: true })
-    detail_medical_record_id: Types.ObjectId;
-
-    @Prop({ type: Types.ObjectId, ref: Medication.name, required: true })
-    medication_id: Types.ObjectId;
-
-    @Prop({ type: Number, required: true })
-    quantity_prescribed: number;
-
+    detailMedicalRecordId: Types.ObjectId;
 
     @Prop({ type: Boolean, default: false })
     isDeleted: boolean;
