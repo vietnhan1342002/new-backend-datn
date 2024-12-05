@@ -120,21 +120,21 @@ export class DetailMedicalRecordService {
   }
 
 
-  async softDeleteByMedicalRecordId(medicalRecordId: string, session: any) {
-    const objectId = new Types.ObjectId(medicalRecordId);
-    const details = await this.detailMedicalRecordModel.find({ medicalRecordId: objectId }).session(session);
+  async softDeleteByMedicalRecordId(medicalRecordId: Types.ObjectId, session: any) {
 
-    if (!details || details.length === 0) {
-      throw new NotFoundException('No detail medical records found');
+    const detail = await this.detailMedicalRecordModel.findOne({ medicalRecordId }).session(session);
+
+    if (!detail) {
+      throw new NotFoundException('No medical records found');
     }
 
     await this.detailMedicalRecordModel.updateMany(
-      { medicalRecordId: objectId },
+      { medicalRecordId },
       { $set: { isDeleted: true, deletedAt: new Date() } },
       { session }
     );
 
-    await this.prescriptionsService.softDeleteByDetailMedicalRecordId(objectId, session)
+    await this.prescriptionsService.softDeleteByDetailMedicalRecordId(detail._id, session)
   }
 
   //------------------------------------------------------//

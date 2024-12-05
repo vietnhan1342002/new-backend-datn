@@ -4,6 +4,7 @@ import { CreateMedicalRecordDto } from './dto/create-medical_record.dto';
 import { UpdateMedicalRecordDto } from './dto/update-medical_record.dto';
 import { parseQueryParam } from '@/helpers/utils';
 import { Public } from '../user-auth/guard/public.guard';
+import { Types } from 'mongoose';
 
 @Public()
 @Controller('medical-records')
@@ -42,17 +43,17 @@ export class MedicalRecordsController {
   }
 
   @Get(':_id')
-  findOne(@Param('_id') _id: string) {
+  findOne(@Param('_id') _id: Types.ObjectId) {
     return this.medicalRecordsService.findOne(_id);
   }
 
   @Patch(':_id')
-  update(@Param('_id') _id: string, @Body() updateMedicalRecordDto: UpdateMedicalRecordDto) {
+  update(@Param('_id') _id: Types.ObjectId, @Body() updateMedicalRecordDto: UpdateMedicalRecordDto) {
     return this.medicalRecordsService.update(_id, updateMedicalRecordDto);
   }
 
   @Delete(':_id')
-  remove(@Param('_id') _id: string) {
+  remove(@Param('_id') _id: Types.ObjectId) {
     return this.medicalRecordsService.softDeleteMedicalRecord(_id);
   }
 

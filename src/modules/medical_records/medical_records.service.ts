@@ -65,7 +65,7 @@ export class MedicalRecordsService {
     return { result, totalItems, totalPages };
   }
 
-  async findOne(_id: string) {
+  async findOne(_id: Types.ObjectId) {
     await this.checkMedicalRecordExists(_id);
 
     const medical_record = await this.populateMedicalRecordQuery(
@@ -77,7 +77,7 @@ export class MedicalRecordsService {
     return medical_record;
   }
 
-  async update(_id: string, updateMedicalRecordDto: UpdateMedicalRecordDto) {
+  async update(_id: Types.ObjectId, updateMedicalRecordDto: UpdateMedicalRecordDto) {
 
     await this.checkMedicalRecordExists(_id);
 
@@ -90,7 +90,7 @@ export class MedicalRecordsService {
     return updatedMedicalRecord;
   }
 
-  async softDeleteMedicalRecord(_id: string) {
+  async softDeleteMedicalRecord(_id: Types.ObjectId) {
 
     const session = await this.connection.startSession();
     session.startTransaction();
@@ -109,7 +109,7 @@ export class MedicalRecordsService {
       medicalRecord.deletedAt = new Date();
       await medicalRecord.save({ session });
 
-      await this.detailMedicalRecordService.softDeleteByMedicalRecordId(_id, session);
+      await this.detailMedicalRecordService.softDeleteByMedicalRecordId(objectId, session);
 
 
       await session.commitTransaction();
@@ -158,7 +158,7 @@ export class MedicalRecordsService {
   }
 
   //------------------------------------------------------//
-  private async checkMedicalRecordExists(_id: string) {
+  private async checkMedicalRecordExists(_id: Types.ObjectId) {
     const medical_record = await this.medicalRecordModel.findById(_id);
     if (!medical_record) {
       throw new NotFoundException(`medical_record with ID ${_id} not found`);
@@ -191,7 +191,7 @@ export class MedicalRecordsService {
         },
       ]);
   }
-  async checkIfMedicalRecordIsDeleted(_id: string): Promise<void> {
+  async checkIfMedicalRecordIsDeleted(_id: Types.ObjectId): Promise<void> {
     const objectId = new Types.ObjectId(_id);
 
     const medicalRecord = await this.medicalRecordModel.findById(objectId);
