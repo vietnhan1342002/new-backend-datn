@@ -4,8 +4,14 @@ import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { Pinecone } from '@pinecone-database/pinecone';
 
+interface UserDetails {
+  name: string;
+  phone: string;
+}
+
 @Injectable()
 export class ChatbotAiService {
+  private userDetails: UserDetails;
   private llm;
   private chatHistory = [];
   private vectorStore;
@@ -14,7 +20,7 @@ export class ChatbotAiService {
     { name: "Neurology", description: "Examination and treatment of neurological diseases", isActive: true },
     { name: "Digestive", description: "Examination and treatment of digestive diseases", isActive: true },
     { name: "Cardiovascular", description: "Examination and treatment of cardiovascular diseases", isActive: true },
-    { name: "Ear, Nose and Throat", description: "Examination and treatment of ear, nose and throat diseases", isActive: true },
+    { name: "Ear, Nose, and Throat", description: "Examination and treatment of ear, nose, and throat diseases", isActive: true },
     { name: "Spine", description: "Diagnosis and treatment of spinal problems", isActive: true },
     { name: "Traditional Medicine", description: "Examination and treatment using traditional medicine methods", isActive: true },
     { name: "Acupuncture", description: "Application of acupuncture in treatment", isActive: true },
@@ -53,8 +59,8 @@ export class ChatbotAiService {
     { name: "Pediatric dentistry", description: "Dental examination and treatment for children", isActive: true },
     { name: "Thyroid", description: "Thyroid examination and treatment", isActive: true },
     { name: "Breast specialist", description: "Breast specialist examination and treatment", isActive: true },
-    ];
-  
+  ];
+
 
   constructor() {
     const apiKey = "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";
@@ -71,12 +77,10 @@ export class ChatbotAiService {
     this.vectorStore = index; // Sử dụng sau này nếu cần tích hợp thêm tính năng tìm kiếm.
   }
 
-
-
   async processMessage(input: string) {
     const farewellKeywords = ['bye', 'goodbye', 'see you', 'later', 'farewell', 'take care'];
     const affirmativeKeywords = ['yes', 'yeah', 'sure', 'okay'];
-  
+
     // Kiểm tra nếu input chứa từ khoá chia tay
     if (farewellKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
       this.chatHistory = [];
@@ -85,12 +89,64 @@ export class ChatbotAiService {
       };
     }
 
+    // Xử lý phản hồi "Yes" trong ngữ cảnh đặt lịch hẹn
     if (affirmativeKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
-      if (this.chatHistory.some(msg => msg.content.includes("Would you like to make an appointment?"))) {
-        return {
-          message: 'Great! Please provide the following information to schedule an appointment: date, time, and type of service you need.',
-          nextStep: 'booking', // Trạng thái đặt lịch để backend có thể xử lý thêm
-        };
+      if (this.chatHistory.some(msg =>
+        msg.content.includes("Would you like to make an appointment?")
+      )) {
+        const userPrompt = ChatPromptTemplate.fromMessages([
+          ['system', 'Please ask the user for their full name and phone number.'],
+          new MessagesPlaceholder({ variableName: 'chat_history' }),
+          ['human', '{input}'],
+        ]);
+
+        console.log('input', input);
+
+
+        const formattedAppointmentPrompt = await userPrompt.format({
+          chat_history: this.chatHistory,
+          input,
+        });
+
+        try {
+          const response = await this.llm.invoke(formattedAppointmentPrompt);
+
+          this.chatHistory.push(new HumanMessage({ content: input }));
+          this.chatHistory.push(new AIMessage({ content: response.content }));
+
+          return { message: response.content, nextStep: 'get_appointment_details' };
+        } catch (error) {
+          console.error('Error processing appointment message:', error);
+          return { message: 'Sorry, there was an error processing your request to book an appointment. Please try again later.' };
+        }
+      }
+    }
+
+
+
+    // Tạo prompt khi người dùng yêu cầu đặt lịch
+    if (input.toLowerCase().includes("book an appointment")) {
+      const appointmentPrompt = ChatPromptTemplate.fromMessages([
+        ['system', 'You are a helpful assistant for scheduling appointments in a health clinic. Please ask the user for the necessary details to book an appointment.'],
+        new MessagesPlaceholder({ variableName: 'chat_history' }),
+        ['human', '{input}'],
+      ]);
+
+      const formattedAppointmentPrompt = await appointmentPrompt.format({
+        chat_history: this.chatHistory,
+        input,
+      });
+
+      try {
+        const response = await this.llm.invoke(formattedAppointmentPrompt);
+
+        this.chatHistory.push(new HumanMessage({ content: input }));
+        this.chatHistory.push(new AIMessage({ content: response.content }));
+
+        return { message: response.content, nextStep: 'get_appointment_details' };
+      } catch (error) {
+        console.error('Error processing appointment message:', error);
+        return { message: 'Sorry, there was an error processing your request to book an appointment. Please try again later.' };
       }
     }
 
@@ -101,9 +157,9 @@ export class ChatbotAiService {
         Say greetings first. Then ask how you can help.
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
-        After 3 questions, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
-        From the list of ${this.specialtiesData}, predict which specialty the patient is in.
-        Ask them if they want to book an appointment on your website.
+        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        From the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above.
+        Ask them Would you like to make an appointment?.
       `],
       new MessagesPlaceholder({ variableName: 'chat_history' }),
       ['human', '{input}'],
@@ -117,7 +173,6 @@ export class ChatbotAiService {
     try {
       const response = await this.llm.invoke(formattedPrompt);
 
-      // Cố gắng phân tích phản hồi dạng JSON
       let jsonResponse;
       try {
         jsonResponse = JSON.parse(response.content);
@@ -125,7 +180,6 @@ export class ChatbotAiService {
         jsonResponse = { message: response.content.trim().replace(/^AI:\s*/, '') };
       }
 
-      // Cập nhật lịch sử trò chuyện
       this.chatHistory.push(new HumanMessage({ content: input }));
       this.chatHistory.push(new AIMessage({ content: response.content }));
 
@@ -135,4 +189,5 @@ export class ChatbotAiService {
       return { message: 'Sorry, there was an error processing your request. Please try again later.' };
     }
   }
+
 }
