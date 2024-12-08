@@ -79,6 +79,8 @@ export class UserAuthController {
   create(@Body() createUserAuthDto: CreateUserAuthDto) {
     return this.userAuthService.create(createUserAuthDto);
   }
+
+  @Public()
   @Get()
   async findAll(
     @Query() query: string,
