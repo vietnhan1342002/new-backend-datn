@@ -1,73 +1,138 @@
 import { Injectable } from '@nestjs/common';
-import { ChatGroq } from '@langchain/groq';
+import { ChatGroq } from "@langchain/groq";
+import { AIMessage, HumanMessage } from '@langchain/core/messages';
+import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+import { Pinecone } from '@pinecone-database/pinecone';
+
 @Injectable()
 export class ChatbotAiService {
-  private readonly chatGroq: ChatGroq;
-  private questionCount = 0;
+  private llm;
+  private chatHistory = [];
+  private vectorStore;
+  private specialtiesData = [
+    { name: "Musculoskeletal", description: "Examination and treatment of musculoskeletal diseases", isActive: true },
+    { name: "Neurology", description: "Examination and treatment of neurological diseases", isActive: true },
+    { name: "Digestive", description: "Examination and treatment of digestive diseases", isActive: true },
+    { name: "Cardiovascular", description: "Examination and treatment of cardiovascular diseases", isActive: true },
+    { name: "Ear, Nose and Throat", description: "Examination and treatment of ear, nose and throat diseases", isActive: true },
+    { name: "Spine", description: "Diagnosis and treatment of spinal problems", isActive: true },
+    { name: "Traditional Medicine", description: "Examination and treatment using traditional medicine methods", isActive: true },
+    { name: "Acupuncture", description: "Application of acupuncture in treatment", isActive: true },
+    { name: "Obstetrics and Gynecology", description: "Examination and treatment of obstetric and gynecological health", isActive: true },
+    { name: "Prenatal ultrasound", description: "Prenatal ultrasound service", isActive: true },
+    { name: "Pediatrics", description: "Examination and treatment of children", isActive: true },
+    { name: "Dermatology", description: "Examination and treatment of dermatological diseases", isActive: true },
+    { name: "Hepatitis", description: "Treatment and consultation of hepatitis", isActive: true },
+    { name: "Mental health", description: "Examination and psychological and mental support", isActive: true },
+    { name: "Allergy and immunology", description: "Diagnosis and treatment of allergy and immunology", isActive: true },
+    { name: "Respiratory - Lung", description: "Examination and treatment of respiratory diseases", isActive: true },
+    { name: "Neurosurgery", description: "Neurosurgery and treatment", isActive: true },
+    { name: "Andrology", description: "Examination and treatment of andrology problems", isActive: true },
+    { name: "Ophthalmology", description: "Examination and treatment of eye diseases", isActive: true },
+    { name: "Kidney - Urology", description: "Examination and treatment of kidney and urinary diseases", isActive: true },
+    { name: "Internal medicine", description: "Examination and treatment of general internal medicine", isActive: true },
+    { name: "Dentistry", description: "Examination and treatment of dental problems", isActive: true },
+    { name: "Diabetes - Endocrinology", description: "Diagnosis and treatment of diabetes, endocrine diseases", isActive: true },
+    { name: "Rehabilitation", description: "Support and rehabilitation", isActive: true },
+    { name: "Magnetic resonance imaging", description: "Magnetic resonance imaging service", isActive: true },
+    { name: "Computerized tomography", description: "Computerized tomography service", isActive: true },
+    { name: "Digestive endoscopy", description: "Digestive endoscopy service", isActive: true },
+    { name: "Oncology", description: "Examination and treatment of tumors", isActive: true },
+    { name: "Cosmetic dermatology", description: "Skin care and cosmetic treatment", isActive: true },
+    { name: "Infectious diseases", description: "Examination and treatment of infectious diseases", isActive: true },
+    { name: "Family doctor", description: "Family doctor service", isActive: true },
+    { name: "Maxillofacial Plastic Surgery", description: "Maxillofacial Plastic Surgery Service", isActive: true },
+    { name: "Psychological consultation and therapy", description: "Psychological consultation and therapy", isActive: true },
+    { name: "Infertility - Infertility", description: "Infertility and infertility examination and treatment", isActive: true },
+    { name: "Orthopedic trauma", description: "Orthopedic trauma treatment", isActive: true },
+    { name: "Braces", description: "Braces service", isActive: true },
+    { name: "Porcelain crowns", description: "Porcelain crowns service", isActive: true },
+    { name: "Implant dentistry", description: "Implant dentistry service", isActive: true },
+    { name: "Wisdom tooth extraction", description: "Wisdom tooth extraction service", isActive: true },
+    { name: "General dentistry", description: "General dental examination and treatment", isActive: true },
+    { name: "Pediatric dentistry", description: "Dental examination and treatment for children", isActive: true },
+    { name: "Thyroid", description: "Thyroid examination and treatment", isActive: true },
+    { name: "Breast specialist", description: "Breast specialist examination and treatment", isActive: true },
+    ];
+  
 
   constructor() {
-    this.chatGroq = new ChatGroq({
-      apiKey: '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',
+    const apiKey = "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";
+    this.llm = new ChatGroq({
+      model: 'gemma2-9b-it',
+      temperature: 0,
+      apiKey
     });
+
+    const pc = new Pinecone({
+      apiKey: "pcsk_6exEkN_LwZnN4UQRXRdb1qYnRg4JGdkn8ewi6zG8pRkwRyuLAXQB4ZGgiLsMKXXwQTHCFd"
+    });
+    const index = pc.index('langchain-chatbot');
+    this.vectorStore = index; // Sử dụng sau này nếu cần tích hợp thêm tính năng tìm kiếm.
   }
 
-  private incrementQuestionCount(): number {
-    this.questionCount += 1;
-    return this.questionCount;
-  }
 
-  private resetQuestionCount(): void {
-    this.questionCount = 0;
-  }
 
-  async askGPT(prompt: string): Promise<string> {
+  async processMessage(input: string) {
+    const farewellKeywords = ['bye', 'goodbye', 'see you', 'later', 'farewell', 'take care'];
+    const affirmativeKeywords = ['yes', 'yeah', 'sure', 'okay'];
+  
+    // Kiểm tra nếu input chứa từ khoá chia tay
+    if (farewellKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
+      this.chatHistory = [];
+      return {
+        message: 'Goodbye! The chat history has been cleared. Feel free to start a new conversation anytime!',
+      };
+    }
+
+    if (affirmativeKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
+      if (this.chatHistory.some(msg => msg.content.includes("Would you like to make an appointment?"))) {
+        return {
+          message: 'Great! Please provide the following information to schedule an appointment: date, time, and type of service you need.',
+          nextStep: 'booking', // Trạng thái đặt lịch để backend có thể xử lý thêm
+        };
+      }
+    }
+
+    // Tạo prompt dựa trên lịch sử trò chuyện
+    const prompt = ChatPromptTemplate.fromMessages([
+      ['system', `
+        You are a helpful assistant in health.
+        Say greetings first. Then ask how you can help.
+        You can only ask one question at a time and give examples for them.
+        Ask and wait for them to answer.
+        After 3 questions, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        From the list of ${this.specialtiesData}, predict which specialty the patient is in.
+        Ask them if they want to book an appointment on your website.
+      `],
+      new MessagesPlaceholder({ variableName: 'chat_history' }),
+      ['human', '{input}'],
+    ]);
+
+    const formattedPrompt = await prompt.format({
+      chat_history: this.chatHistory,
+      input,
+    });
+
     try {
-      const currentCount = this.incrementQuestionCount();
-      console.log(currentCount);
-      if (currentCount > 5) {
-        const response = await this.chatGroq.completionWithRetry({
-          model: 'gemma2-9b-it',
-          messages: [
-            {
-              "role": "system",
-              "content": "Now provide a diagnosis, severity, and precautions based on the symptoms collected. ",
-            },
-            { role: 'user', content: prompt },
-          ],
-          temperature: 0.5,
-          max_tokens: 5000,
-          top_p: 1,
-          stream: false,
-          response_format: { type: 'json_object' },
-        });
-        this.resetQuestionCount();
-        const followUpQuestion =
-          '\nWould you like to discuss another symptom or ask additional questions? (Yes/No)';
-        return JSON.parse(response.choices[0].message?.content + followUpQuestion) || 'No response. Do you want to ask about another symptom?';
+      const response = await this.llm.invoke(formattedPrompt);
+
+      // Cố gắng phân tích phản hồi dạng JSON
+      let jsonResponse;
+      try {
+        jsonResponse = JSON.parse(response.content);
+      } catch (error) {
+        jsonResponse = { message: response.content.trim().replace(/^AI:\s*/, '') };
       }
 
-      const response = await this.chatGroq.completionWithRetry({
-        model: 'gemma2-9b-it',
-        messages: [
-          {
-            "role": "system",
-            "content": "```json\n{\n  \"role\": \"system\",\n  \"content\": \"As an assistant, your task is to diagnose possible diseases based on the user’s symptoms. Follow this step-by-step conversation process:\nAsk a follow-up question about symptoms to gather more details. Start with a friendly greeting. When the user types 'start', ask for their name, age, and gender. Then, ask the user about their initial symptom. Ask follow-up questions based on their responses to gather more symptom details. Conclude with a possible disease diagnosis, its severity level, and temporary home precautions. Ask the user if they want to continue with another symptom. If yes, repeat the process from asking for their symptom. Format your responses and questions in JSON format.\n\nExample:\n\nUser: start\nAssistant:\n{\n  \\\"question\\\": \\\"Hello! Please tell me your name, age, and gender so I can assist you better.\\\"\n}\nUser: John, 30, Male\nAssistant:\n{\n  \\\"question\\\": \\\"What symptoms are you experiencing today?\\\"\n}\nUser: I have a headache.\nAssistant:\n{\n  \\\"question\\\": \\\"Do you have any associated symptoms, such as dizziness or sensitivity to light?\\\"\n}\nUser: Yes, I also feel nauseous and have sensitivity to light.\nAssistant:\n{\n  \\\"question\\\": \\\"Have you recently experienced stress, lack of sleep, or dehydration?\\\"\n}\nUser: No, I haven’t experienced any of those.\nAssistant:\n{\n  \\\"question\\\": \\\"Does the headache feel like pressure, pounding, or stabbing pain?\\\"\n}\nUser: It feels like a pounding pain.\nAssistant:\n{\n  \\\"diagnosis\\\": \\\"Based on your symptoms, you may have a migraine.\\\",\n  \\\"severity\\\": \\\"Moderate\\\",\n  \\\"precautions\\\": \\\"Rest in a dark, quiet room, stay hydrated, and take an over-the-counter pain reliever if needed.\\\"\n}\nAssistant:\n{\n  \\\"question\\\": \\\"Would you like to discuss another symptom?\\\"\n}\nUser: Yes\nAssistant:\n{\n  \\\"question\\\": \\\"What other symptoms are you experiencing?\\\"\n}\n\nStart by greeting the user and asking their name, age, and gender when they type 'start'.\"\n}\n{\n  \"role\": \"user\",\n  \"content\": \"I have a rash\",\n}\n{\n  \"role\": \"assistant\",\n  \"content\": {\n    \"question\": \"Can you describe the rash? For example, is it itchy, red, bumpy, or does it have any other characteristics?\"\n  }\n}\n{\n  \"role\": \"user\",\n  \"content\": \"itchy\",\n}\n{\n  \"role\": \"assistant\",\n  \"content\": {\n    \"question\": \"Where is the rash located on your body? Is it on a specific area or all over?\"\n  }\n}\n{\n  \"role\": \"user\",\n  \"content\": \"My hand\",\n}\n{\n  \"role\": \"assistant\",\n  \"content\": {\n    \"question\": \"Have you come into contact with any new soaps, lotions, plants, or animals recently?\"\n  }\n}\n{\n  \"role\": \"user\",\n  \"content\": \"lotions\",\n}\n{\n  \"role\": \"assistant\",\n  \"content\": {\n    \"diagnosis\": \"Based on your symptoms, you may have contact dermatitis.\",\n    \"severity\": \"Mild\",\n    \"precautions\": \"Stop using the new lotion immediately. Apply a cool compress to the affected area and consider using an over-the-counter hydrocortisone cream. If the rash worsens or spreads, consult a doctor.\"\n  }\n}\n{\n  \"role\": \"assistant\",\n  \"content\": {\n    \"question\": \"Would you like to discuss another symptom?\"\n  }\n}\n```"
-          },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.5,
-        max_tokens: 5000,
-        top_p: 1,
-        stream: false,
-        response_format: { type: 'json_object' },
-      });
+      // Cập nhật lịch sử trò chuyện
+      this.chatHistory.push(new HumanMessage({ content: input }));
+      this.chatHistory.push(new AIMessage({ content: response.content }));
 
-      return (
-        JSON.parse(response.choices[0].message?.content) ||
-        'No response. Do you want to ask about another symptom?'
-      );
+      return jsonResponse;
     } catch (error) {
-      throw new Error(`Error from GroqAI: ${error.message}`);
+      console.error('Error processing message:', error);
+      return { message: 'Sorry, there was an error processing your request. Please try again later.' };
     }
   }
 }
