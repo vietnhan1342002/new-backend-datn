@@ -26,11 +26,22 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   handleRequest(err, user, info) {
-    // Nếu không có lỗi và có user, trả về user
     if (user) {
       return user;
     }
-    // Nếu gặp lỗi mà không phải là @Public(), ném ra lỗi không xác thực
-    throw err || new UnauthorizedException();
+  
+    // Nếu có lỗi, xác định lỗi chính xác
+    if (err) {
+      if (err.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Token has expired');
+      }
+      if (err.name === 'JsonWebTokenError') {
+        throw new UnauthorizedException('Invalid token');
+      }
+    }
+  
+    // Nếu không có thông tin xác thực, ném lỗi chung
+    throw new UnauthorizedException('User not authenticated');
   }
+  
 }

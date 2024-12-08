@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Role } from './schemas/role.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class RolesService {
@@ -17,7 +17,7 @@ export class RolesService {
   }
 
   // Tìm role bằng ObjectId
-  async findRoleById(roleId: string) {
+  async findRoleById(roleId: Types.ObjectId) {
     return this.roleModel.findById(roleId);
   }
 }

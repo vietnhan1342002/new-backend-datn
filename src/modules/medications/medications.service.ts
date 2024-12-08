@@ -57,8 +57,6 @@ export class MedicationsService {
   }
 
   async findOne(_id: Types.ObjectId) {
-    console.log(_id);
-
     const medication = await this.medicationModel.findById(new Types.ObjectId(_id))
     // .select('-__v -createdAt -updatedAt')
 
@@ -115,7 +113,6 @@ export class MedicationsService {
     medicationId: Types.ObjectId,
     quantity: number,
   ) {
-    console.log(medicationId);
 
     const medication = await this.findOne(medicationId);
     if (!medication) {
@@ -123,8 +120,6 @@ export class MedicationsService {
     }
 
     const newQuantity = medication.quantity + quantity;
-
-    console.log(newQuantity);
 
 
     let warningMessage = '';

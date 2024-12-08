@@ -13,19 +13,18 @@ import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { RoleGuard } from '../user-auth/guard/role.guard';
 import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
-import { Roles } from '@/decorator/role.decorator';
 import { parseQueryParam } from '@/helpers/utils';
 import { UpdatePatientUserDto } from './dto/update-patient-user.dto';
 import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 
+@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
-  @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
   @Post()
   create(@Body() createPatientDto: CreatePatientDto) {
     return this.patientsService.create(createPatientDto);
@@ -34,10 +33,11 @@ export class PatientsController {
   @Permissions([{ resource: Resource.PATIENT, actions: [Action.READ] }])
   @Get()
   async findAll(
-    @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
+    @Query('query') query: string = '',
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
-  ) {
+  ) {    
+    
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
 

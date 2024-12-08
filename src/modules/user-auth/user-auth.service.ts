@@ -23,6 +23,7 @@ import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 import { Patient } from '../patients/schemas/patient.schema';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { Doctor } from '../doctors/schemas/doctor.schema';
+import { log } from 'node:console';
 
 @Injectable()
 export class UserAuthService {
@@ -125,7 +126,7 @@ export class UserAuthService {
   async generateUserTokens(userId) {
     const accessToken = this.jwtService.sign(
       { userId },
-      { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRED },
+      { expiresIn: parseInt(process.env.JWT_ACCESS_TOKEN_EXPIRED, 10) },
     );
     const refreshToken = uuidv4();
 
@@ -166,9 +167,11 @@ export class UserAuthService {
 
   async getUserPermissions(userId: string) {
     const user = await this.userAuthModel.findById(userId);
+    
     if (!user) throw new BadRequestException('User does not exist');
 
-    const role = await this.roleService.findRoleById(user.roleId.toString());
+    const role = await this.roleService.findRoleById(user.roleId);
+    
     return role.permissions;
   }
 
