@@ -18,7 +18,7 @@ export class PatientsService {
   constructor(
     @InjectModel(Patient.name) private patientModel: Model<Patient>,
     private userAuthService: UserAuthService,
-  ) {}
+  ) { }
   // create date patient with ObjectId
   private createPatientData(createPatientDto: CreatePatientDto) {
     const { userId, address, dateOfBirth, gender } = createPatientDto;
@@ -106,8 +106,8 @@ export class PatientsService {
 
   async remove(_id: string) {
     await this.checkPatientExists(_id);
-    await this.patientModel.findByIdAndDelete(_id);
-
+    const patient = await this.patientModel.findByIdAndDelete(_id);
+    await this.userAuthService.remove(patient.userId.toString())
     return { message: `patient with ID ${_id} has been removed successfully` };
   }
 
