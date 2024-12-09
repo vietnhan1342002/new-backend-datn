@@ -7,6 +7,8 @@ import { UserAuthService } from '@/modules/user-auth/user-auth.service';
 import { CreateUserAuthDto } from '@/modules/user-auth/dto/create-user-auth.dto';
 import { Types } from 'mongoose';
 import { SpecialtiesService } from '@/modules/specialties/specialties.service';
+import { FilterService } from '@/modules/filter/filter.service';
+import { Status } from '@/modules/doctor-schedules/schemas/doctor-schedule.schema';
 
 interface UserDetails {
   name: string;
@@ -20,6 +22,8 @@ export class ChatbotAiService {
   private chatHistory = [];
   private specialtiesData: string[] = [];
   private vectorStore;
+  private specialtyId: string;
+  private date: string;
   // private specialtiesData = [
   //   { name: "Musculoskeletal", description: "Examination and treatment of musculoskeletal diseases" },
   //   { name: "Neurology", description: "Examination and treatment of neurological diseases" },
@@ -70,6 +74,7 @@ export class ChatbotAiService {
   constructor(
     private userAuthService: UserAuthService,
     private specialtiesService: SpecialtiesService,
+    private filterService: FilterService,
   ) {
     const apiKey = "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";
     this.llm = new ChatGroq({
@@ -99,8 +104,6 @@ export class ChatbotAiService {
   async processMessage(input: string) {
     const farewellKeywords = ['bye', 'goodbye', 'see you', 'later', 'farewell', 'take care'];
     const greetingKeywords = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'howdy'];
-    let specialtyUser = '';
-    let date = '';
 
     if (greetingKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
       this.chatHistory = [];
@@ -118,8 +121,6 @@ export class ChatbotAiService {
       };
     }
 
-
-
     // Check if input Have a good day
     if (this.chatHistory.some(msg =>
       msg.content.includes("Have a good day!")
@@ -133,7 +134,6 @@ export class ChatbotAiService {
       this.specialtiesData = await this.specialtiesService.findAllName();
     }
 
-
     // Tạo prompt dựa trên lịch sử trò chuyện
     const prompt = ChatPromptTemplate.fromMessages([
       ['system', `
@@ -141,7 +141,7 @@ export class ChatbotAiService {
         Say greetings first. Then ask how you can help.
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
-        After 3 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
         Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
         Next Answer" "Specialty can be: **speciaty predict**."
         Finally, ask them Would you like to make an appointment?.
@@ -174,9 +174,8 @@ export class ChatbotAiService {
         if (specialtyMatch) {
           let specialty = specialtyMatch[1].trim(); // Lấy nội dung sau "Specialty can be:"
           specialty = specialty.replace(/\*\*/g, '').trim();
-          if (specialtyUser.length === 0) {
-            specialtyUser = specialty;
-            console.log(`Extracted Specialty: ${specialtyUser}`);
+          if (!this.specialtyId) {
+            this.specialtyId = await this.specialtiesService.findByName(specialty)
           }
         } else {
           const responseMessage = "No specific specialty found after 'Specialty can be:'";
@@ -184,7 +183,6 @@ export class ChatbotAiService {
           return { message: responseMessage };
         }
       }
-
 
       //collect user information
       if (input.includes('My name is')) {
@@ -229,14 +227,15 @@ export class ChatbotAiService {
       const dateMatch = input.match(dateRegex);
       if (dateMatch) {
         const appointmentDate = dateMatch[1];
-        if (date.length === 0) {
-          date = appointmentDate
-          console.log(`Appointment Date: ${date}`);
+        if (!this.date) {
+          this.date = appointmentDate;
+          console.log(`Appointment Date: ${this.date}`);
         }
-        const response = `Your appointment has been scheduled for ${date}.`;
+        const response = `Your appointment has been scheduled for ${this.date}.`;
         this.chatHistory.push(new AIMessage({ content: response }));
         return { message: response };
       }
+
 
       return jsonResponse;
     } catch (error) {

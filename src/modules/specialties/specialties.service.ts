@@ -80,8 +80,9 @@ export class SpecialtiesService {
     return specialties.map(specialty => specialty.name);
   }
 
-  async findByName(name: string): Promise<Specialty | null> {
-    return this.specialtyModel.findOne({ name }).exec();
+  async findByName(name: string) {
+    const specialty = await this.specialtyModel.findOne({ name }).exec();
+    return specialty._id.toString()
   }
 
   async findOne(_id: string): Promise<Specialty> {
