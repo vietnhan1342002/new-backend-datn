@@ -252,7 +252,6 @@ export class UserAuthService {
     if (result.deletedCount === 0) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-
     return { message: `User with ID ${id} deleted successfully` };
   }
 
