@@ -20,7 +20,7 @@ export class SpecialtiesService {
   constructor(
     @InjectModel(Specialty.name)
     private specialtyModel: Model<Specialty>,
-  ) {}
+  ) { }
 
   private async checkSpecialtyExistence(name: string) {
     const specialtyExists = await isExistHelper({ name }, this.specialtyModel);
@@ -75,6 +75,15 @@ export class SpecialtiesService {
     return { result, totalItems, totalPages };
   }
 
+  async findAllName(): Promise<string[]> {
+    const specialties = await this.specialtyModel.find().select('-_id name').exec();
+    return specialties.map(specialty => specialty.name);
+  }
+
+  async findByName(name: string): Promise<Specialty | null> {
+    return this.specialtyModel.findOne({ name }).exec();
+  }
+
   async findOne(_id: string): Promise<Specialty> {
     const specialty = await this.specialtyModel
       .findById(_id)
@@ -106,4 +115,10 @@ export class SpecialtiesService {
       message: `Specialty with ID ${_id} has been removed successfully`,
     };
   }
+
+
+  async createMany(specialtiesData: any[]) {
+    return this.specialtyModel.insertMany(specialtiesData);
+  }
+
 }

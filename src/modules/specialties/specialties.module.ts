@@ -14,5 +14,6 @@ import { UserAuthModule } from '../user-auth/user-auth.module';
   ],
   controllers: [SpecialtiesController],
   providers: [SpecialtiesService],
+  exports: [SpecialtiesService]
 })
-export class SpecialtiesModule {}
+export class SpecialtiesModule { }
