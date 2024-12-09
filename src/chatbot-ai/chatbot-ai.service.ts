@@ -11,7 +11,7 @@ interface UserDetails {
 
 @Injectable()
 export class ChatbotAiService {
-  private userDetails: UserDetails;
+  private userDetails: UserDetails = { name: '', phone: '' };
   private llm;
   private chatHistory = [];
   private vectorStore;
@@ -74,81 +74,44 @@ export class ChatbotAiService {
       apiKey: "pcsk_6exEkN_LwZnN4UQRXRdb1qYnRg4JGdkn8ewi6zG8pRkwRyuLAXQB4ZGgiLsMKXXwQTHCFd"
     });
     const index = pc.index('langchain-chatbot');
-    this.vectorStore = index; // Sử dụng sau này nếu cần tích hợp thêm tính năng tìm kiếm.
+    this.vectorStore = index; // Use later if you need to integrate search functionality.
   }
+
+
+  private parseAIResponse(responseContent: string): { message: string } {
+    try {
+      return JSON.parse(responseContent);
+    } catch (error) {
+      // Nếu không thể parse JSON, xử lý như văn bản thông thường
+      return { message: responseContent.trim().replace(/^AI:\s*/, '') };
+    }
+  }
+
 
   async processMessage(input: string) {
     const farewellKeywords = ['bye', 'goodbye', 'see you', 'later', 'farewell', 'take care'];
-    const affirmativeKeywords = ['yes', 'yeah', 'sure', 'okay'];
 
-    // Kiểm tra nếu input chứa từ khoá chia tay
+    const regex = new RegExp(`\\b(${farewellKeywords.join('|')})\\b`, 'i');
+
+    // Check if input contains the breakup keyword
     if (farewellKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
       this.chatHistory = [];
+      this.userDetails.name = '';
+      this.userDetails.phone = '';
       return {
         message: 'Goodbye! The chat history has been cleared. Feel free to start a new conversation anytime!',
       };
     }
 
-    // Xử lý phản hồi "Yes" trong ngữ cảnh đặt lịch hẹn
-    if (affirmativeKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
-      if (this.chatHistory.some(msg =>
-        msg.content.includes("Would you like to make an appointment?")
-      )) {
-        const userPrompt = ChatPromptTemplate.fromMessages([
-          ['system', 'Please ask the user for their full name and phone number.'],
-          new MessagesPlaceholder({ variableName: 'chat_history' }),
-          ['human', '{input}'],
-        ]);
 
-        console.log('input', input);
-
-
-        const formattedAppointmentPrompt = await userPrompt.format({
-          chat_history: this.chatHistory,
-          input,
-        });
-
-        try {
-          const response = await this.llm.invoke(formattedAppointmentPrompt);
-
-          this.chatHistory.push(new HumanMessage({ content: input }));
-          this.chatHistory.push(new AIMessage({ content: response.content }));
-
-          return { message: response.content, nextStep: 'get_appointment_details' };
-        } catch (error) {
-          console.error('Error processing appointment message:', error);
-          return { message: 'Sorry, there was an error processing your request to book an appointment. Please try again later.' };
-        }
-      }
+    if (this.chatHistory.some(msg =>
+      msg.content.includes("Have a good day!")
+    )) {
+      this.chatHistory = [];
+      this.userDetails.name = '';
+      this.userDetails.phone = '';
     }
 
-
-
-    // Tạo prompt khi người dùng yêu cầu đặt lịch
-    if (input.toLowerCase().includes("book an appointment")) {
-      const appointmentPrompt = ChatPromptTemplate.fromMessages([
-        ['system', 'You are a helpful assistant for scheduling appointments in a health clinic. Please ask the user for the necessary details to book an appointment.'],
-        new MessagesPlaceholder({ variableName: 'chat_history' }),
-        ['human', '{input}'],
-      ]);
-
-      const formattedAppointmentPrompt = await appointmentPrompt.format({
-        chat_history: this.chatHistory,
-        input,
-      });
-
-      try {
-        const response = await this.llm.invoke(formattedAppointmentPrompt);
-
-        this.chatHistory.push(new HumanMessage({ content: input }));
-        this.chatHistory.push(new AIMessage({ content: response.content }));
-
-        return { message: response.content, nextStep: 'get_appointment_details' };
-      } catch (error) {
-        console.error('Error processing appointment message:', error);
-        return { message: 'Sorry, there was an error processing your request to book an appointment. Please try again later.' };
-      }
-    }
 
     // Tạo prompt dựa trên lịch sử trò chuyện
     const prompt = ChatPromptTemplate.fromMessages([
@@ -159,7 +122,9 @@ export class ChatbotAiService {
         Ask and wait for them to answer.
         After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
         From the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above.
-        Ask them Would you like to make an appointment?.
+        Finally, ask them Would you like to make an appointment?.
+        If user agree. Ask What is your name? Format: My name is [your name], [your phone number][only 10 numbers]. 
+        Else, answer: "Have a good day!".
       `],
       new MessagesPlaceholder({ variableName: 'chat_history' }),
       ['human', '{input}'],
@@ -173,21 +138,50 @@ export class ChatbotAiService {
     try {
       const response = await this.llm.invoke(formattedPrompt);
 
-      let jsonResponse;
-      try {
-        jsonResponse = JSON.parse(response.content);
-      } catch (error) {
-        jsonResponse = { message: response.content.trim().replace(/^AI:\s*/, '') };
-      }
+      const jsonResponse = this.parseAIResponse(response.content);
 
       this.chatHistory.push(new HumanMessage({ content: input }));
       this.chatHistory.push(new AIMessage({ content: response.content }));
+
+      if (input.includes('My name is')) {
+        const namePhoneRegex = /My name is ([A-Za-z\s]+), (\d{10}).?$/;
+        const match = input.match(namePhoneRegex);
+
+        if (match) {
+          this.userDetails.name = match[1]
+          this.userDetails.phone = match[2]
+
+        } else {
+          return { message: 'Invalid input format. Please ensure your name and phone number are entered correctly.' };
+        }
+      }
+
+      if (input.match(/My name is [A-Za-z\s]+, (\d{10})/)) {
+
+        console.log('Name and Phone Validated');
+
+        const response = "What date would you like to schedule your appointment? Please provide a date in the format YYYY-MM-DD.";
+        this.chatHistory.push(new AIMessage({ content: response }));
+        return { message: response };
+      }
+
+      const dateRegex = /\b(\d{4}-\d{2}-\d{2})\b/;
+      const dateMatch = input.match(dateRegex);
+      if (dateMatch) {
+        const appointmentDate = dateMatch[1];
+        console.log(`Appointment Date: ${appointmentDate}`);
+
+        const response = `Your appointment has been scheduled for ${appointmentDate}.`;
+        this.chatHistory.push(new AIMessage({ content: response }));
+        return { message: response };
+      }
 
       return jsonResponse;
     } catch (error) {
       console.error('Error processing message:', error);
       return { message: 'Sorry, there was an error processing your request. Please try again later.' };
     }
+
   }
 
 }
