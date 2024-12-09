@@ -26,5 +26,4 @@ export class UserAuth {
 
 export const UserAuthSchema = SchemaFactory.createForClass(UserAuth);
 
-UserAuthSchema.index({ fullName: 1 }, { unique: true });
 UserAuthSchema.index({ phoneNumber: 1 }, { unique: true });
