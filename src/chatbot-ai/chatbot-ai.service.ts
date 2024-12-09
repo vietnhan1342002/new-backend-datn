@@ -96,8 +96,6 @@ export class ChatbotAiService {
   async processMessage(input: string) {
     const farewellKeywords = ['bye', 'goodbye', 'see you', 'later', 'farewell', 'take care'];
 
-    const regex = new RegExp(`\\b(${farewellKeywords.join('|')})\\b`, 'i');
-
     // Check if input contains the breakup keyword
     if (farewellKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
       this.chatHistory = [];
@@ -126,7 +124,8 @@ export class ChatbotAiService {
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
         After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
-        From the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above.
+        From the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
+        Answer" "Specialty can be: **${this.specialtiesData}**."
         Finally, ask them Would you like to make an appointment?.
         If user agree. Ask What is your name? Format: My name is [your name], [your phone number][only 10 numbers]. 
         Else, answer: "Have a good day!".
@@ -148,6 +147,21 @@ export class ChatbotAiService {
       this.chatHistory.push(new HumanMessage({ content: input }));
       this.chatHistory.push(new AIMessage({ content: response.content }));
 
+      //collect specialty
+      if (response.content.includes("Specialty can be:")) {
+        // Xử lý đoạn văn bản để lấy specialty
+        const specialtyRegex = /Specialty can be:\s*(.+?)(\.|\n|$)/;
+        const specialtyMatch = response.content.match(specialtyRegex);
+        if (specialtyMatch) {
+          const specialty = specialtyMatch[1].trim(); // Lấy nội dung sau "Specialty can be:"
+          console.log(`Extracted Specialty: ${specialty}`);
+
+        } else {
+          console.log("No specific specialty found after 'Specialty can be:'");
+        }
+      }
+
+      //collect user information
       if (input.includes('My name is')) {
         const namePhoneRegex = /My name is ([A-Za-z\s]+), (\d{10}).?$/;
         const match = input.match(namePhoneRegex);
@@ -155,7 +169,6 @@ export class ChatbotAiService {
         if (match) {
           const fullName = (this.userDetails.name = match[1]);
           const phoneNumber = (this.userDetails.phone = match[2]).toString();
-          console.log(phoneNumber);
           const existingUser = await this.userAuthService.checkPhoneExists(phoneNumber);
           if (existingUser) {
             return { message: 'Phone number already exists. Please use a different phone number.' };
@@ -169,16 +182,16 @@ export class ChatbotAiService {
           };
 
           const user = await this.userAuthService.register(createUserAuthDto);
-
-          return { message: 'Registration successful!', _id: user._id };
+          const response = "What date would you like to schedule your appointment? Please provide a date in the format YYYY-MM-DD.";
+          this.chatHistory.push(new AIMessage({ content: response }));
+          return { message: response, _id: user._id };
         } else {
           return { message: 'Invalid input format. Please ensure your name and phone number are entered correctly.' };
         }
       }
 
+      //collect date
       if (input.match(/My name is [A-Za-z\s]+, (\d{10})/)) {
-
-        console.log('Name and Phone Validated');
 
         const response = "What date would you like to schedule your appointment? Please provide a date in the format YYYY-MM-DD.";
         this.chatHistory.push(new AIMessage({ content: response }));
