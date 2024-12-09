@@ -6,6 +6,7 @@ import { Pinecone } from '@pinecone-database/pinecone';
 import { UserAuthService } from '@/modules/user-auth/user-auth.service';
 import { CreateUserAuthDto } from '@/modules/user-auth/dto/create-user-auth.dto';
 import { Types } from 'mongoose';
+import { SpecialtiesService } from '@/modules/specialties/specialties.service';
 
 interface UserDetails {
   name: string;
@@ -17,56 +18,58 @@ export class ChatbotAiService {
   private userDetails: UserDetails = { name: '', phone: '' };
   private llm;
   private chatHistory = [];
+  private specialtiesData: string[] = [];
   private vectorStore;
-  private specialtiesData = [
-    { name: "Musculoskeletal", description: "Examination and treatment of musculoskeletal diseases", isActive: true },
-    { name: "Neurology", description: "Examination and treatment of neurological diseases", isActive: true },
-    { name: "Digestive", description: "Examination and treatment of digestive diseases", isActive: true },
-    { name: "Cardiovascular", description: "Examination and treatment of cardiovascular diseases", isActive: true },
-    { name: "Ear, Nose, and Throat", description: "Examination and treatment of ear, nose, and throat diseases", isActive: true },
-    { name: "Spine", description: "Diagnosis and treatment of spinal problems", isActive: true },
-    { name: "Traditional Medicine", description: "Examination and treatment using traditional medicine methods", isActive: true },
-    { name: "Acupuncture", description: "Application of acupuncture in treatment", isActive: true },
-    { name: "Obstetrics and Gynecology", description: "Examination and treatment of obstetric and gynecological health", isActive: true },
-    { name: "Prenatal ultrasound", description: "Prenatal ultrasound service", isActive: true },
-    { name: "Pediatrics", description: "Examination and treatment of children", isActive: true },
-    { name: "Dermatology", description: "Examination and treatment of dermatological diseases", isActive: true },
-    { name: "Hepatitis", description: "Treatment and consultation of hepatitis", isActive: true },
-    { name: "Mental health", description: "Examination and psychological and mental support", isActive: true },
-    { name: "Allergy and immunology", description: "Diagnosis and treatment of allergy and immunology", isActive: true },
-    { name: "Respiratory - Lung", description: "Examination and treatment of respiratory diseases", isActive: true },
-    { name: "Neurosurgery", description: "Neurosurgery and treatment", isActive: true },
-    { name: "Andrology", description: "Examination and treatment of andrology problems", isActive: true },
-    { name: "Ophthalmology", description: "Examination and treatment of eye diseases", isActive: true },
-    { name: "Kidney - Urology", description: "Examination and treatment of kidney and urinary diseases", isActive: true },
-    { name: "Internal medicine", description: "Examination and treatment of general internal medicine", isActive: true },
-    { name: "Dentistry", description: "Examination and treatment of dental problems", isActive: true },
-    { name: "Diabetes - Endocrinology", description: "Diagnosis and treatment of diabetes, endocrine diseases", isActive: true },
-    { name: "Rehabilitation", description: "Support and rehabilitation", isActive: true },
-    { name: "Magnetic resonance imaging", description: "Magnetic resonance imaging service", isActive: true },
-    { name: "Computerized tomography", description: "Computerized tomography service", isActive: true },
-    { name: "Digestive endoscopy", description: "Digestive endoscopy service", isActive: true },
-    { name: "Oncology", description: "Examination and treatment of tumors", isActive: true },
-    { name: "Cosmetic dermatology", description: "Skin care and cosmetic treatment", isActive: true },
-    { name: "Infectious diseases", description: "Examination and treatment of infectious diseases", isActive: true },
-    { name: "Family doctor", description: "Family doctor service", isActive: true },
-    { name: "Maxillofacial Plastic Surgery", description: "Maxillofacial Plastic Surgery Service", isActive: true },
-    { name: "Psychological consultation and therapy", description: "Psychological consultation and therapy", isActive: true },
-    { name: "Infertility - Infertility", description: "Infertility and infertility examination and treatment", isActive: true },
-    { name: "Orthopedic trauma", description: "Orthopedic trauma treatment", isActive: true },
-    { name: "Braces", description: "Braces service", isActive: true },
-    { name: "Porcelain crowns", description: "Porcelain crowns service", isActive: true },
-    { name: "Implant dentistry", description: "Implant dentistry service", isActive: true },
-    { name: "Wisdom tooth extraction", description: "Wisdom tooth extraction service", isActive: true },
-    { name: "General dentistry", description: "General dental examination and treatment", isActive: true },
-    { name: "Pediatric dentistry", description: "Dental examination and treatment for children", isActive: true },
-    { name: "Thyroid", description: "Thyroid examination and treatment", isActive: true },
-    { name: "Breast specialist", description: "Breast specialist examination and treatment", isActive: true },
-  ];
+  // private specialtiesData = [
+  //   { name: "Musculoskeletal", description: "Examination and treatment of musculoskeletal diseases" },
+  //   { name: "Neurology", description: "Examination and treatment of neurological diseases" },
+  //   { name: "Digestive", description: "Examination and treatment of digestive diseases" },
+  //   { name: "Cardiovascular", description: "Examination and treatment of cardiovascular diseases" },
+  //   { name: "Ear, Nose, and Throat", description: "Examination and treatment of ear, nose, and throat diseases" },
+  //   { name: "Spine", description: "Diagnosis and treatment of spinal problems" },
+  //   { name: "Traditional Medicine", description: "Examination and treatment using traditional medicine methods" },
+  //   { name: "Acupuncture", description: "Application of acupuncture in treatment" },
+  //   { name: "Obstetrics and Gynecology", description: "Examination and treatment of obstetric and gynecological health" },
+  //   { name: "Prenatal ultrasound", description: "Prenatal ultrasound service" },
+  //   { name: "Pediatrics", description: "Examination and treatment of children" },
+  //   { name: "Dermatology", description: "Examination and treatment of dermatological diseases" },
+  //   { name: "Hepatitis", description: "Treatment and consultation of hepatitis" },
+  //   { name: "Mental health", description: "Examination and psychological and mental support" },
+  //   { name: "Allergy and immunology", description: "Diagnosis and treatment of allergy and immunology" },
+  //   { name: "Respiratory - Lung", description: "Examination and treatment of respiratory diseases" },
+  //   { name: "Neurosurgery", description: "Neurosurgery and treatment" },
+  //   { name: "Andrology", description: "Examination and treatment of andrology problems" },
+  //   { name: "Ophthalmology", description: "Examination and treatment of eye diseases" },
+  //   { name: "Kidney - Urology", description: "Examination and treatment of kidney and urinary diseases" },
+  //   { name: "Internal medicine", description: "Examination and treatment of general internal medicine" },
+  //   { name: "Dentistry", description: "Examination and treatment of dental problems" },
+  //   { name: "Diabetes - Endocrinology", description: "Diagnosis and treatment of diabetes, endocrine diseases" },
+  //   { name: "Rehabilitation", description: "Support and rehabilitation" },
+  //   { name: "Magnetic resonance imaging", description: "Magnetic resonance imaging service" },
+  //   { name: "Computerized tomography", description: "Computerized tomography service" },
+  //   { name: "Digestive endoscopy", description: "Digestive endoscopy service" },
+  //   { name: "Oncology", description: "Examination and treatment of tumors" },
+  //   { name: "Cosmetic dermatology", description: "Skin care and cosmetic treatment" },
+  //   { name: "Infectious diseases", description: "Examination and treatment of infectious diseases" },
+  //   { name: "Family doctor", description: "Family doctor service" },
+  //   { name: "Maxillofacial Plastic Surgery", description: "Maxillofacial Plastic Surgery Service" },
+  //   { name: "Psychological consultation and therapy", description: "Psychological consultation and therapy" },
+  //   { name: "Infertility - Infertility", description: "Infertility and infertility examination and treatment" },
+  //   { name: "Orthopedic trauma", description: "Orthopedic trauma treatment" },
+  //   { name: "Braces", description: "Braces service" },
+  //   { name: "Porcelain crowns", description: "Porcelain crowns service" },
+  //   { name: "Implant dentistry", description: "Implant dentistry service" },
+  //   { name: "Wisdom tooth extraction", description: "Wisdom tooth extraction service" },
+  //   { name: "General dentistry", description: "General dental examination and treatment" },
+  //   { name: "Pediatric dentistry", description: "Dental examination and treatment for children" },
+  //   { name: "Thyroid", description: "Thyroid examination and treatment" },
+  //   { name: "Breast specialist", description: "Breast specialist examination and treatment" },
+  // ];
 
 
   constructor(
     private userAuthService: UserAuthService,
+    private specialtiesService: SpecialtiesService,
   ) {
     const apiKey = "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";
     this.llm = new ChatGroq({
@@ -95,7 +98,7 @@ export class ChatbotAiService {
 
   async processMessage(input: string) {
     const farewellKeywords = ['bye', 'goodbye', 'see you', 'later', 'farewell', 'take care'];
-
+    let specialtyUser = '';
     // Check if input contains the breakup keyword
     if (farewellKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
       this.chatHistory = [];
@@ -113,6 +116,10 @@ export class ChatbotAiService {
       this.chatHistory = [];
       this.userDetails.name = '';
       this.userDetails.phone = '';
+    }
+
+    if (this.specialtiesData.length === 0) {
+      this.specialtiesData = await this.specialtiesService.findAllName();
     }
 
 
@@ -154,10 +161,13 @@ export class ChatbotAiService {
         const specialtyMatch = response.content.match(specialtyRegex);
         if (specialtyMatch) {
           const specialty = specialtyMatch[1].trim(); // Lấy nội dung sau "Specialty can be:"
-          console.log(`Extracted Specialty: ${specialty}`);
+          specialtyUser = specialty
+          console.log(`Extracted Specialty: ${specialtyUser}`);
 
         } else {
-          console.log("No specific specialty found after 'Specialty can be:'");
+          const response = "No specific specialty found after 'Specialty can be:'";
+          this.chatHistory.push(new AIMessage({ content: response }));
+          return { message: response };
         }
       }
 
