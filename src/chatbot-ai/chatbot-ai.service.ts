@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChatGroq } from "@langchain/groq";
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
@@ -231,6 +231,19 @@ export class ChatbotAiService {
           this.date = appointmentDate;
           console.log(`Appointment Date: ${this.date}`);
         }
+
+        console.log('appoinemt:', this.specialtyId, this.date);
+
+        const schedule = await this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId: this.specialtyId, date: this.date, status: 'active' })
+        console.log(schedule);
+
+
+        if (schedule.length === 0) {
+          const response = "Don't have any schedule suitable";
+          this.chatHistory.push(new AIMessage({ content: response }));
+          return { message: response };
+        }
+
         const response = `Your appointment has been scheduled for ${this.date}.`;
         this.chatHistory.push(new AIMessage({ content: response }));
         return { message: response };
