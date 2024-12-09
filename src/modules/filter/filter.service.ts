@@ -19,8 +19,53 @@ export class FilterService {
     if (filterCriteria.date) filter.date = filterCriteria.date;
     if (filterCriteria.status) filter.status = filterCriteria.status;
 
-    return this.doctorScheduleModel.find(filter).exec();
+    const doctor_schedules = await this.doctorScheduleModel.find(filter).exec();
+    if (doctor_schedules.length === 0) {
+      throw new NotFoundException("Don't have any schedule suitable")
+    }
+    return doctor_schedules
   }
+
+  async filterDoctorSchedulesBySpecialty(filterCriteria: { specialtyId?: string; date?: string; status?: string }) {
+    const matchFilter: any = {};
+    if (filterCriteria.date) matchFilter.date = new Date(filterCriteria.date); // Chuyển đổi `date` thành đối tượng `Date`
+    if (filterCriteria.status) matchFilter.status = filterCriteria.status;
+
+    const doctor_schedules = await this.doctorScheduleModel.aggregate([
+      { $match: matchFilter }, // Lọc dữ liệu cơ bản (không cần doctorId)
+      {
+        $lookup: {
+          from: 'doctors',              // Tên collection "doctors"
+          localField: 'doctorId',       // Trường liên kết trong collection "doctor_schedules"
+          foreignField: '_id',          // Trường liên kết trong collection "doctors"
+          as: 'doctorDetails',          // Kết quả lưu trong trường `doctorDetails`
+        },
+      },
+      { $unwind: { path: '$doctorDetails', preserveNullAndEmptyArrays: true } }, // Giải nén mảng `doctorDetails`
+      {
+        $match: {
+          ...(filterCriteria.specialtyId && {
+            'doctorDetails.specialtyId': new Types.ObjectId(filterCriteria.specialtyId),
+          }),
+        },
+      },
+      {
+        $project: {                 // Chỉ giữ lại các trường mong muốn
+          _id: 1,
+          doctorId: 1,
+          shiftId: 1,
+        },
+      },
+    ]).exec();
+
+    if (doctor_schedules.length === 0) {
+      throw new NotFoundException("Don't have any schedule suitable");
+    }
+    return doctor_schedules;
+  }
+
+
+
 
   // Lọc lịch bác sĩ với thông tin chi tiết
   async filterDoctorSchedulesWithDetails(filterCriteria: { doctorId?: string; date?: string; status?: string }) {
@@ -29,7 +74,7 @@ export class FilterService {
     if (filterCriteria.date) matchFilter.date = filterCriteria.date;
     if (filterCriteria.status) matchFilter.status = filterCriteria.status;
 
-    return this.doctorScheduleModel.aggregate([
+    const doctor_schedules = await this.doctorScheduleModel.aggregate([
       { $match: matchFilter },
       {
         $lookup: {
@@ -41,6 +86,11 @@ export class FilterService {
       },
       { $unwind: '$doctorDetails' },
     ]).exec();
+
+    if (doctor_schedules.length === 0) {
+      throw new NotFoundException("Don't have any schedule suitable")
+    }
+    return doctor_schedules
   }
 
   async filterSpecialties(filterCriteria: { departmentId?: string }) {
