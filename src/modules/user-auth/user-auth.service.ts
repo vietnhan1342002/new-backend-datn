@@ -23,7 +23,6 @@ import { UpdateUserAuthDto } from './dto/update-user-auth.dto';
 import { Patient } from '../patients/schemas/patient.schema';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { Doctor } from '../doctors/schemas/doctor.schema';
-import { log } from 'node:console';
 
 @Injectable()
 export class UserAuthService {
@@ -40,11 +39,16 @@ export class UserAuthService {
 
     private jwtService: JwtService,
     private roleService: RolesService,
-  ) {}
+  ) { }
 
   //-------------------------------------------------------------------------//
 
   async register(createUserDto: CreateUserAuthDto) {
+    const existingUser = await this.checkPhoneExists(createUserDto.phoneNumber);
+    if (existingUser) {
+      return { message: 'Phone number already exists. Please use a different phone number.' };
+    }
+
     const user = await this.createUser(createUserDto);
 
     // Set default role to 'patient'
@@ -167,17 +171,23 @@ export class UserAuthService {
 
   async getUserPermissions(userId: string) {
     const user = await this.userAuthModel.findById(userId);
-    
+
     if (!user) throw new BadRequestException('User does not exist');
 
     const role = await this.roleService.findRoleById(user.roleId);
-    
+
     return role.permissions;
   }
 
   //--------------------------------------Part for User------------------------------------------------------------//
 
   async create(createUserDto: CreateUserAuthDto) {
+
+    const existingUser = await this.checkPhoneExists(createUserDto.phoneNumber);
+    if (existingUser) {
+      return { message: 'Phone number already exists. Please use a different phone number.' };
+    }
+
     const user = await this.createUser(createUserDto);
     // Create Patient record with only userId (no other information required)
     if (user.roleId.toString() === '673d935335e97c832bfa6356') {
@@ -226,7 +236,10 @@ export class UserAuthService {
 
   async update(_id: string, updateUserDto: UpdateUserAuthDto) {
     const { fullName, phoneNumber } = updateUserDto;
-
+    const existingUser = await this.checkPhoneExists(updateUserDto.phoneNumber);
+    if (existingUser) {
+      return { message: 'Phone number already exists. Please use a different phone number.' };
+    }
     return await this.userAuthModel.updateOne(
       { _id },
       { fullName, phoneNumber },
@@ -266,25 +279,13 @@ export class UserAuthService {
   }
 
   async createUser(createUserDto: CreateUserAuthDto) {
-    const { email, password, fullName, phoneNumber, roleId } = createUserDto;
-
-    const emailExists = await isExistHelper({ email }, this.userAuthModel);
-    const phoneNumberExists = await isExistHelper(
-      { phoneNumber },
-      this.userAuthModel,
-    );
-    if (emailExists || phoneNumberExists) {
-      throw new BadRequestException(
-        `Email : ${email} or ${phoneNumberExists} Already exists. Please use another email or another phone number!`,
-      );
-    }
+    const { password, fullName, phoneNumber, roleId } = createUserDto;
 
     // Mã hóa mật khẩu
     const hashPassword = await hashPasswordHelper(password);
 
     // Tạo người dùng mới
     const user = await this.userAuthModel.create({
-      email,
       password: hashPassword,
       fullName,
       phoneNumber,
@@ -292,5 +293,10 @@ export class UserAuthService {
     });
 
     return user;
+  }
+
+  async checkPhoneExists(phoneNumber: string): Promise<boolean> {
+    const user = await this.userAuthModel.findOne({ phoneNumber }).exec();
+    return user ? true : false;  // Return true if a user with the phone number exists, false otherwise
   }
 }
