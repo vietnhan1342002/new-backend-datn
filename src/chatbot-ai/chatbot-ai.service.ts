@@ -3,6 +3,9 @@ import { ChatGroq } from "@langchain/groq";
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { Pinecone } from '@pinecone-database/pinecone';
+import { UserAuthService } from '@/modules/user-auth/user-auth.service';
+import { CreateUserAuthDto } from '@/modules/user-auth/dto/create-user-auth.dto';
+import { Types } from 'mongoose';
 
 interface UserDetails {
   name: string;
@@ -62,7 +65,9 @@ export class ChatbotAiService {
   ];
 
 
-  constructor() {
+  constructor(
+    private userAuthService: UserAuthService,
+  ) {
     const apiKey = "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";
     this.llm = new ChatGroq({
       model: 'gemma2-9b-it',
@@ -103,7 +108,7 @@ export class ChatbotAiService {
       };
     }
 
-
+    // Check if input Have a good day
     if (this.chatHistory.some(msg =>
       msg.content.includes("Have a good day!")
     )) {
@@ -148,9 +153,24 @@ export class ChatbotAiService {
         const match = input.match(namePhoneRegex);
 
         if (match) {
-          this.userDetails.name = match[1]
-          this.userDetails.phone = match[2]
+          const fullName = (this.userDetails.name = match[1]);
+          const phoneNumber = (this.userDetails.phone = match[2]).toString();
+          console.log(phoneNumber);
+          const existingUser = await this.userAuthService.checkPhoneExists(phoneNumber);
+          if (existingUser) {
+            return { message: 'Phone number already exists. Please use a different phone number.' };
+          }
+          const password = '123456';
+          const createUserAuthDto: CreateUserAuthDto = {
+            fullName,
+            phoneNumber,
+            password,
+            roleId: new Types.ObjectId('673d931c35e97c832bfa6351')
+          };
 
+          const user = await this.userAuthService.register(createUserAuthDto);
+
+          return { message: 'Registration successful!', _id: user._id };
         } else {
           return { message: 'Invalid input format. Please ensure your name and phone number are entered correctly.' };
         }
