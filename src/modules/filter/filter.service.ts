@@ -57,10 +57,6 @@ export class FilterService {
         },
       },
     ]).exec();
-
-    if (doctor_schedules.length === 0) {
-      throw new NotFoundException("Don't have any schedule suitable");
-    }
     return doctor_schedules;
   }
 
