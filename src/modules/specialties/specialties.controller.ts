@@ -15,9 +15,7 @@ import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
 import { Public } from '../user-auth/guard/public.guard';
 import { JwtAuthGuard } from '../user-auth/guard/jwt-auth.guard';
 import { RoleGuard } from '../user-auth/guard/role.guard';
-
 import { parseQueryParam } from '@/helpers/utils';
-import { Roles } from '@/decorator/role.decorator';
 import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
@@ -26,7 +24,13 @@ import { Action } from '../roles/enum/action.enum';
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @Controller('specialties')
 export class SpecialtiesController {
-  constructor(private readonly specialtiesService: SpecialtiesService) {}
+  constructor(private readonly specialtiesService: SpecialtiesService) { }
+
+  // @Post('create-many')
+  // async createMany(@Body() specialtiesData: any[]) {
+  //   console.log(specialtiesData);
+  //   return this.specialtiesService.createMany(specialtiesData);
+  // }
 
   @Post()
   create(@Body() createSpecialtyDto: CreateSpecialtyDto) {
