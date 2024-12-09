@@ -5,16 +5,13 @@ import { Document, HydratedDocument, Types } from 'mongoose';
 export type UserAuthDocument = HydratedDocument<UserAuth>;
 
 @Schema()
-export class UserAuth extends Document {
-  @Prop({ required: true })
-  email: string;
-
+export class UserAuth {
   @Prop({ required: true })
   password: string;
 
   @Prop({
-    required: false,
     type: Types.ObjectId,
+    required: true,
     ref: Role.name,
     default: new Types.ObjectId('673d935335e97c832bfa6356'),
   })
@@ -29,6 +26,5 @@ export class UserAuth extends Document {
 
 export const UserAuthSchema = SchemaFactory.createForClass(UserAuth);
 
-UserAuthSchema.index({ email: 1 }, { unique: true });
 UserAuthSchema.index({ fullName: 1 }, { unique: true });
 UserAuthSchema.index({ phoneNumber: 1 }, { unique: true });
