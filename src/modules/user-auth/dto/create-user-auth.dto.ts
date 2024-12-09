@@ -1,26 +1,20 @@
 import {
-  IsEmail,
-  IsEmpty,
-  IsMongoId,
   IsNotEmpty,
   IsOptional,
-  Length,
+
 } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateUserAuthDto {
-  @IsEmail()
-  @IsNotEmpty({ message: 'email cannot be empty' })
-  email: string;
-
-  @IsNotEmpty({ message: 'Password cannot be empty' })
-  password: string;
-
   @IsNotEmpty({ message: 'fullName cannot be empty' })
   fullName: string;
 
   @IsNotEmpty({ message: 'phoneNumber cannot be empty' })
   phoneNumber: string;
 
+  @IsNotEmpty({ message: 'Password cannot be empty' })
+  password: string;
+
   @IsOptional()
-  roleId: string;
+  roleId: Types.ObjectId;
 }
