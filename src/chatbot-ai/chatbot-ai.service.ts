@@ -24,52 +24,7 @@ export class ChatbotAiService {
   private vectorStore;
   private specialtyId: string;
   private date: string;
-  // private specialtiesData = [
-  //   { name: "Musculoskeletal", description: "Examination and treatment of musculoskeletal diseases" },
-  //   { name: "Neurology", description: "Examination and treatment of neurological diseases" },
-  //   { name: "Digestive", description: "Examination and treatment of digestive diseases" },
-  //   { name: "Cardiovascular", description: "Examination and treatment of cardiovascular diseases" },
-  //   { name: "Ear, Nose, and Throat", description: "Examination and treatment of ear, nose, and throat diseases" },
-  //   { name: "Spine", description: "Diagnosis and treatment of spinal problems" },
-  //   { name: "Traditional Medicine", description: "Examination and treatment using traditional medicine methods" },
-  //   { name: "Acupuncture", description: "Application of acupuncture in treatment" },
-  //   { name: "Obstetrics and Gynecology", description: "Examination and treatment of obstetric and gynecological health" },
-  //   { name: "Prenatal ultrasound", description: "Prenatal ultrasound service" },
-  //   { name: "Pediatrics", description: "Examination and treatment of children" },
-  //   { name: "Dermatology", description: "Examination and treatment of dermatological diseases" },
-  //   { name: "Hepatitis", description: "Treatment and consultation of hepatitis" },
-  //   { name: "Mental health", description: "Examination and psychological and mental support" },
-  //   { name: "Allergy and immunology", description: "Diagnosis and treatment of allergy and immunology" },
-  //   { name: "Respiratory - Lung", description: "Examination and treatment of respiratory diseases" },
-  //   { name: "Neurosurgery", description: "Neurosurgery and treatment" },
-  //   { name: "Andrology", description: "Examination and treatment of andrology problems" },
-  //   { name: "Ophthalmology", description: "Examination and treatment of eye diseases" },
-  //   { name: "Kidney - Urology", description: "Examination and treatment of kidney and urinary diseases" },
-  //   { name: "Internal medicine", description: "Examination and treatment of general internal medicine" },
-  //   { name: "Dentistry", description: "Examination and treatment of dental problems" },
-  //   { name: "Diabetes - Endocrinology", description: "Diagnosis and treatment of diabetes, endocrine diseases" },
-  //   { name: "Rehabilitation", description: "Support and rehabilitation" },
-  //   { name: "Magnetic resonance imaging", description: "Magnetic resonance imaging service" },
-  //   { name: "Computerized tomography", description: "Computerized tomography service" },
-  //   { name: "Digestive endoscopy", description: "Digestive endoscopy service" },
-  //   { name: "Oncology", description: "Examination and treatment of tumors" },
-  //   { name: "Cosmetic dermatology", description: "Skin care and cosmetic treatment" },
-  //   { name: "Infectious diseases", description: "Examination and treatment of infectious diseases" },
-  //   { name: "Family doctor", description: "Family doctor service" },
-  //   { name: "Maxillofacial Plastic Surgery", description: "Maxillofacial Plastic Surgery Service" },
-  //   { name: "Psychological consultation and therapy", description: "Psychological consultation and therapy" },
-  //   { name: "Infertility - Infertility", description: "Infertility and infertility examination and treatment" },
-  //   { name: "Orthopedic trauma", description: "Orthopedic trauma treatment" },
-  //   { name: "Braces", description: "Braces service" },
-  //   { name: "Porcelain crowns", description: "Porcelain crowns service" },
-  //   { name: "Implant dentistry", description: "Implant dentistry service" },
-  //   { name: "Wisdom tooth extraction", description: "Wisdom tooth extraction service" },
-  //   { name: "General dentistry", description: "General dental examination and treatment" },
-  //   { name: "Pediatric dentistry", description: "Dental examination and treatment for children" },
-  //   { name: "Thyroid", description: "Thyroid examination and treatment" },
-  //   { name: "Breast specialist", description: "Breast specialist examination and treatment" },
-  // ];
-
+  private shift: string;
 
   constructor(
     private userAuthService: UserAuthService,
@@ -122,9 +77,7 @@ export class ChatbotAiService {
     }
 
     // Check if input Have a good day
-    if (this.chatHistory.some(msg =>
-      msg.content.includes("Have a good day!")
-    )) {
+    if (this.chatHistory.some(msg => msg.content.includes("Have a good day!"))) {
       this.chatHistory = [];
       this.userDetails.name = '';
       this.userDetails.phone = '';
@@ -132,6 +85,38 @@ export class ChatbotAiService {
 
     if (this.specialtiesData.length === 0) {
       this.specialtiesData = await this.specialtiesService.findAllName();
+    }
+
+
+    //collect user information
+    if (input.includes('My name is')) {
+      const namePhoneRegex = /My name is ([A-Za-z\s]+), (\d{10}).?$/;
+      const match = input.match(namePhoneRegex);
+
+      if (match) {
+        const fullName = (this.userDetails.name = match[1]);
+        const phoneNumber = (this.userDetails.phone = match[2]).toString();
+        const existingUser = await this.userAuthService.checkPhoneExists(phoneNumber);
+        if (existingUser) {
+          return { message: 'Phone number already exists. Please use a different phone number.' };
+        }
+        const password = '123456';
+        const createUserAuthDto: CreateUserAuthDto = {
+          fullName,
+          phoneNumber,
+          password,
+          roleId: new Types.ObjectId('673d931c35e97c832bfa6351')
+        };
+        // const user = await this.userAuthService.register(createUserAuthDto);
+        const response = "I created an account for you with a phone and password is 123456.\nWhat date would you like to schedule your appointment? Please provide a date in the format YYYY-MM-DD.";
+        this.chatHistory.push(new AIMessage({ content: response }));
+        return {
+          message: response,
+          // _id: user._id
+        };
+      } else {
+        return { message: 'Invalid input format. Please ensure your name and phone number are entered correctly.' };
+      }
     }
 
     // Tạo prompt dựa trên lịch sử trò chuyện
@@ -184,37 +169,6 @@ export class ChatbotAiService {
         }
       }
 
-      //collect user information
-      if (input.includes('My name is')) {
-        const namePhoneRegex = /My name is ([A-Za-z\s]+), (\d{10}).?$/;
-        const match = input.match(namePhoneRegex);
-
-        if (match) {
-          const fullName = (this.userDetails.name = match[1]);
-          const phoneNumber = (this.userDetails.phone = match[2]).toString();
-          const existingUser = await this.userAuthService.checkPhoneExists(phoneNumber);
-          if (existingUser) {
-            return { message: 'Phone number already exists. Please use a different phone number.' };
-          }
-          const password = '123456';
-          const createUserAuthDto: CreateUserAuthDto = {
-            fullName,
-            phoneNumber,
-            password,
-            roleId: new Types.ObjectId('673d931c35e97c832bfa6351')
-          };
-          console.log(createUserAuthDto);
-          // const user = await this.userAuthService.register(createUserAuthDto);
-          const response = "I created an account for you with a phone and password is 123456.\nWhat date would you like to schedule your appointment? Please provide a date in the format YYYY-MM-DD.";
-          this.chatHistory.push(new AIMessage({ content: response }));
-          return {
-            message: response,
-            // _id: user._id
-          };
-        } else {
-          return { message: 'Invalid input format. Please ensure your name and phone number are entered correctly.' };
-        }
-      }
 
       //collect date
       if (input.match(/My name is [A-Za-z\s]+, (\d{10})/)) {
@@ -229,26 +183,50 @@ export class ChatbotAiService {
         const appointmentDate = dateMatch[1];
         if (!this.date) {
           this.date = appointmentDate;
-          console.log(`Appointment Date: ${this.date}`);
         }
-
-        console.log('appoinemt:', this.specialtyId, this.date);
-
-        const schedule = await this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId: this.specialtyId, date: this.date, status: 'active' })
-        console.log(schedule);
-
-
+        // Lọc các lịch làm việc của bác sĩ theo chuyên khoa và ngày
+        const schedule = await this.filterService.filterDoctorSchedulesBySpecialty({
+          specialtyId: this.specialtyId,
+          date: this.date,
+          status: 'active'
+        });
         if (schedule.length === 0) {
-          const response = "Don't have any schedule suitable";
+          const response = `We couldn't find any suitable schedule for ${this.date}. Please try another date.`;
           this.chatHistory.push(new AIMessage({ content: response }));
           return { message: response };
         }
 
-        const response = `Your appointment has been scheduled for ${this.date}.`;
+        const shiftList = schedule.map(shift => shift.shift).join(', ');
+
+        const response = `Your appointment has been scheduled for ${this.date}. The available shifts are: ${shiftList}. Please choose a shift.`;
         this.chatHistory.push(new AIMessage({ content: response }));
         return { message: response };
       }
 
+      //collect shift
+      const Shiftregex = /\d{2}:\d{2} - \d{2}:\d{2}/g;
+      const ShiftMatch = input.match(Shiftregex);
+
+      if (ShiftMatch) {
+        const shiftDate = ShiftMatch[0];
+        if (!this.shift) {
+          this.shift = shiftDate;
+        }
+
+        console.log('Appointment:', this.specialtyId, this.date, this.shift);
+        const schedule = await this.filterService.filterDoctorSchedulesBySpecialty({
+          specialtyId: this.specialtyId,
+          date: this.date,
+          status: 'active',
+          shift: this.shift
+        });
+        const scheduleId = schedule[0]._id;
+        const doctorId = schedule[0].doctorId;
+        console.log(scheduleId, doctorId);
+        const response = `Your appointment has been scheduled for ${this.date} and ${this.shift}.`;
+        this.chatHistory.push(new AIMessage({ content: response }));
+        return { message: response };
+      }
 
       return jsonResponse;
     } catch (error) {

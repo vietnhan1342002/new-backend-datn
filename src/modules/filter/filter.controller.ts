@@ -24,8 +24,9 @@ export class FilterController {
     @Query('specialtyId') specialtyId?: string,
     @Query('date') date?: string,
     @Query('status') status?: string,
+    @Query('shift') shift?: string,
   ) {
-    return this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId, date, status });
+    return this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId, date, status, shift });
   }
 
   // Lấy lịch bác sĩ với chi tiết thông tin
