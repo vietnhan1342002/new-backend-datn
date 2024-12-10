@@ -20,8 +20,9 @@ import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { Public } from '../user-auth/guard/public.guard';
 
-@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
-@UseGuards(JwtAuthGuard, RoleGuard)
+// @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
+// @UseGuards(JwtAuthGuard, RoleGuard)
+@Public()
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) { }

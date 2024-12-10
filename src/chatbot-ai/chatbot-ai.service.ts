@@ -24,6 +24,7 @@ export class ChatbotAiService {
   private llm;
   private chatHistory = [];
   private specialtiesData: string[] = [];
+  private dateList: string[] = [];
   private vectorStore;
   private patientId: string;
   private specialtyId: string;
@@ -61,6 +62,16 @@ export class ChatbotAiService {
     }
   }
 
+  private resetState() {
+    this.chatHistory = [];
+    this.userDetails.name = '';
+    this.userDetails.phone = '';
+    this.date = '';
+    this.patientId = '';
+    this.specialtyId = '';
+    this.shift = '';
+  }
+
 
   async processMessage(input: string) {
     const farewellKeywords = ['bye', 'goodbye', 'see you', 'later', 'farewell', 'take care'];
@@ -73,16 +84,12 @@ export class ChatbotAiService {
     const Shiftregex = /\d{2}:\d{2} - \d{2}:\d{2}/g;
 
     if (greetingKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
-      this.chatHistory = [];
-      this.userDetails.name = '';
-      this.userDetails.phone = '';
+      this.resetState();
     }
 
     // Check if input contains the breakup keyword
     if (farewellKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
-      this.chatHistory = [];
-      this.userDetails.name = '';
-      this.userDetails.phone = '';
+      this.resetState();
       return {
         message: 'Goodbye! The chat history has been cleared. Feel free to start a new conversation anytime!',
       };
@@ -90,47 +97,13 @@ export class ChatbotAiService {
 
     // Check if input Have a good day
     if (this.chatHistory.some(msg => msg.content.includes("Have a good day!"))) {
-      this.chatHistory = [];
-      this.userDetails.name = '';
-      this.userDetails.phone = '';
+      this.resetState();
     }
 
     if (this.specialtiesData.length === 0) {
       this.specialtiesData = await this.specialtiesService.findAllName();
     }
 
-
-    //collect user information
-    if (input.includes('My name is')) {
-      const match = input.match(namePhoneRegex);
-
-      if (match) {
-        const fullName = (this.userDetails.name = match[1]);
-        const phoneNumber = (this.userDetails.phone = match[2]).toString();
-        const existingUser = await this.userAuthService.checkPhoneExists(phoneNumber);
-        if (existingUser) {
-          return { message: 'Phone number already exists. Please use a different phone number.' };
-        }
-        const password = '123456';
-        const createUserAuthDto: CreateUserAuthDto = {
-          fullName,
-          phoneNumber,
-          password,
-          roleId: new Types.ObjectId('673d931c35e97c832bfa6351')
-        };
-        const user = await this.userAuthService.register(createUserAuthDto);
-        const patient = await this.patientsService.findPatientByUserId(user._id)
-        this.patientId = patient.toString()
-        const response = "I created an account for you with a phone and password is 123456.\nWhat date would you like to schedule your appointment? Please provide a date in the format YYYY-MM-DD.";
-        this.chatHistory.push(new AIMessage({ content: response }));
-        return {
-          message: response,
-          // _id: user._id
-        };
-      } else {
-        return { message: 'Invalid input format. Please ensure your name and phone number are entered correctly.' };
-      }
-    }
 
     // Tạo prompt dựa trên lịch sử trò chuyện
     const prompt = ChatPromptTemplate.fromMessages([
@@ -139,7 +112,7 @@ export class ChatbotAiService {
         Say greetings first. Then ask how you can help.
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
-        After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
         Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
         Next Answer" "Specialty can be: **speciaty predict**."
         Finally, ask them Would you like to make an appointment?.
@@ -169,10 +142,13 @@ export class ChatbotAiService {
         const specialtyMatch = response.content.match(specialtyRegex);
 
         if (specialtyMatch) {
-          let specialty = specialtyMatch[1].trim(); // Lấy nội dung sau "Specialty can be:"
+          let specialty = specialtyMatch[1].trim();
           specialty = specialty.replace(/\*\*/g, '').trim();
           if (!this.specialtyId) {
             this.specialtyId = await this.specialtiesService.findByName(specialty)
+            const dateSchedule = await this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId: this.specialtyId });
+            const uniqueDates = [...new Set(dateSchedule.map(schedule => schedule.date.toISOString().split('T')[0]))];
+            this.dateList = uniqueDates
           }
         } else {
           const responseMessage = "No specific specialty found after 'Specialty can be:'";
@@ -182,13 +158,44 @@ export class ChatbotAiService {
       }
 
 
-      //collect date
-      if (input.match(/My name is [A-Za-z\s]+, (\d{10})/)) {
-        const response = "What date would you like to schedule your appointment? Please provide a date in the format YYYY-MM-DD.";
-        this.chatHistory.push(new AIMessage({ content: response }));
-        return { message: response };
+      //collect user information
+      if (input.includes('My name is')) {
+        const match = input.match(namePhoneRegex);
+
+        if (match) {
+          const fullName = (this.userDetails.name = match[1]);
+          const phoneNumber = (this.userDetails.phone = match[2]).toString();
+          const existingUser = await this.userAuthService.checkPhoneExists(phoneNumber);
+          if (existingUser) {
+            return { message: 'Phone number already exists. Please use a different phone number.' };
+          }
+          const createUserAuthDto: CreateUserAuthDto = {
+            fullName,
+            phoneNumber,
+            password: phoneNumber,
+            roleId: new Types.ObjectId('673d931c35e97c832bfa6351')
+          };
+          // const user = await this.userAuthService.register(createUserAuthDto);
+          // const patient = await this.patientsService.findPatientByUserId(user._id)
+          // this.patientId = patient.toString()
+          const response = `I created an account for you with a phone and password is 123456.\nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
+          this.chatHistory.push(new AIMessage({ content: response }));
+          return {
+            message: response,
+            dateList: this.dateList
+            // _id: user._id
+          };
+        } else {
+          return { message: 'Invalid input format. Please ensure your name and phone number are entered correctly.' };
+        }
       }
 
+      //collect date
+      if (input.match(/My name is [A-Za-z\s]+, (\d{10})/)) {
+        const response = `What date would you like to schedule your appointment?`;
+        this.chatHistory.push(new AIMessage({ content: response }));
+        return { message: response, dateList: this.dateList };
+      }
       const dateMatch = input.match(dateRegex);
       if (dateMatch) {
         const appointmentDate = dateMatch[1];
@@ -201,6 +208,7 @@ export class ChatbotAiService {
           date: this.date,
           status: 'active'
         });
+
         if (schedule.length === 0) {
           const response = `We couldn't find any suitable schedule for ${this.date}. Please try another date.`;
           this.chatHistory.push(new AIMessage({ content: response }));
@@ -211,7 +219,7 @@ export class ChatbotAiService {
 
         const response = `Your appointment has been scheduled for ${this.date}. The available shifts are: ${shiftList}. Please choose a shift.`;
         this.chatHistory.push(new AIMessage({ content: response }));
-        return { message: response };
+        return { message: response, shiftList: shiftList };
       }
 
       //collect shift

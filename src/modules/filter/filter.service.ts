@@ -30,7 +30,7 @@ export class FilterService {
     const matchFilter: any = {};
     if (filterCriteria.date) matchFilter.date = new Date(filterCriteria.date); // Chuyển đổi `date` thành đối tượng `Date`
     if (filterCriteria.status) matchFilter.status = filterCriteria.status;
-    console.log(filterCriteria.shift);
+    console.log("shift in filter: ", filterCriteria.shift);
 
     const doctor_schedules = await this.doctorScheduleModel.aggregate([
       { $match: matchFilter }, // Lọc dữ liệu cơ bản
@@ -69,6 +69,7 @@ export class FilterService {
           _id: 1,
           doctorId: 1,
           shiftId: 1,
+          date: 1,
           shift: '$shiftDetails.name', // Thêm trường `shift`
         },
       },
