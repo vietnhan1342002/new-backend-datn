@@ -26,13 +26,14 @@ export class FilterService {
     return doctor_schedules
   }
 
-  async filterDoctorSchedulesBySpecialty(filterCriteria: { specialtyId?: string; date?: string; status?: string }) {
+  async filterDoctorSchedulesBySpecialty(filterCriteria: { specialtyId?: string; date?: string; status?: string; shift?: string }) {
     const matchFilter: any = {};
     if (filterCriteria.date) matchFilter.date = new Date(filterCriteria.date); // Chuyển đổi `date` thành đối tượng `Date`
     if (filterCriteria.status) matchFilter.status = filterCriteria.status;
+    console.log(filterCriteria.shift);
 
     const doctor_schedules = await this.doctorScheduleModel.aggregate([
-      { $match: matchFilter }, // Lọc dữ liệu cơ bản (không cần doctorId)
+      { $match: matchFilter }, // Lọc dữ liệu cơ bản
       {
         $lookup: {
           from: 'doctors',              // Tên collection "doctors"
@@ -41,7 +42,7 @@ export class FilterService {
           as: 'doctorDetails',          // Kết quả lưu trong trường `doctorDetails`
         },
       },
-      { $unwind: { path: '$doctorDetails', preserveNullAndEmptyArrays: true } }, // Giải nén mảng `doctorDetails`
+      { $unwind: { path: '$doctorDetails', preserveNullAndEmptyArrays: true } },
       {
         $match: {
           ...(filterCriteria.specialtyId && {
@@ -50,17 +51,31 @@ export class FilterService {
         },
       },
       {
+        $lookup: {
+          from: 'shifts',
+          localField: 'shiftId',
+          foreignField: '_id',
+          as: 'shiftDetails',
+        },
+      },
+      { $unwind: { path: '$shiftDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          ...(filterCriteria.shift && { 'shiftDetails.name': filterCriteria.shift }),
+        },
+      },
+      {
         $project: {                 // Chỉ giữ lại các trường mong muốn
           _id: 1,
           doctorId: 1,
           shiftId: 1,
+          shift: '$shiftDetails.name', // Thêm trường `shift`
         },
       },
     ]).exec();
+
     return doctor_schedules;
   }
-
-
 
 
   // Lọc lịch bác sĩ với thông tin chi tiết
