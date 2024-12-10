@@ -29,6 +29,7 @@ export class AppointmentsService {
   async create(createAppointmentDto: CreateAppointmentDto) {
     const { patientId, doctorId, doctorScheduleId } = createAppointmentDto;
 
+
     // Chuyển chuỗi thành ObjectId (Mongoose tự động chuyển khi lưu vào DB)
     const patientObjectId = new Types.ObjectId(patientId); // Chuyển chuỗi thành ObjectId
     const doctorObjectId = new Types.ObjectId(doctorId);   // Chuyển chuỗi thành ObjectId
@@ -40,6 +41,7 @@ export class AppointmentsService {
     try {
       const schedule =
         await this.doctorScheduleService.findOne(doctorScheduleId);
+
       if (!schedule) {
         throw new NotFoundException(
           'No available schedule for this doctor on this date',
@@ -225,7 +227,8 @@ export class AppointmentsService {
   }
 
   private validateSchedule(schedule: any, doctorId: Types.ObjectId) {
-    if (schedule.doctorId._id.toString() !== doctorId) {
+
+    if (schedule.doctorId._id.toString() !== doctorId.toString()) {
       throw new BadRequestException('Doctor ID does not match the schedule.');
     }
     if (schedule.status === 'inactive') {

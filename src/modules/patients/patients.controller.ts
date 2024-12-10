@@ -18,12 +18,13 @@ import { UpdatePatientUserDto } from './dto/update-patient-user.dto';
 import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
+import { Public } from '../user-auth/guard/public.guard';
 
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Controller('patients')
 export class PatientsController {
-  constructor(private readonly patientsService: PatientsService) {}
+  constructor(private readonly patientsService: PatientsService) { }
 
   @Post()
   create(@Body() createPatientDto: CreatePatientDto) {
@@ -36,14 +37,15 @@ export class PatientsController {
     @Query('query') query: string = '',
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
-  ) {    
-    
+  ) {
+
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
 
     // Tìm tất cả bác sĩ hoặc theo query
     return this.patientsService.findAll(query, currentPage, pageLimit);
   }
+
 
   @Permissions([{ resource: Resource.PATIENT, actions: [Action.READ] }])
   @Get(':_id')

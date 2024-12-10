@@ -9,6 +9,9 @@ import { Types } from 'mongoose';
 import { SpecialtiesService } from '@/modules/specialties/specialties.service';
 import { FilterService } from '@/modules/filter/filter.service';
 import { Status } from '@/modules/doctor-schedules/schemas/doctor-schedule.schema';
+import { PatientsService } from '@/modules/patients/patients.service';
+import { AppointmentsService } from '@/modules/appointments/appointments.service';
+import { CreateAppointmentDto } from '@/modules/appointments/dto/create-appointment.dto';
 
 interface UserDetails {
   name: string;
@@ -22,6 +25,7 @@ export class ChatbotAiService {
   private chatHistory = [];
   private specialtiesData: string[] = [];
   private vectorStore;
+  private patientId: string;
   private specialtyId: string;
   private date: string;
   private shift: string;
@@ -30,6 +34,8 @@ export class ChatbotAiService {
     private userAuthService: UserAuthService,
     private specialtiesService: SpecialtiesService,
     private filterService: FilterService,
+    private patientsService: PatientsService,
+    private appointmentsService: AppointmentsService,
   ) {
     const apiKey = "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";
     this.llm = new ChatGroq({
@@ -107,7 +113,9 @@ export class ChatbotAiService {
           password,
           roleId: new Types.ObjectId('673d931c35e97c832bfa6351')
         };
-        // const user = await this.userAuthService.register(createUserAuthDto);
+        const user = await this.userAuthService.register(createUserAuthDto);
+        const patient = await this.patientsService.findPatientByUserId(user._id)
+        this.patientId = patient.toString()
         const response = "I created an account for you with a phone and password is 123456.\nWhat date would you like to schedule your appointment? Please provide a date in the format YYYY-MM-DD.";
         this.chatHistory.push(new AIMessage({ content: response }));
         return {
@@ -213,7 +221,6 @@ export class ChatbotAiService {
           this.shift = shiftDate;
         }
 
-        console.log('Appointment:', this.specialtyId, this.date, this.shift);
         const schedule = await this.filterService.filterDoctorSchedulesBySpecialty({
           specialtyId: this.specialtyId,
           date: this.date,
@@ -222,12 +229,18 @@ export class ChatbotAiService {
         });
         const scheduleId = schedule[0]._id;
         const doctorId = schedule[0].doctorId;
-        console.log(scheduleId, doctorId);
-        const response = `Your appointment has been scheduled for ${this.date} and ${this.shift}.`;
+        const createAppointmentDto: CreateAppointmentDto = {
+          doctorScheduleId: scheduleId,
+          doctorId: doctorId,
+          patientId: new Types.ObjectId(this.patientId),
+        };
+
+        await this.appointmentsService.create(createAppointmentDto)
+
+        const response = `Your appointment has been scheduled for ${this.date} and ${this.shift}. Have a good day!`;
         this.chatHistory.push(new AIMessage({ content: response }));
         return { message: response };
       }
-
       return jsonResponse;
     } catch (error) {
       console.error('Error processing message:', error);
