@@ -66,6 +66,12 @@ export class ChatbotAiService {
     const farewellKeywords = ['bye', 'goodbye', 'see you', 'later', 'farewell', 'take care'];
     const greetingKeywords = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'howdy'];
 
+    //REGEX
+    const namePhoneRegex = /My name is ([A-Za-z\s]+), (\d{10}).?$/;
+    const specialtyRegex = /Specialty can be:\s*(.*?)(\.|\n|$)/;
+    const dateRegex = /\b(\d{4}-\d{2}-\d{2})\b/;
+    const Shiftregex = /\d{2}:\d{2} - \d{2}:\d{2}/g;
+
     if (greetingKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
       this.chatHistory = [];
       this.userDetails.name = '';
@@ -96,7 +102,6 @@ export class ChatbotAiService {
 
     //collect user information
     if (input.includes('My name is')) {
-      const namePhoneRegex = /My name is ([A-Za-z\s]+), (\d{10}).?$/;
       const match = input.match(namePhoneRegex);
 
       if (match) {
@@ -134,7 +139,7 @@ export class ChatbotAiService {
         Say greetings first. Then ask how you can help.
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
-        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
         Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
         Next Answer" "Specialty can be: **speciaty predict**."
         Finally, ask them Would you like to make an appointment?.
@@ -161,7 +166,6 @@ export class ChatbotAiService {
       //collect specialty
       if (response.content.includes("Specialty can be:")) {
         // Xử lý đoạn văn bản để lấy specialty
-        const specialtyRegex = /Specialty can be:\s*(.*?)(\.|\n|$)/;
         const specialtyMatch = response.content.match(specialtyRegex);
 
         if (specialtyMatch) {
@@ -185,7 +189,6 @@ export class ChatbotAiService {
         return { message: response };
       }
 
-      const dateRegex = /\b(\d{4}-\d{2}-\d{2})\b/;
       const dateMatch = input.match(dateRegex);
       if (dateMatch) {
         const appointmentDate = dateMatch[1];
@@ -212,9 +215,7 @@ export class ChatbotAiService {
       }
 
       //collect shift
-      const Shiftregex = /\d{2}:\d{2} - \d{2}:\d{2}/g;
       const ShiftMatch = input.match(Shiftregex);
-
       if (ShiftMatch) {
         const shiftDate = ShiftMatch[0];
         if (!this.shift) {
