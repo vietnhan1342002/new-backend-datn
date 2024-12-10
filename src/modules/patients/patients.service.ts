@@ -81,6 +81,14 @@ export class PatientsService {
     return patient;
   }
 
+  async findPatientByUserId(userId: string) {
+    const patient = await this.patientModel.findOne({ userId: new Types.ObjectId(userId) }).exec();
+    if (!patient) {
+      throw new NotFoundException(`Patient with userId ${userId} not found`);
+    }
+    return patient._id;
+  }
+
   async update(
     _id: string,
     updatePatientDto: UpdatePatientDto,

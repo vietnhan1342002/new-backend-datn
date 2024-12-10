@@ -4,12 +4,16 @@ import { ChatBotAiController } from './chatbot-ai.controller';
 import { UserAuthModule } from '@/modules/user-auth/user-auth.module';
 import { SpecialtiesModule } from '@/modules/specialties/specialties.module';
 import { FilterModule } from '@/modules/filter/filter.module';
+import { PatientsModule } from '@/modules/patients/patients.module';
+import { AppointmentsModule } from '@/modules/appointments/appointments.module';
 
 @Module({
   imports: [
     UserAuthModule,
     SpecialtiesModule,
-    FilterModule
+    FilterModule,
+    PatientsModule,
+    AppointmentsModule
   ],
   controllers: [ChatBotAiController],
   providers: [ChatbotAiService],

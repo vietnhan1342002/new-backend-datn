@@ -18,5 +18,6 @@ import { MedicalRecordsModule } from '../medical_records/medical_records.module'
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],
+  exports: [AppointmentsService]
 })
 export class AppointmentsModule { }
