@@ -220,6 +220,7 @@ export class UserAuthService {
       .find(filter)
       .limit(pageSize)
       .skip(skip)
+      .populate({ path: 'roleId', select: 'nameRole' })
       .select('-password')
       .sort(sort as any);
     return { result, totalPages };
