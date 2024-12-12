@@ -3,6 +3,7 @@ export enum Resource {
   USER = 'user',
   PASSWORD = 'password',
   DOCTOR = 'doctor',
+  DOCTOR_CHEDULE = 'doctor_chedule',
   PATIENT = 'patient',
   RECEPTIONIST = 'receptionist',
   APPOINTMENT = 'appointment',

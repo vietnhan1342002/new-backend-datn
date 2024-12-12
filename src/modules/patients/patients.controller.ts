@@ -20,9 +20,8 @@ import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { Public } from '../user-auth/guard/public.guard';
 
-// @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
-// @UseGuards(JwtAuthGuard, RoleGuard)
-@Public()
+@Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
+@UseGuards(JwtAuthGuard, RoleGuard)
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) { }
@@ -32,7 +31,7 @@ export class PatientsController {
     return this.patientsService.create(createPatientDto);
   }
 
-  @Permissions([{ resource: Resource.PATIENT, actions: [Action.READ] }])
+  @Permissions([{ resource: Resource.PATIENT, actions: [Action.ALL] }])
   @Get()
   async findAll(
     @Query('query') query: string = '',

@@ -236,10 +236,6 @@ export class UserAuthService {
 
   async update(_id: string, updateUserDto: UpdateUserAuthDto) {
     const { fullName, phoneNumber } = updateUserDto;
-    const existingUser = await this.checkPhoneExists(updateUserDto.phoneNumber);
-    if (existingUser) {
-      return { message: 'Phone number already exists. Please use a different phone number.' };
-    }
     return await this.userAuthModel.updateOne(
       { _id },
       { fullName, phoneNumber },

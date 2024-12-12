@@ -30,7 +30,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @Controller('user-auth')
 export class UserAuthController {
-  constructor(private readonly userAuthService: UserAuthService) {}
+  constructor(private readonly userAuthService: UserAuthService) { }
 
   @Public()
   @Post('register')
@@ -80,7 +80,6 @@ export class UserAuthController {
     return this.userAuthService.create(createUserAuthDto);
   }
 
-  @Public()
   @Get()
   async findAll(
     @Query() query: string,

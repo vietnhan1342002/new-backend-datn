@@ -75,7 +75,7 @@ export class RoleGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly userAuthService: UserAuthService,
-  ) {}
+  ) { }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -85,10 +85,10 @@ export class RoleGuard implements CanActivate {
       return true; // Nếu route là @Public, bỏ qua RoleGuard
     }
 
-    
+
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    
+
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
@@ -100,7 +100,8 @@ export class RoleGuard implements CanActivate {
     const userPermissions = await this.userAuthService.getUserPermissions(
       user._id,
     );
-
+    console.log('routePermissions', routePermissions);
+    console.log('userPermissions', userPermissions);
     if (
       userPermissions.some(
         (perm) =>
@@ -120,6 +121,8 @@ export class RoleGuard implements CanActivate {
       const userPermission = userPermissions.find(
         (perm) => perm.resource === routePermission.resource,
       );
+
+
       if (!userPermission) {
         throw new ForbiddenException(
           `No permission for resource: ${routePermission.resource}`,

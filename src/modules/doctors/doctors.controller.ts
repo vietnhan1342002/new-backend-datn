@@ -24,7 +24,7 @@ import { parseQueryParam } from '@/helpers/utils';
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
 @Controller('doctors')
 export class DoctorsController {
-  constructor(private readonly doctorsService: DoctorsService) {}
+  constructor(private readonly doctorsService: DoctorsService) { }
 
   @Post()
   create(@Body() createDoctorDto: CreateDoctorDto) {
@@ -50,7 +50,6 @@ export class DoctorsController {
   findOne(@Param('_id') _id: string) {
     return this.doctorsService.findOne(_id);
   }
-
   @Patch(':_id')
   update(@Param('_id') _id: string, @Body() updateDoctorDto: UpdateDoctorDto) {
     return this.doctorsService.update(_id, updateDoctorDto);
