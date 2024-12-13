@@ -3,28 +3,33 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DoctorSchedule } from '../doctor-schedules/schemas/doctor-schedule.schema';
 import { Model, Types } from 'mongoose';
 import { Specialty } from '../specialties/schemas/specialty.schema';
-import { loadavg } from 'os';
+import { Doctor } from '../doctors/schemas/doctor.schema';
 
 @Injectable()
 export class FilterService {
   constructor(
     @InjectModel(DoctorSchedule.name) private readonly doctorScheduleModel: Model<DoctorSchedule>,
+    @InjectModel(Doctor.name) private readonly doctorModel: Model<Doctor>,
     @InjectModel(Specialty.name) private readonly specialtyModel: Model<Specialty>,
   ) { }
 
 
-  async filterDoctorSchedules(filterCriteria: { doctorId?: string; date?: string; status?: string }) {
+  async filterDoctorSchedules(filterCriteria: { doctorId?: string; date?: string; status?: string; shiftId?: string }) {
     const filter: any = {};
+
     if (filterCriteria.doctorId) filter.doctorId = new Types.ObjectId(filterCriteria.doctorId);
     if (filterCriteria.date) filter.date = filterCriteria.date;
     if (filterCriteria.status) filter.status = filterCriteria.status;
-
+    if (filterCriteria.shiftId) filter.shiftId = new Types.ObjectId(filterCriteria.shiftId);
     const doctor_schedules = await this.doctorScheduleModel.find(filter).exec();
+
     if (doctor_schedules.length === 0) {
-      throw new NotFoundException("Don't have any schedule suitable")
+      throw new NotFoundException("Don't have any schedule suitable");
     }
-    return doctor_schedules
+
+    return doctor_schedules;
   }
+
 
   async filterDoctorSchedulesBySpecialty(filterCriteria: { specialtyId?: string; date?: string; status?: string; shift?: string }) {
     const matchFilter: any = {};
@@ -107,5 +112,14 @@ export class FilterService {
     const filter: any = {};
     if (filterCriteria.departmentId) filter.departmentId = new Types.ObjectId(filterCriteria.departmentId);
     return this.specialtyModel.find(filter).exec();
+  }
+
+  async fieldDoctorBySpecialtyId(filterCriteria: { specialtyId?: string }): Promise<Doctor[]> {
+    const filter: any = {};
+    if (filterCriteria.specialtyId) filter.specialtyId = new Types.ObjectId(filterCriteria.specialtyId);
+    return this.doctorModel.find(filter).populate({
+      path: 'userId',
+      select: 'fullName'
+    }).exec();
   }
 }

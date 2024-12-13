@@ -43,8 +43,8 @@ export class DoctorSchedulesService {
     await this.checkDoctorScheduleExistence(doctorId, shiftId, date);
 
     const schedule = await this.doctorScheduleModel.create({
-      doctorId,
-      shiftId,
+      doctorId: new Types.ObjectId(doctorId),
+      shiftId: new Types.ObjectId(shiftId),
       date,
       status,
     });

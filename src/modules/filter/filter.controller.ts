@@ -9,14 +9,25 @@ import { Public } from '../user-auth/guard/public.guard';
 export class FilterController {
   constructor(private readonly filterService: FilterService) { }
 
-  // Lấy lịch bác sĩ đơn giản
-  @Get('doctor-schedules')
-  async getFilteredSchedules(
+  // Lấy lịch bác sĩ với chi tiết thông tin
+  @Get('doctor-schedules/details')
+  async getFilteredSchedulesWithDetails(
     @Query('doctorId') doctorId?: string,
     @Query('date') date?: string,
     @Query('status') status?: string,
   ) {
-    return this.filterService.filterDoctorSchedules({ doctorId, date, status });
+    return this.filterService.filterDoctorSchedulesWithDetails({ doctorId, date, status });
+  }
+
+  // Lấy lịch bác sĩ đơn giản
+  @Get('doctor-schedules')
+  async getFilteredSchedules(
+    @Query('doctorId') doctorId?: string,
+    @Query('shiftId') shiftId?: string,
+    @Query('date') date?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.filterService.filterDoctorSchedules({ doctorId, date, status, shiftId });
   }
 
   @Get('doctor-schedules-specialty')
@@ -29,14 +40,12 @@ export class FilterController {
     return this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId, date, status, shift });
   }
 
-  // Lấy lịch bác sĩ với chi tiết thông tin
-  @Get('doctor-schedules/details')
-  async getFilteredSchedulesWithDetails(
-    @Query('doctorId') doctorId?: string,
-    @Query('date') date?: string,
-    @Query('status') status?: string,
+
+  @Get('specialties/doctors')
+  async fieldDoctorBySpecialtyId(
+    @Query('specialtyId') specialtyId?: string
   ) {
-    return this.filterService.filterDoctorSchedulesWithDetails({ doctorId, date, status });
+    return this.filterService.fieldDoctorBySpecialtyId({ specialtyId });
   }
 
   // Lấy lịch bác sĩ đơn giản
@@ -46,4 +55,5 @@ export class FilterController {
   ) {
     return this.filterService.filterSpecialties({ departmentId });
   }
+
 }

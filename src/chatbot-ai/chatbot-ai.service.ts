@@ -90,7 +90,7 @@ export class ChatbotAiService {
     if (farewellKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
       this.resetState();
       return {
-        message: 'Goodbye! The chat history has been cleared. Feel free to start a new conversation anytime!',
+        message: 'Goodbye! It was a pleasure to assist you!',
       };
     }
 
@@ -179,7 +179,7 @@ export class ChatbotAiService {
           this.patientId = patient
           console.log('this.patientId', this.patientId);
 
-          const response = `I created an account for you with a phone and password is 123456.\nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
+          const response = `I created an account for you with a phone and password is your phone number.\nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
           this.chatHistory.push(new AIMessage({ content: response }));
           return {
             message: response,
@@ -244,7 +244,9 @@ export class ChatbotAiService {
         const scheduleId = schedule[0]._id;
         const doctorId = schedule[0].doctorId;
         console.log('scheduleId,doctorId,this.patientId', scheduleId, doctorId, this.patientId);
-
+        if (!scheduleId || !doctorId || !this.patientId) {
+          this.patientsService.remove(this.patientId.toString())
+        }
         const createAppointmentDto: CreateAppointmentDto = {
           patientId: this.patientId,
           doctorScheduleId: scheduleId,
