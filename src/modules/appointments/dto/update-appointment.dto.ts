@@ -4,7 +4,7 @@ import { IsNotEmpty, IsEnum, IsOptional, IsMongoId } from 'class-validator';
 import { Status } from '../schemas/appointment.schema';
 import { Types } from 'mongoose';
 
-export class UpdateAppointmentDto extends PartialType(CreateAppointmentDto) {
+export class UpdateAppointmentDto {
   @IsOptional()
   @IsMongoId()
   @IsNotEmpty({ message: 'patientId cannot be empty or null' })

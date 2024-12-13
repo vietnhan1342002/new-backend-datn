@@ -26,7 +26,7 @@ export class ChatbotAiService {
   private specialtiesData: string[] = [];
   private dateList: string[] = [];
   private vectorStore;
-  private patientId: string;
+  private patientId: Types.ObjectId;
   private specialtyId: string;
   private date: string;
   private shift: string;
@@ -67,7 +67,6 @@ export class ChatbotAiService {
     this.userDetails.name = '';
     this.userDetails.phone = '';
     this.date = '';
-    this.patientId = '';
     this.specialtyId = '';
     this.shift = '';
   }
@@ -175,9 +174,11 @@ export class ChatbotAiService {
             password: phoneNumber,
             roleId: new Types.ObjectId('673d931c35e97c832bfa6351')
           };
-          // const user = await this.userAuthService.register(createUserAuthDto);
-          // const patient = await this.patientsService.findPatientByUserId(user._id)
-          // this.patientId = patient.toString()
+          const user = await this.userAuthService.register(createUserAuthDto);
+          const patient = await this.patientsService.findPatientByUserId(user._id)
+          this.patientId = patient
+          console.log('this.patientId', this.patientId);
+
           const response = `I created an account for you with a phone and password is 123456.\nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
           this.chatHistory.push(new AIMessage({ content: response }));
           return {
@@ -225,6 +226,8 @@ export class ChatbotAiService {
       //collect shift
       const ShiftMatch = input.match(Shiftregex);
       if (ShiftMatch) {
+        console.log('shift');
+
         const shiftDate = ShiftMatch[0];
         if (!this.shift) {
           this.shift = shiftDate;
@@ -236,12 +239,16 @@ export class ChatbotAiService {
           status: 'active',
           shift: this.shift
         });
+        console.log(schedule);
+
         const scheduleId = schedule[0]._id;
         const doctorId = schedule[0].doctorId;
+        console.log('scheduleId,doctorId,this.patientId', scheduleId, doctorId, this.patientId);
+
         const createAppointmentDto: CreateAppointmentDto = {
+          patientId: this.patientId,
           doctorScheduleId: scheduleId,
           doctorId: doctorId,
-          patientId: new Types.ObjectId(this.patientId),
         };
 
         await this.appointmentsService.create(createAppointmentDto)
