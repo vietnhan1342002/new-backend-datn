@@ -5,8 +5,7 @@ import { Types } from 'mongoose';
 export class CreateAppointmentDto {
   @IsNotEmpty()
   @IsMongoId()
-  @Type(() => Types.ObjectId) // Ánh xạ chuỗi thành ObjectId
-  patientId: Types.ObjectId; // ID của bệnh nhân
+  patientId: Types.ObjectId | string; // ID của bệnh nhân
 
   @IsNotEmpty()
   @IsMongoId()

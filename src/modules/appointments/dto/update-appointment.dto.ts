@@ -8,7 +8,7 @@ export class UpdateAppointmentDto {
   @IsOptional()
   @IsMongoId()
   @IsNotEmpty({ message: 'patientId cannot be empty or null' })
-  patientId: Types.ObjectId;
+  patientId: Types.ObjectId | string;
 
   @IsOptional()
   @IsMongoId()

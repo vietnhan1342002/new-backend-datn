@@ -247,6 +247,7 @@ export class ChatbotAiService {
         if (!scheduleId || !doctorId || !this.patientId) {
           this.patientsService.remove(this.patientId.toString())
         }
+
         const createAppointmentDto: CreateAppointmentDto = {
           patientId: this.patientId,
           doctorScheduleId: scheduleId,
