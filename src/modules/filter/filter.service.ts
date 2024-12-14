@@ -4,6 +4,8 @@ import { DoctorSchedule } from '../doctor-schedules/schemas/doctor-schedule.sche
 import { Model, Types } from 'mongoose';
 import { Specialty } from '../specialties/schemas/specialty.schema';
 import { Doctor } from '../doctors/schemas/doctor.schema';
+import { MedicalRecord } from '../medical_records/schemas/medical_record.schema';
+import { MedicalRecordsService } from '../medical_records/medical_records.service';
 
 @Injectable()
 export class FilterService {
@@ -11,6 +13,9 @@ export class FilterService {
     @InjectModel(DoctorSchedule.name) private readonly doctorScheduleModel: Model<DoctorSchedule>,
     @InjectModel(Doctor.name) private readonly doctorModel: Model<Doctor>,
     @InjectModel(Specialty.name) private readonly specialtyModel: Model<Specialty>,
+    @InjectModel(MedicalRecord.name) private readonly medicalRecordModel: Model<MedicalRecord>,
+
+    private readonly medicalRecordsService: MedicalRecordsService
   ) { }
 
 
@@ -114,15 +119,52 @@ export class FilterService {
   async filterSpecialties(filterCriteria: { departmentId?: string }) {
     const filter: any = {};
     if (filterCriteria.departmentId) filter.departmentId = new Types.ObjectId(filterCriteria.departmentId);
-    return this.specialtyModel.find(filter).exec();
+    return await this.specialtyModel.find(filter).exec();
   }
 
   async fieldDoctorBySpecialtyId(filterCriteria: { specialtyId?: string }): Promise<Doctor[]> {
     const filter: any = {};
     if (filterCriteria.specialtyId) filter.specialtyId = new Types.ObjectId(filterCriteria.specialtyId);
-    return this.doctorModel.find(filter).populate({
+    return await this.doctorModel.find(filter).populate({
       path: 'userId',
       select: 'fullName'
     }).exec();
   }
+
+  async fieldMMedicalRecordsByPatientId(filterCriteria: { patientId?: string }): Promise<MedicalRecord[]> {
+    const filter: any = {};
+
+    // Nếu có patientId thì thêm vào filter
+    if (filterCriteria.patientId) {
+      filter.patientId = new Types.ObjectId(filterCriteria.patientId);
+    }
+
+    // Truy vấn và dùng populate để lấy dữ liệu liên quan
+    const medicalRecords = await this.medicalRecordModel
+      .find(filter)
+      .populate({
+        path: 'patientId', // Tên trường trong MedicalRecord
+        select: 'userId', // Chỉ lấy trường userId từ patientId
+        populate: {
+          path: 'userId', // Lấy thông tin userId (ví dụ fullName)
+          select: 'fullName',
+        },
+      })
+      .populate({
+        path: 'doctorId', // Tên trường trong MedicalRecord
+        select: 'userId', // Chỉ lấy trường userId từ doctorId
+        populate: {
+          path: 'userId', // Lấy thông tin userId (ví dụ fullName)
+          select: 'fullName',
+        },
+      })
+      .populate({
+        path: 'appointmentId', // Tên trường trong MedicalRecord
+        select: 'appointmentDate',
+      })
+      .exec();
+
+    return medicalRecords;
+  }
+
 }

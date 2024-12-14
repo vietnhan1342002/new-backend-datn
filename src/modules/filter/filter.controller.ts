@@ -1,7 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { FilterService } from './filter.service';
-import { CreateFilterDto } from './dto/create-filter.dto';
-import { UpdateFilterDto } from './dto/update-filter.dto';
 import { Public } from '../user-auth/guard/public.guard';
 
 @Public()
@@ -54,6 +52,13 @@ export class FilterController {
     @Query('departmentId') departmentId?: string,
   ) {
     return this.filterService.filterSpecialties({ departmentId });
+  }
+
+  @Get('medical_records')
+  async getfieldMMedicalRecordsByPatientId(
+    @Query('patientId') patientId?: string,
+  ) {
+    return this.filterService.fieldMMedicalRecordsByPatientId({ patientId });
   }
 
 }
