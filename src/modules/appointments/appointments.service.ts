@@ -195,7 +195,7 @@ export class AppointmentsService {
         path: 'patientId',
         select: 'userId',
         nestedPath: 'userId',
-        nestedSelect: 'fullName',
+        nestedSelect: 'fullName phoneNumber',
       },
       {
         path: 'doctorId',

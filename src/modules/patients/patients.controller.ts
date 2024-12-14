@@ -19,6 +19,7 @@ import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { Public } from '../user-auth/guard/public.guard';
+import { UpdatePatientDto } from './dto/update-patient.dto';
 
 @Public()
 // @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -45,6 +46,11 @@ export class PatientsController {
 
     // Tìm tất cả bác sĩ hoặc theo query
     return this.patientsService.findAll(query, currentPage, pageLimit);
+  }
+
+  @Get('user/:_id')
+  findByUserId(@Param('_id') _id: string) {
+    return this.patientsService.findPatientByUserId(_id);
   }
 
 
