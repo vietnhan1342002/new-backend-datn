@@ -2,7 +2,7 @@ import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class LoginDto {
   @IsNotEmpty({ message: 'Email or PhoneNumber cannot empty' })
-  emailOrPhone: string;
+  phoneNumber: string;
 
   @IsNotEmpty({ message: 'password cannot empty' })
   @IsString()

@@ -46,7 +46,7 @@ export class UserAuthService {
   async register(createUserDto: CreateUserAuthDto) {
     const existingUser = await this.checkPhoneExists(createUserDto.phoneNumber);
     if (existingUser) {
-      return { message: 'Phone number already exists. Please use a different phone number.' };
+      throw new BadRequestException('Phone number already exists. Please use a different phone number.')
     }
 
     const user = await this.createUser(createUserDto);
@@ -69,8 +69,8 @@ export class UserAuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const { emailOrPhone, password } = loginDto;
-    const user = await this.validateUser(emailOrPhone, password);
+    const { phoneNumber, password } = loginDto;
+    const user = await this.validateUser(phoneNumber, password);
 
     //Generate JWT tokens
     const tokens = await this.generateUserTokens(user._id);
