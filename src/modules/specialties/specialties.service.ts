@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,12 +15,15 @@ import {
   calculateSkip,
 } from '@/helpers/utils';
 import aqp from 'api-query-params';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class SpecialtiesService {
   constructor(
     @InjectModel(Specialty.name)
     private specialtyModel: Model<Specialty>,
+    @Inject('S3_CLIENT') private readonly s3: S3Client,
   ) { }
 
   private async checkSpecialtyExistence(name: string) {
@@ -97,11 +101,33 @@ export class SpecialtiesService {
     return specialty;
   }
 
-  async update(_id: string, updateSpecialtyDto: UpdateSpecialtyDto) {
+  async update(_id: string, updateSpecialtyDto: UpdateSpecialtyDto, file?: Express.Multer.File) {
+    let s3Url: string | undefined;
+    if (file) {
+      const fileKey = uuid();
+      const bucketName = process.env.S3_BUCKET;
+
+      await this.s3.send(
+        new PutObjectCommand({
+          Bucket: bucketName,
+          Key: fileKey,
+          Body: file.buffer,
+          ACL: 'public-read',
+          ContentType: file.mimetype, // Lấy đúng định dạng file
+        }),
+      );
+
+      s3Url = `${process.env.S3_BASE_URL}/${fileKey}`;
+    }
+
+    const updatedData = {
+      ...updateSpecialtyDto,
+      ...(s3Url && { icon: s3Url }), // Chỉ thêm avatar nếu có file
+    };
+
     const updatedSpecialty = await this.specialtyModel.findByIdAndUpdate(
       _id,
-      { $set: updateSpecialtyDto },
-
+      { $set: updatedData },
       { upsert: false, new: true }, // Trả về bản ghi đã cập nhật
     );
 

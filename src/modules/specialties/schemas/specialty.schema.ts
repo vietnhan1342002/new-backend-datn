@@ -26,7 +26,9 @@ export class Specialty extends Document {
     qualifications: string[];
     relatedDiseases: string[];
   };
-  // Mô tả chuyên khoa
+
+  @Prop({ type: String, default: null })
+  icon: string;
 }
 
 export const SpecialtySchema = SchemaFactory.createForClass(Specialty);

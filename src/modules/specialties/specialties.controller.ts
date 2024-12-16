@@ -8,6 +8,8 @@ import {
   Delete,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { SpecialtiesService } from './specialties.service';
 import { CreateSpecialtyDto } from './dto/create-specialty.dto';
@@ -19,6 +21,7 @@ import { parseQueryParam } from '@/helpers/utils';
 import { Permissions } from '@/decorator/permission.decorator';
 import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -57,6 +60,7 @@ export class SpecialtiesController {
     return this.specialtiesService.findOne(_id);
   }
 
+  @Public()
   @Patch(':_id')
   update(
     @Param('_id') _id: string,

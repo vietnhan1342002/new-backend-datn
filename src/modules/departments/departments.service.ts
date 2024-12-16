@@ -8,7 +8,7 @@ import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Department } from './schemas/department.schema';
 import { Model, Types } from 'mongoose';
-import { isExistHelper } from '@/helpers/utils';
+import { isExistHelper, preparePaginationFilter } from '@/helpers/utils';
 import aqp from 'api-query-params';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class DepartmentsService {
   constructor(
     @InjectModel(Department.name)
     private departmentModel: Model<Department>,
-  ) {}
+  ) { }
 
   private async checkDepartmentExistence(name: string) {
     const departmentExists = await isExistHelper(
@@ -45,14 +45,12 @@ export class DepartmentsService {
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    if (filter.current) delete filter.current;
-    if (filter.pageSize) delete filter.pageSize;
-
-    if (!current) current = 1;
-    if (!pageSize) pageSize = 10;
-
-    const totalItems = (await this.departmentModel.find(filter)).length;
-    const totalPages = Math.ceil(totalItems / pageSize);
+    const { totalItems, totalPages } = await preparePaginationFilter(
+      this.departmentModel,
+      filter,
+      current,
+      pageSize,
+    );
 
     const skip = (current - 1) * pageSize;
 
@@ -62,10 +60,11 @@ export class DepartmentsService {
       .skip(skip)
       .sort(sort as any);
 
-    if (result.length === 0)
-      throw new NotFoundException('No departments available');
+    if (result.length === 0) {
+      throw new NotFoundException('No doctors available');
+    }
 
-    return { result, totalPages };
+    return { result, totalItems, totalPages };
   }
 
   async findOne(_id: string) {

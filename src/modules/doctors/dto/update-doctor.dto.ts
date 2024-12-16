@@ -17,7 +17,7 @@ export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
 
   @IsOptional()
   @IsNotEmpty({ message: 'yearsOfExperience cannot be empty' })
-  @Min(1, { message: 'yearsOfExperience phải lớn hơn 0' }) // Kiểm tra số năm kinh nghiệm phải > 0
+  @Min(1, { message: 'yearsOfExperience phải lớn hơn 0' })
   @Type(() => Number)
   yearsOfExperience?: number;
 
