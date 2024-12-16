@@ -48,6 +48,17 @@ export class AppointmentsController {
     return this.appointmentsService.findAll(query, currentPage, pageLimit);
   }
 
+  @Get('/pending')
+  async findAllPending(
+    @Query('query') query: string = '',
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
+  ) {
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
+    return this.appointmentsService.findAllPending(query, currentPage, pageLimit);
+  }
+
   @Permissions([
     { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.READ] }, // Patient có quyền 'read'
   ])
@@ -70,6 +81,13 @@ export class AppointmentsController {
     @Body() status: UpdateStatusAppointmentDto,
   ) {
     return this.appointmentsService.updateStatus(_id, status);
+  }
+
+  @Patch('/status/completed/:_id')
+  completed(
+    @Param('_id') _id: Types.ObjectId,
+  ) {
+    return this.appointmentsService.completed(_id);
   }
 
   @Permissions([

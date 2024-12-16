@@ -67,14 +67,40 @@ export class MedicationsService {
   }
 
   async update(_id: Types.ObjectId, updateMedicationDto: UpdateMedicationDto) {
-    await this.checkNameExists(updateMedicationDto.name);
+    // Lấy thông tin thuốc hiện tại từ database
+    const currentMedication = await this.medicationModel.findById(_id);
+
+    // Nếu tên thuốc có thay đổi, kiểm tra xem tên mới có bị trùng không
+    if (updateMedicationDto.name && updateMedicationDto.name !== currentMedication.name) {
+      await this.checkNameExists(updateMedicationDto.name);
+    }
+
+    // Tạo đối tượng để lưu các trường dữ liệu cần cập nhật
+    const updateFields = {};
+
+    // So sánh từng trường và chỉ đưa vào những trường thay đổi
+    for (const key in updateMedicationDto) {
+      if (updateMedicationDto[key] !== currentMedication[key]) {
+        updateFields[key] = updateMedicationDto[key];
+      }
+    }
+
+    // Nếu không có trường nào thay đổi, không thực hiện update
+    if (Object.keys(updateFields).length === 0) {
+      return { message: 'No changes detected' };
+    }
+
+    // Cập nhật thuốc với chỉ các trường đã thay đổi
     const updatedMedication = await this.medicationModel.findByIdAndUpdate(
       _id,
-      updateMedicationDto,
+      updateFields,
       { new: true, runValidators: true }
     );
-    return { _id: updatedMedication.id }
+
+    return { _id: updatedMedication.id };
   }
+
+
 
   async updateMedicationQuantity(
     medicationId: Types.ObjectId,

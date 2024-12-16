@@ -92,6 +92,31 @@ export class AppointmentsService {
     return { result, totalItems, totalPages };
   }
 
+  async findAllPending(query: string, current: number, pageSize: number) {
+    const { filter, sort } = aqp(query);
+
+    // Thêm điều kiện lọc status là 'pending'
+    filter.status = Status.PENDING;
+
+    const { result, totalPages, totalItems } = await paginateAndPopulate(
+      this.appointmentModel,
+      {
+        filter,
+        sort,
+        current,
+        pageSize,
+        populateQuery: this.populateAppointmentQuery,
+      },
+    );
+
+    if (result.length === 0) {
+      throw new NotFoundException('No appointments available');
+    }
+
+    return { result, totalItems, totalPages };
+  }
+
+
   // ------------------------- FIND ONE APPOINTMENT -------------------------
   async findOne(_id: Types.ObjectId) {
     const appointment = await this.populateAppointmentQuery(
@@ -115,7 +140,7 @@ export class AppointmentsService {
     await appointment.save();
 
     // Tạo Medical Record nếu trạng thái là CONFIRMED hoặc COMPLETED
-    if (status.status === Status.CONFIRMED || status.status === Status.COMPLETED) {
+    if (status.status === Status.CONFIRMED) {
       const existingRecord = await this.medicalRecordsService.findOneByAppointmentId(appointment._id);
       if (!existingRecord) {
         const createMedicalRecordDto: CreateMedicalRecordDto = {
@@ -127,6 +152,10 @@ export class AppointmentsService {
         };
         await this.medicalRecordsService.create(createMedicalRecordDto);
       }
+    }
+
+    if (status.status === Status.COMPLETED || status.status === Status.CANCELED) {
+      this.remove(new Types.ObjectId(id))
     }
 
     return appointment;
@@ -187,6 +216,37 @@ export class AppointmentsService {
     }
   }
 
+  async completed(id: Types.ObjectId) {
+    const session = await this.connection.startSession();
+    session.startTransaction();
+
+    try {
+      const appointment = await this.appointmentModel.findById(id);
+      if (!appointment) {
+        throw new NotFoundException(`Appointment with ID ${id} not found`);
+      }
+      appointment.status = Status.COMPLETED;
+      await appointment.save();
+
+      const schedule = await this.doctorScheduleService.findOne(
+        appointment.doctorScheduleId,
+      );
+
+      if (schedule && schedule.result.status === 'inactive') {
+        schedule.result.status = 'active';
+        await schedule.result.save({ session });
+      }
+
+      await session.commitTransaction();
+      return { message: `Appointment with ID ${id} has been completed` };
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  }
+
   // ------------------------- HELPERS -------------------------
 
   private populateAppointmentQuery = (query: any) => {
@@ -202,7 +262,7 @@ export class AppointmentsService {
         select: 'userId',
         nestedPath: 'userId',
         nestedSelect: 'fullName',
-      },
+      }
     ];
     return this.populateFieldsForQuery(query, fields);
   };

@@ -11,6 +11,7 @@ import {
   Delete,
   Put,
   UnauthorizedException,
+  Headers,
 } from '@nestjs/common';
 import { UserAuthService } from './user-auth.service';
 import { CreateUserAuthDto } from './dto/create-user-auth.dto';
@@ -25,6 +26,7 @@ import { RoleGuard } from './guard/role.guard';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './guard/public.guard';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { parseQueryParam } from '@/helpers/utils';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -64,6 +66,13 @@ export class UserAuthController {
     return this.userAuthService.refreshTokens(refreshTokenDto.refreshToken);
   }
 
+  @Public()
+  @Get('verify-token')
+  async verifyToken(@Headers('Authorization') authHeader: string) {
+    const token = authHeader.split(' ')[1];
+    return this.userAuthService.verifyToken(token);
+  }
+
   @Permissions([{ resource: Resource.PASSWORD, actions: [Action.UPDATE] }])
   @Patch('update-password/')
   async updatePassword(
@@ -82,11 +91,26 @@ export class UserAuthController {
 
   @Get()
   async findAll(
-    @Query() query: string,
-    @Param('current') current: string,
-    @Param('pageSize') pageSize: string,
+    @Query('query') query: string = '',
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
   ) {
-    return this.userAuthService.findAll(query, +current, +pageSize);
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
+
+    return this.userAuthService.findAll(query, currentPage, pageLimit);
+  }
+
+  @Get('/employee')
+  async findEmployee(
+    @Query('query') query: string = '',
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
+  ) {
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
+
+    return this.userAuthService.findEmployee(query, currentPage, pageLimit);
   }
 
   @Get(':id')

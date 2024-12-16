@@ -1,12 +1,20 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { FilterService } from './filter.service';
 import { Public } from '../user-auth/guard/public.guard';
+import { Appointment } from '../appointments/schemas/appointment.schema';
 
 @Public()
 @Controller('filter')
 export class FilterController {
   constructor(private readonly filterService: FilterService) { }
 
+
+  @Get('specialties/doctors')
+  async fieldDoctorBySpecialtyId(
+    @Query('specialtyId') specialtyId?: string
+  ) {
+    return this.filterService.fieldDoctorBySpecialtyId({ specialtyId });
+  }
   // Lấy lịch bác sĩ với chi tiết thông tin
   @Get('doctor-schedules/details')
   async getFilteredSchedulesWithDetails(
@@ -39,12 +47,6 @@ export class FilterController {
   }
 
 
-  @Get('specialties/doctors')
-  async fieldDoctorBySpecialtyId(
-    @Query('specialtyId') specialtyId?: string
-  ) {
-    return this.filterService.fieldDoctorBySpecialtyId({ specialtyId });
-  }
 
   // Lấy lịch bác sĩ đơn giản
   @Get('specialties')
@@ -60,5 +62,20 @@ export class FilterController {
   ) {
     return this.filterService.fieldMMedicalRecordsByPatientId({ patientId });
   }
+
+  @Get('appointment-confirmed')
+  async getConfirmedAppointments(): Promise<Appointment[]> {
+    return this.filterService.filterAppointmentConfirmed();
+  }
+
+  @Get('count/doctors')
+  async getDoctorsCount(): Promise<number> {
+    return this.filterService.countDoctors();
+  }
+  @Get('count/appointments')
+  async getAppointmentsCount(): Promise<number> {
+    return this.filterService.countAppointments();
+  }
+
 
 }

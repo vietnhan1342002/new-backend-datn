@@ -7,6 +7,7 @@ import { Specialty, SpecialtySchema } from '../specialties/schemas/specialty.sch
 import { Doctor, DoctorSchema } from '../doctors/schemas/doctor.schema';
 import { MedicalRecord, MedicalRecordSchema } from '../medical_records/schemas/medical_record.schema';
 import { MedicalRecordsModule } from '../medical_records/medical_records.module';
+import { Appointment, AppointmentSchema } from '../appointments/schemas/appointment.schema';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { MedicalRecordsModule } from '../medical_records/medical_records.module'
       { name: Doctor.name, schema: DoctorSchema },
       { name: Specialty.name, schema: SpecialtySchema },
       { name: MedicalRecord.name, schema: MedicalRecordSchema },
+      { name: Appointment.name, schema: AppointmentSchema },
     ]),
     MedicalRecordsModule
   ],

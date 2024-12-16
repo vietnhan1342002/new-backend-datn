@@ -29,7 +29,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (user) {
       return user;
     }
-  
+
     // Nếu có lỗi, xác định lỗi chính xác
     if (err) {
       if (err.name === 'TokenExpiredError') {
@@ -39,9 +39,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         throw new UnauthorizedException('Invalid token');
       }
     }
-  
+
     // Nếu không có thông tin xác thực, ném lỗi chung
     throw new UnauthorizedException('User not authenticated');
   }
-  
+
 }

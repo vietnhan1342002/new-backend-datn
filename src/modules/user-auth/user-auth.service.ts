@@ -10,9 +10,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { UserAuth, UserAuthDocument } from './schemas/user-auth.schema';
 import { Model, ObjectId, Types } from 'mongoose';
 import {
+  calculateSkip,
   comparePasswordHelper,
   hashPasswordHelper,
   isExistHelper,
+  preparePaginationFilter,
 } from '@/helpers/utils';
 import { RefreshToken } from './schemas/refresh-token.schema';
 import { v4 as uuidv4 } from 'uuid';
@@ -204,26 +206,71 @@ export class UserAuthService {
 
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
-    // Trả về true nếu đúng, false nếu không
-    if (filter.current) delete filter.current;
-    if (filter.pageSize) delete filter.pageSize;
 
-    if (!current) current = 1;
-    if (!pageSize) pageSize = 10;
+    const { totalItems, totalPages } = await preparePaginationFilter(
+      this.userAuthModel,
+      filter,
+      current,
+      pageSize,
+    );
 
-    const totalItems = (await this.userAuthModel.find(filter)).length;
-    const totalPages = Math.ceil(totalItems / pageSize);
+    // Tính toán skip để phân trang
+    const skip = calculateSkip(current, pageSize);
 
-    const skip = (current - 1) * pageSize;
+    // Truy vấn các bản ghi với phân trang và sắp xếp
+    const result = await
+      this.userAuthModel
+        .find(filter)
+        .limit(pageSize)
+        .skip(skip)
+        .populate({ path: 'roleId', select: 'nameRole' })
+        .select('-password')
+        .sort(sort as any)
+        .exec();
 
+    // Nếu không có dữ liệu, ném ngoại lệ
+    if (result.length === 0) {
+      throw new NotFoundException('No user available');
+    }
+
+    return { result, totalItems, totalPages };
+  }
+
+  async findEmployee(query: string, current: number, pageSize: number) {
+    const { filter, sort } = aqp(query);
+
+    // Thêm điều kiện loại trừ roleId vào filter
+    const roleIdToExclude = '673d931c35e97c832bfa6351';
+    filter.roleId = { $ne: new Types.ObjectId(roleIdToExclude) };
+
+    const { totalItems, totalPages } = await preparePaginationFilter(
+      this.userAuthModel,
+      filter,
+      current,
+      pageSize,
+    );
+
+    // Tính toán skip để phân trang
+    const skip = calculateSkip(current, pageSize);
+
+    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await this.userAuthModel
       .find(filter)
       .limit(pageSize)
       .skip(skip)
-      .select('-password')
-      .sort(sort as any);
-    return { result, totalPages };
+      .populate({ path: 'roleId', select: 'nameRole' })
+      .select('-password') // Loại bỏ trường password trong kết quả trả về
+      .sort(sort as any)
+      .exec();
+
+    // Nếu không có dữ liệu, ném ngoại lệ
+    if (result.length === 0) {
+      throw new NotFoundException('No user available');
+    }
+
+    return { result, totalItems, totalPages };
   }
+
 
   async findById(userId: string) {
     const user = await this.userAuthModel
@@ -235,10 +282,10 @@ export class UserAuthService {
   }
 
   async update(_id: string, updateUserDto: UpdateUserAuthDto) {
-    const { fullName, phoneNumber } = updateUserDto;
+    const { fullName, phoneNumber, roleId } = updateUserDto;
     return await this.userAuthModel.updateOne(
       { _id },
-      { fullName, phoneNumber },
+      { fullName, phoneNumber, roleId: new Types.ObjectId(roleId) },
     );
   }
 
@@ -249,6 +296,20 @@ export class UserAuthService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
     return { message: `User with ID ${id} deleted successfully` };
+  }
+
+  async verifyToken(token: string) {
+    try {
+      const decoded = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_SECRET,
+      });
+      if (decoded) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 
   //-------------------------HELPER--------------------------------------------//
