@@ -10,7 +10,6 @@ import {
 import { Type } from 'class-transformer';
 
 export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
-
   @IsOptional()
   @IsNotEmpty({ message: 'licenseNumber cannot be empty' })
   @IsString({ message: 'licenseNumber phải là một chuỗi' })

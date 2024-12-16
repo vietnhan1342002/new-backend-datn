@@ -32,21 +32,7 @@ export class DoctorsService {
   }
 
   // Tạo dữ liệu bác sĩ với ObjectId
-  private async createDoctorData(file: Express.Multer.File, createDoctorDto: CreateDoctorDto) {
-
-    const fileKey = uuid();
-    const bucketName = process.env.S3_BUCKET;
-
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: bucketName,
-        Key: fileKey,
-        Body: file.buffer,
-        ACL: 'public-read',
-      }),
-    );
-
-    const s3Url = `${process.env.S3_BASE_URL}/${fileKey}`; //url
+  private async createDoctorData(createDoctorDto: CreateDoctorDto) {
 
     const { userId, specialtyId, licenseNumber, yearsOfExperience } =
       createDoctorDto;
@@ -58,9 +44,9 @@ export class DoctorsService {
     };
   }
 
-  async create(file: Express.Multer.File, createDoctorDto: CreateDoctorDto) {
+  async create(createDoctorDto: CreateDoctorDto) {
     try {
-      const doctorData = this.createDoctorData(file, createDoctorDto);
+      const doctorData = this.createDoctorData(createDoctorDto);
       const createdDoctor = await this.doctorModel.create(doctorData);
       return createdDoctor;
     } catch (error) {
@@ -111,29 +97,37 @@ export class DoctorsService {
   }
 
   async update(_id: string, updateDoctorDto: UpdateDoctorDto,
-    // file?: Express.Multer.File
+    file?: Express.Multer.File
   ) {
     // Kiểm tra xem bác sĩ có tồn tại hay không
     await this.checkDoctorExists(_id);
-    const fileKey = uuid();
-    const bucketName = process.env.S3_BUCKET;
+    let s3Url: string | undefined;
+    if (file) {
+      const fileKey = uuid();
+      const bucketName = process.env.S3_BUCKET;
 
-    // await this.s3.send(
-    //   new PutObjectCommand({
-    //     Bucket: bucketName,
-    //     Key: fileKey,
-    //     Body: file.buffer,
-    //     ACL: 'public-read',
-    //     ContentType: 'image/jpg'
-    //   }),
-    // );
+      await this.s3.send(
+        new PutObjectCommand({
+          Bucket: bucketName,
+          Key: fileKey,
+          Body: file.buffer,
+          ACL: 'public-read',
+          ContentType: file.mimetype, // Lấy đúng định dạng file
+        }),
+      );
 
-    // const s3Url = `${process.env.S3_BASE_URL}/${fileKey}`;
-    // console.log('s3Url', s3Url);
+      s3Url = `${process.env.S3_BASE_URL}/${fileKey}`;
+    }
+
+
+    const updatedData = {
+      ...updateDoctorDto,
+      ...(s3Url && { avatar: s3Url }), // Chỉ thêm avatar nếu có file
+    };
 
     const updatedDoctor = await this.doctorModel.findByIdAndUpdate(
       _id,
-      { $set: updateDoctorDto },
+      { $set: updatedData },
       { new: true },
     );
 

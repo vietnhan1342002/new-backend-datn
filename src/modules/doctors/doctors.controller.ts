@@ -36,10 +36,9 @@ export class DoctorsController {
   @UseInterceptors(FileInterceptor('avatar'))
   create(
     @Body() createDoctorDto: CreateDoctorDto,
-    @UploadedFile() file: Express.Multer.File,
   ) {
 
-    return this.doctorsService.create(file, createDoctorDto);
+    return this.doctorsService.create(createDoctorDto);
   }
 
   @Public()
@@ -73,10 +72,11 @@ export class DoctorsController {
   @UseInterceptors(FileInterceptor('avatar'))
   update(@Param('_id') _id: string,
     @Body() updateDoctorDto: UpdateDoctorDto,
-    // @UploadedFile() file?: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
+    console.log(file);
     return this.doctorsService.update(_id, updateDoctorDto,
-      // file
+      file
     );
   }
 

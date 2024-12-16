@@ -19,6 +19,9 @@ export class Doctor extends Document {
 
   @Prop({ type: Types.ObjectId, ref: Specialty.name })
   specialtyId: Types.ObjectId;
+
+  @Prop({ type: String, default: null }) // Avatar lưu dưới dạng URL
+  avatar: string;
 }
 
 export const DoctorSchema = SchemaFactory.createForClass(Doctor);
