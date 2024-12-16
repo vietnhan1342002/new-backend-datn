@@ -18,6 +18,8 @@ export class SearchService {
 
 
   async searchDoctors(query: string, page: number, pageSize: number) {
+    console.log(query);
+
     const skip = (page - 1) * pageSize;
     const limit = pageSize;
     const doctors = await this.doctorModel.aggregate([
@@ -61,10 +63,10 @@ export class SearchService {
         },
       },
       {
-        $skip: skip, // Bỏ qua số lượng kết quả đầu tiên
+        $skip: skip,
       },
       {
-        $limit: limit, // Giới hạn số lượng kết quả trả về
+        $limit: limit,
       },
     ]);
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, Query, BadRequestException, Put } from '@nestjs/common';
 import { MedicationsService } from './medications.service';
 import { CreateMedicationDto } from './dto/create-medication.dto';
 import { UpdateMedicationDto } from './dto/update-medication.dto';
@@ -36,7 +36,7 @@ export class MedicationsController {
 
   @Patch('/updateQuantity/:_id')
   updateQuantity(@Param('_id') _id: Types.ObjectId, @Body() updateQuantityMedicationDto: UpdateQuantityMedicationDto) {
-    const { quantity } = updateQuantityMedicationDto; 
+    const { quantity } = updateQuantityMedicationDto;
     if (isNaN(quantity)) {
       throw new BadRequestException('Invalid medication quantity');
     }
@@ -45,7 +45,7 @@ export class MedicationsController {
 
   }
 
-  @Patch(':_id')
+  @Put(':_id')
   update(@Param('_id') _id: Types.ObjectId, @Body() updateMedicationDto: UpdateMedicationDto) {
     return this.medicationsService.update(_id, updateMedicationDto);
   }

@@ -182,7 +182,7 @@ export class MedicalRecordsService {
           select: 'userId',
           populate: {
             path: 'userId',
-            select: 'fullName',
+            select: 'fullName phoneNumber',
           },
         },
         {

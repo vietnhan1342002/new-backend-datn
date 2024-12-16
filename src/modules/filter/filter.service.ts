@@ -6,6 +6,8 @@ import { Specialty } from '../specialties/schemas/specialty.schema';
 import { Doctor } from '../doctors/schemas/doctor.schema';
 import { MedicalRecord } from '../medical_records/schemas/medical_record.schema';
 import { MedicalRecordsService } from '../medical_records/medical_records.service';
+import { Appointment } from '../appointments/schemas/appointment.schema';
+import { UserAuth } from '../user-auth/schemas/user-auth.schema';
 
 @Injectable()
 export class FilterService {
@@ -14,6 +16,7 @@ export class FilterService {
     @InjectModel(Doctor.name) private readonly doctorModel: Model<Doctor>,
     @InjectModel(Specialty.name) private readonly specialtyModel: Model<Specialty>,
     @InjectModel(MedicalRecord.name) private readonly medicalRecordModel: Model<MedicalRecord>,
+    @InjectModel(Appointment.name) private readonly appointmentModel: Model<Appointment>,
 
     private readonly medicalRecordsService: MedicalRecordsService
   ) { }
@@ -37,7 +40,6 @@ export class FilterService {
 
     return doctor_schedules;
   }
-
 
   async filterDoctorSchedulesBySpecialty(filterCriteria: { specialtyId?: string; date?: string; status?: string; shift?: string }) {
     const matchFilter: any = {};
@@ -89,8 +91,6 @@ export class FilterService {
     return doctor_schedules;
   }
 
-
-  // Lọc lịch bác sĩ với thông tin chi tiết
   async filterDoctorSchedulesWithDetails(filterCriteria: { doctorId?: string; date?: string; status?: string }) {
     const matchFilter: any = {};
     if (filterCriteria.doctorId) matchFilter.doctorId = new Types.ObjectId(filterCriteria.doctorId);
@@ -125,10 +125,14 @@ export class FilterService {
   async fieldDoctorBySpecialtyId(filterCriteria: { specialtyId?: string }): Promise<Doctor[]> {
     const filter: any = {};
     if (filterCriteria.specialtyId) filter.specialtyId = new Types.ObjectId(filterCriteria.specialtyId);
-    return await this.doctorModel.find(filter).populate({
+    const doctors = await this.doctorModel.find({ specialtyId: filterCriteria.specialtyId }).populate({
       path: 'userId',
       select: 'fullName'
     }).exec();
+    if (doctors.length === 0) {
+      throw new NotFoundException("Don't have any schedule suitable");
+    }
+    return doctors
   }
 
   async fieldMMedicalRecordsByPatientId(filterCriteria: { patientId?: string }): Promise<MedicalRecord[]> {
@@ -139,11 +143,10 @@ export class FilterService {
       filter.patientId = new Types.ObjectId(filterCriteria.patientId);
     }
 
-    // Truy vấn và dùng populate để lấy dữ liệu liên quan
     const medicalRecords = await this.medicalRecordModel
       .find(filter)
       .populate({
-        path: 'patientId', // Tên trường trong MedicalRecord
+        path: 'patientId',
         select: 'userId', // Chỉ lấy trường userId từ patientId
         populate: {
           path: 'userId', // Lấy thông tin userId (ví dụ fullName)
@@ -165,6 +168,20 @@ export class FilterService {
       .exec();
 
     return medicalRecords;
+  }
+
+  async countDoctors(): Promise<number> {
+    const count = await this.doctorModel.countDocuments();  // Đếm tất cả tài liệu trong collection
+    return count;
+  }
+
+  async countAppointments(): Promise<number> {
+    const count = await this.appointmentModel.find({ status: 'confirmed' }).countDocuments()
+    return count
+  }
+
+  async filterAppointmentConfirmed(): Promise<Appointment[]> {
+    return this.appointmentModel.find({ status: 'confirmed' }).exec();
   }
 
 }

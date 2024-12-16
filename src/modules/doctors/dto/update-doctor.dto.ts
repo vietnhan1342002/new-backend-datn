@@ -7,8 +7,10 @@ import {
   IsString,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
+
   @IsOptional()
   @IsNotEmpty({ message: 'licenseNumber cannot be empty' })
   @IsString({ message: 'licenseNumber phải là một chuỗi' })
@@ -17,6 +19,7 @@ export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
   @IsOptional()
   @IsNotEmpty({ message: 'yearsOfExperience cannot be empty' })
   @Min(1, { message: 'yearsOfExperience phải lớn hơn 0' }) // Kiểm tra số năm kinh nghiệm phải > 0
+  @Type(() => Number)
   yearsOfExperience?: number;
 
   @IsOptional()

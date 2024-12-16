@@ -8,6 +8,9 @@ import {
   Delete,
   Query,
   UseGuards,
+  BadRequestException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { DoctorsService } from './doctors.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
@@ -19,6 +22,9 @@ import { Resource } from '../roles/enum/resource.enum';
 import { Action } from '../roles/enum/action.enum';
 import { Public } from '../user-auth/guard/public.guard';
 import { parseQueryParam } from '@/helpers/utils';
+import { Types } from 'mongoose';
+import { Doctor } from './schemas/doctor.schema';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtAuthGuard, RoleGuard)
 @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -27,8 +33,13 @@ export class DoctorsController {
   constructor(private readonly doctorsService: DoctorsService) { }
 
   @Post()
-  create(@Body() createDoctorDto: CreateDoctorDto) {
-    return this.doctorsService.create(createDoctorDto);
+  @UseInterceptors(FileInterceptor('avatar'))
+  create(
+    @Body() createDoctorDto: CreateDoctorDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+
+    return this.doctorsService.create(file, createDoctorDto);
   }
 
   @Public()
@@ -46,14 +57,30 @@ export class DoctorsController {
   }
 
   @Public()
+  @Get('user/:userId')
+  async getDoctorByUserId(@Param('userId') userId: string): Promise<Doctor> {
+    return this.doctorsService.getDoctorByUserId(userId);
+  }
+
+  @Public()
   @Get(':_id')
   findOne(@Param('_id') _id: string) {
     return this.doctorsService.findOne(_id);
   }
+
+  @Public()
   @Patch(':_id')
-  update(@Param('_id') _id: string, @Body() updateDoctorDto: UpdateDoctorDto) {
-    return this.doctorsService.update(_id, updateDoctorDto);
+  @UseInterceptors(FileInterceptor('avatar'))
+  update(@Param('_id') _id: string,
+    @Body() updateDoctorDto: UpdateDoctorDto,
+    // @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.doctorsService.update(_id, updateDoctorDto,
+      // file
+    );
   }
+
+
 
   @Delete(':_id')
   remove(@Param('_id') _id: string) {

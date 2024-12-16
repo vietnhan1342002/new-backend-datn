@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { v4 as uuid } from 'uuid';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
 import { Model, Types } from 'mongoose';
@@ -10,10 +12,16 @@ import { Doctor } from './schemas/doctor.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import aqp from 'api-query-params';
 import { calculateSkip, preparePaginationFilter } from '@/helpers/utils';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { UserAuthService } from '../user-auth/user-auth.service';
 
 @Injectable()
 export class DoctorsService {
-  constructor(@InjectModel(Doctor.name) private doctorModel: Model<Doctor>) {}
+  constructor(
+    @InjectModel(Doctor.name) private doctorModel: Model<Doctor>,
+    @Inject('S3_CLIENT') private readonly s3: S3Client,
+    private userAuthService: UserAuthService,
+  ) { }
 
   private async checkDoctorExists(_id: string) {
     const doctor = await this.doctorModel.findById(_id);
@@ -24,7 +32,22 @@ export class DoctorsService {
   }
 
   // Tạo dữ liệu bác sĩ với ObjectId
-  private createDoctorData(createDoctorDto: CreateDoctorDto) {
+  private async createDoctorData(file: Express.Multer.File, createDoctorDto: CreateDoctorDto) {
+
+    const fileKey = uuid();
+    const bucketName = process.env.S3_BUCKET;
+
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: fileKey,
+        Body: file.buffer,
+        ACL: 'public-read',
+      }),
+    );
+
+    const s3Url = `${process.env.S3_BASE_URL}/${fileKey}`; //url
+
     const { userId, specialtyId, licenseNumber, yearsOfExperience } =
       createDoctorDto;
     return {
@@ -34,9 +57,10 @@ export class DoctorsService {
       yearsOfExperience,
     };
   }
-  async create(createDoctorDto: CreateDoctorDto) {
+
+  async create(file: Express.Multer.File, createDoctorDto: CreateDoctorDto) {
     try {
-      const doctorData = this.createDoctorData(createDoctorDto);
+      const doctorData = this.createDoctorData(file, createDoctorDto);
       const createdDoctor = await this.doctorModel.create(doctorData);
       return createdDoctor;
     } catch (error) {
@@ -86,29 +110,53 @@ export class DoctorsService {
     return doctor;
   }
 
-  async update(_id: string, updateDoctorDto: UpdateDoctorDto) {
+  async update(_id: string, updateDoctorDto: UpdateDoctorDto,
+    // file?: Express.Multer.File
+  ) {
     // Kiểm tra xem bác sĩ có tồn tại hay không
     await this.checkDoctorExists(_id);
+    const fileKey = uuid();
+    const bucketName = process.env.S3_BUCKET;
 
-    // Cập nhật thông tin bác sĩ
+    // await this.s3.send(
+    //   new PutObjectCommand({
+    //     Bucket: bucketName,
+    //     Key: fileKey,
+    //     Body: file.buffer,
+    //     ACL: 'public-read',
+    //     ContentType: 'image/jpg'
+    //   }),
+    // );
+
+    // const s3Url = `${process.env.S3_BASE_URL}/${fileKey}`;
+    // console.log('s3Url', s3Url);
+
     const updatedDoctor = await this.doctorModel.findByIdAndUpdate(
       _id,
       { $set: updateDoctorDto },
-      { new: true }, // Trả về bản ghi đã cập nhật
+      { new: true },
     );
 
     return updatedDoctor;
   }
 
   async remove(_id: string) {
-    // Kiểm tra xem bác sĩ có tồn tại hay không
     await this.checkDoctorExists(_id);
-
-    // Xóa bác sĩ khỏi cơ sở dữ liệu
-    await this.doctorModel.findByIdAndDelete(_id);
-
+    const doctor = await this.doctorModel.findByIdAndDelete(_id);
+    await this.userAuthService.remove(doctor.userId.toString())
     return { message: `Doctor with ID ${_id} has been removed successfully` };
   }
+
+  async getDoctorByUserId(userId: string): Promise<Doctor> {
+    // Chuyển userId từ string sang ObjectId
+    const objectId = new Types.ObjectId(userId);
+    const doctor = await this.doctorModel.findOne({ userId: objectId }).exec();
+    if (!doctor) {
+      throw new NotFoundException(`Doctor with userId ${userId} not found`);
+    }
+    return doctor;
+  }
+
 
   //----------------------------------Helper--------------------------------------//
   private populateDoctorQuery(query: any) {
