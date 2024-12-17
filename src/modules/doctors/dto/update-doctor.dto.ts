@@ -8,6 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Types } from 'mongoose';
 
 export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
   @IsOptional()
@@ -24,5 +25,5 @@ export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
   @IsOptional()
   @IsNotEmpty({ message: 'specialtyId cannot be empty' })
   @IsMongoId({ message: 'specialtyId invalid' })
-  specialty?: string;
+  specialty?: string | Types.ObjectId;
 }

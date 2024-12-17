@@ -113,6 +113,7 @@ export class UserAuthController {
     return this.userAuthService.findEmployee(query, currentPage, pageLimit);
   }
 
+  @Public()
   @Get(':id')
   findById(@Param('id') id: string) {
     return this.userAuthService.findById(id);
