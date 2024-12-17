@@ -20,6 +20,7 @@ import { DoctorSchedulesService } from './doctor-schedules.service';
 import { CreateDoctorScheduleDto } from './dto/create-doctor-schedule.dto';
 import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
 import { Types } from 'mongoose';
+import { parseQueryParam } from '@/helpers/utils';
 
 // @UseGuards(JwtAuthGuard, RoleGuard)
 // @Permissions([{ resource: Resource.ALL, actions: [Action.ALL] }])
@@ -38,11 +39,15 @@ export class DoctorSchedulesController {
   @Public()
   @Get()
   async findAll(
-    @Query() query: string,
-    @Param('current') current: string,
-    @Param('pageSize') pageSize: string,
+    @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
   ) {
-    return this.doctorSchedulesService.findAll(query, +current, +pageSize);
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
+
+    // Tìm tất cả bác sĩ hoặc theo query
+    return this.doctorSchedulesService.findAll(query, currentPage, pageLimit);
   }
 
   @Public()

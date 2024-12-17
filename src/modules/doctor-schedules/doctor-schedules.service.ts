@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DoctorSchedule } from './schemas/doctor-schedule.schema';
 import { Model, Types } from 'mongoose';
 import aqp from 'api-query-params';
+import { preparePaginationFilter } from '@/helpers/utils';
 
 @Injectable()
 export class DoctorSchedulesService {
@@ -22,16 +23,15 @@ export class DoctorSchedulesService {
     shiftId: Types.ObjectId,
     date: Date,
   ) {
-    // Tìm lịch trình có cùng doctorId, shiftId và date
     const scheduleExists = await this.doctorScheduleModel.findOne({
-      doctorId,
-      shiftId,
+      doctorId: new Types.ObjectId(doctorId),
+      shiftId: new Types.ObjectId(shiftId),
       date,
     });
 
     if (scheduleExists) {
       throw new BadRequestException(
-        `Doctor schedule for Doctor ID: ${doctorId}, Shift ID: ${shiftId}, and Date: ${date.toISOString().split('T')[0]} already exists. Please select another date/time!`,
+        `Shift in Date: ${date.toISOString().split('T')[0]} already exists. Please select another date/time!`
       );
     }
   }
@@ -39,29 +39,28 @@ export class DoctorSchedulesService {
   async create(createDoctorScheduleDto: CreateDoctorScheduleDto) {
     const { doctorId, shiftId, date, status } = createDoctorScheduleDto;
 
-    // Check if the schedule for this doctor on this date already exists
+    // Check if the schedule for this doctor on this date and shift already exists
     await this.checkDoctorScheduleExistence(doctorId, shiftId, date);
 
+    // Create a new schedule if no duplicates are found
     const schedule = await this.doctorScheduleModel.create({
       doctorId: new Types.ObjectId(doctorId),
       shiftId: new Types.ObjectId(shiftId),
       date,
       status,
     });
+
     return { _id: schedule.id };
   }
 
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
-
-    if (filter.current) delete filter.current;
-    if (filter.pageSize) delete filter.pageSize;
-
-    if (!current) current = 1;
-    if (!pageSize) pageSize = 10;
-
-    const totalItems = (await this.doctorScheduleModel.find(filter)).length;
-    const totalPages = Math.ceil(totalItems / pageSize);
+    const { totalItems, totalPages } = await preparePaginationFilter(
+      this.doctorScheduleModel,
+      filter,
+      current,
+      pageSize,
+    );
 
     const skip = (current - 1) * pageSize;
 
@@ -72,13 +71,14 @@ export class DoctorSchedulesService {
       .skip(skip)
       .sort(sort as any);
 
+
     // Thực thi truy vấn với populate
     const result = await this.populateDoctorScheduleQuery(queryResult).exec();
 
     if (result.length === 0)
       throw new NotFoundException('No doctor schedules available');
 
-    return { result, totalPages };
+    return { result, totalItems, totalPages };
   }
 
   async findOne(_id: Types.ObjectId) {
