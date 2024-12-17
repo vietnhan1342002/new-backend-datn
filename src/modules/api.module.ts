@@ -58,6 +58,6 @@ import { PrescriptionDetailsModule } from './prescription-details/prescription-d
     PrescriptionDetailsModule,
   ],
   providers: [JwtStrategy],
-  exports: [JwtModule],
+  exports: [JwtModule, UserAuthModule],
 })
 export class ApiModule { }

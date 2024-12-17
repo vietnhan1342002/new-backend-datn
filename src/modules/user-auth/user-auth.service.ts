@@ -355,4 +355,13 @@ export class UserAuthService {
     const user = await this.userAuthModel.findOne({ phoneNumber }).exec();
     return user ? true : false;  // Return true if a user with the phone number exists, false otherwise
   }
+
+  async handleVerifyToken(token) {
+    try {
+      const payload = this.jwtService.verify(token)
+      return payload['userId']
+    } catch (error) {
+      throw new UnauthorizedException()
+    }
+  }
 }

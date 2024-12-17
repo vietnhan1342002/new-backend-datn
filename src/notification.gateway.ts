@@ -9,32 +9,50 @@ import {
     MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { UserAuthService } from './modules/user-auth/user-auth.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class NotificationsGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer() server: Server;
+
+    constructor(private readonly userAuthService: UserAuthService) { }
+
     private doctorsSockets: { [doctorId: string]: Socket } = {};
 
     private users: number = 0;
 
     // Triển khai phương thức handleConnection để xử lý kết nối mới
-    handleConnection(client: Socket) {
-        console.log(`A new client connected: ${client.id}`);
+    async handleConnection(socket: Socket) {
+        const authHeader = socket.handshake.headers.authorization
+        if (authHeader && (authHeader as string).split(' '), [1]) {
+            try {
+                socket.data.userId = await this.userAuthService.handleVerifyToken(
+                    (authHeader as string).split(' ')[1],
+                )
+                console.log("Connect success:", socket.data.userId);
+                socket.join(socket.data.userId)
+            } catch (error) {
+                socket.disconnect()
+            }
+        }
+        console.log(`A new client connected: ${socket.id}`);
+    }
+
+    async handDisconnect(@ConnectedSocket() socket: Socket) {
+        console.log("Disconnect: ", socket.id, socket.data.userId);
+
     }
 
     // Lắng nghe sự kiện "sendNotification"
     @SubscribeMessage('sendNotification')
     handleNotification(
         @MessageBody() { doctorId, status, appointmentId }: { doctorId: string, status: string, appointmentId: string },
-        @ConnectedSocket() client: Socket,
+        @ConnectedSocket() socket: Socket,
     ) {
-        console.log(`Sending notification to doctor ${doctorId} for appointment ${appointmentId} with status: ${status}`);
+        console.log(`Sending notification to doctor ${doctorId} for appointment ${appointmentId} with status: ${status}. Client: ${socket}`);
 
-        const doctorSocket = this.doctorsSockets[doctorId];
-        if (doctorSocket) {
-            doctorSocket.emit('appointmentConfirmed', { appointmentId, status });
-        }
+        this.server.to("userId").emit('appointmentConfirmed', { appointmentId, status })
     }
 
     // Khi bác sĩ kết nối, lưu socket của họ
