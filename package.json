@@ -29,6 +29,8 @@
     "@nestjs/mongoose": "^10.0.10",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.4.15",
+    "@nestjs/websockets": "^10.4.15",
     "@pinecone-database/pinecone": "^4.0.0",
     "api-query-params": "^5.4.0",
     "bcrypt": "^5.1.1",
