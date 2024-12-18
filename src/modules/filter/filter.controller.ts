@@ -64,8 +64,10 @@ export class FilterController {
   }
 
   @Get('appointment-confirmed')
-  async getConfirmedAppointments(): Promise<Appointment[]> {
-    return this.filterService.filterAppointmentConfirmed();
+  async getConfirmedAppointments(
+    @Query('doctorId') doctorId?: string,
+  ): Promise<Appointment[]> {
+    return this.filterService.filterAppointmentConfirmed(doctorId);
   }
 
   @Get('count/doctors')
@@ -73,8 +75,10 @@ export class FilterController {
     return this.filterService.countDoctors();
   }
   @Get('count/appointments')
-  async getAppointmentsCount(): Promise<number> {
-    return this.filterService.countAppointments();
+  async getAppointmentsCount(
+    @Query('doctorId') doctorId?: string,
+  ): Promise<number> {
+    return this.filterService.countAppointments(doctorId);
   }
 
 

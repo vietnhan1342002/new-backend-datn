@@ -6,6 +6,7 @@ import mongoose, { Model, Types } from 'mongoose';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import aqp from 'api-query-params';
 import { calculateSkip, preparePaginationFilter } from '@/helpers/utils';
+import { PrescriptionDetailsService } from '../prescription-details/prescription-details.service';
 // import { DetailMedicalRecordService } from '../detail-medical-record/detail-medical-record.service';
 
 @Injectable()
@@ -15,18 +16,28 @@ export class PrescriptionsService {
     @InjectModel(Prescription.name)
     private prescriptionModel: Model<Prescription>,
 
-    // private detailMedicalRecordService: DetailMedicalRecordService
+    private prescriptionDetailsService: PrescriptionDetailsService
   ) { }
 
   async create(createPrescriptionDto: CreatePrescriptionDto) {
+
     const { detailMedicalRecordId } = createPrescriptionDto;
 
+    // Create the prescription
     const prescription = await this.prescriptionModel.create({
       detailMedicalRecordId: new Types.ObjectId(detailMedicalRecordId),
     });
 
-    return { _id: prescription.id };
+    let prescriptionDetail;
+    if (prescription) {
+      prescriptionDetail = await this.prescriptionDetailsService.create({
+        prescriptionId: prescription.id,
+      });
+    }
+
+    return { _id: prescription.id, prescriptionDetailId: prescriptionDetail._id };
   }
+
 
   // Tìm một Prescription dựa trên detail_medical_record_id
   async findByDetailMedicalRecordId(detail_medical_record_id: Types.ObjectId) {

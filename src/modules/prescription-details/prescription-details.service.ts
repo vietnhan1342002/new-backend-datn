@@ -21,12 +21,18 @@ export class PrescriptionDetailsService {
   async create(createPrescriptionDetailDto: CreatePrescriptionDetailDto) {
     const { prescriptionId, medicationId, quantityPrescribed } = createPrescriptionDetailDto;
 
+    const objMedicationId = medicationId ? new Types.ObjectId(medicationId) : null;
+
     const objPrescriptionId = new Types.ObjectId(prescriptionId);
-    const objMedicationId = new Types.ObjectId(medicationId);
 
+    if (objMedicationId) {
+      await this.checkMedicationExistsInPrescription(objPrescriptionId, objMedicationId);
+    }
 
-    await this.checkMedicationExistsInPrescription(objPrescriptionId, objMedicationId);
-    await this.medicationsService.updateMedicationQuantity(medicationId, quantityPrescribed)
+    if (objMedicationId) {
+      await this.medicationsService.updateMedicationQuantity(medicationId, quantityPrescribed);
+    }
+
     const prescriptionDetail = await this.prescriptionDetailModel.create({
       prescriptionId: objPrescriptionId,
       medicationId: objMedicationId,
@@ -35,6 +41,7 @@ export class PrescriptionDetailsService {
 
     return { _id: prescriptionDetail._id };
   }
+
 
   async findMedicationsByPrescriptionId(prescriptionId: Types.ObjectId) {
 

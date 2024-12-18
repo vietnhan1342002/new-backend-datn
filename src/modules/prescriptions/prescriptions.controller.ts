@@ -41,10 +41,16 @@ export class PrescriptionsController {
     return this.prescriptionsService.findAllSoftDelete(query, currentPage, pageLimit);
   }
 
+  @Get('/detail-medical-record/:_id')
+  findByDetailMedicalRecordId(@Param('_id') _id: Types.ObjectId) {
+    return this.prescriptionsService.findByDetailMedicalRecordId(_id);
+  }
+
   @Get(':_id')
   findOne(@Param('_id') _id: Types.ObjectId) {
     return this.prescriptionsService.findOne(_id);
   }
+
 
   @UsePipes(new ValidationPipe())
   @Patch(':_id')

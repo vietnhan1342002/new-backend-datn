@@ -21,7 +21,6 @@ export class DetailMedicalRecordService {
 
   async create(createDetailMedicalRecordDto: CreateDetailMedicalRecordDto) {
     const { medicalRecordId, symptoms, disease, treatmentPlan } = createDetailMedicalRecordDto;
-
     const detailMedicalRecord = await this.detailMedicalRecordModel.create({
       medicalRecordId: new Types.ObjectId(medicalRecordId), symptoms, disease, treatmentPlan
     });
@@ -30,8 +29,11 @@ export class DetailMedicalRecordService {
   }
 
   // Tìm một Detail Medical Record theo medicalRecordId
-  async findOneByMedicalRecordId(medicalRecordId: Types.ObjectId): Promise<DetailMedicalRecord | null> {
-    return await this.detailMedicalRecordModel.findOne({ medicalRecordId });
+  async findOneByMedicalRecordId(medicalRecordId: string): Promise<DetailMedicalRecord | null> {
+    return await this.detailMedicalRecordModel.findOne({ medicalRecordId: new Types.ObjectId(medicalRecordId) }).populate({
+      path: 'medicalRecordId',
+      select: 'diagnosis note'
+    });;
   }
 
 

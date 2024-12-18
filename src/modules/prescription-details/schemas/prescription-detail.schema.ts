@@ -8,7 +8,7 @@ export class PrescriptionDetail {
     @Prop({ type: Types.ObjectId, ref: Prescription.name, required: true })
     prescriptionId: Types.ObjectId;
 
-    @Prop({ type: Types.ObjectId, ref: Medication.name, required: true })
+    @Prop({ type: Types.ObjectId, ref: Medication.name })
     medicationId: Types.ObjectId;
 
     @Prop({ type: Number, min: 1 })

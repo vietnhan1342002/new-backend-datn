@@ -29,7 +29,7 @@ export class MedicalRecordsService {
 
   // Tìm một Medical Record dựa trên appointmentId
   async findOneByAppointmentId(appointmentId: Types.ObjectId): Promise<MedicalRecord | null> {
-    return await this.medicalRecordModel.findOne({ appointmentId });
+    return await this.medicalRecordModel.findOne({ appointmentId: new Types.ObjectId(appointmentId) });
   }
 
   async findAll(query: string, current: number, pageSize: number) {

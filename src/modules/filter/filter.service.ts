@@ -175,13 +175,13 @@ export class FilterService {
     return count;
   }
 
-  async countAppointments(): Promise<number> {
-    const count = await this.appointmentModel.find({ status: 'confirmed' }).countDocuments()
+  async countAppointments(doctorId?: string): Promise<number> {
+    const count = await this.appointmentModel.find({ status: 'confirmed', doctorId: new Types.ObjectId(doctorId) }).countDocuments()
     return count
   }
 
-  async filterAppointmentConfirmed(): Promise<Appointment[]> {
-    return this.appointmentModel.find({ status: 'confirmed' }).exec();
+  async filterAppointmentConfirmed(doctorId?: string): Promise<Appointment[]> {
+    return this.appointmentModel.find({ doctorId: new Types.ObjectId(doctorId), status: 'confirmed' }).exec();
   }
 
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put } from '@nestjs/common';
 import { MedicalRecordsService } from './medical_records.service';
 import { CreateMedicalRecordDto } from './dto/create-medical_record.dto';
 import { UpdateMedicalRecordDto } from './dto/update-medical_record.dto';
@@ -42,12 +42,17 @@ export class MedicalRecordsController {
     return this.medicalRecordsService.findAllSoftDelete(query, currentPage, pageLimit);
   }
 
+  @Get('/appointment/:_id')
+  findOneByAppointmentId(@Param('_id') _id: Types.ObjectId) {
+    return this.medicalRecordsService.findOneByAppointmentId(_id);
+  }
+
   @Get(':_id')
   findOne(@Param('_id') _id: Types.ObjectId) {
     return this.medicalRecordsService.findOne(_id);
   }
 
-  @Patch(':_id')
+  @Put(':_id')
   update(@Param('_id') _id: Types.ObjectId, @Body() updateMedicalRecordDto: UpdateMedicalRecordDto) {
     return this.medicalRecordsService.update(_id, updateMedicalRecordDto);
   }
@@ -56,6 +61,4 @@ export class MedicalRecordsController {
   remove(@Param('_id') _id: Types.ObjectId) {
     return this.medicalRecordsService.softDeleteMedicalRecord(_id);
   }
-
-
 }

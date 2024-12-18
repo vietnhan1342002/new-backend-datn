@@ -1,4 +1,4 @@
-import { IsInt, IsMongoId, IsNotEmpty } from "class-validator";
+import { IsInt, IsMongoId, IsNotEmpty, IsOptional } from "class-validator";
 import { Types } from "mongoose";
 
 export class CreatePrescriptionDetailDto {
@@ -7,10 +7,10 @@ export class CreatePrescriptionDetailDto {
     prescriptionId: Types.ObjectId;
 
     @IsMongoId()
-    @IsNotEmpty()
-    medicationId: Types.ObjectId;
+    @IsOptional()
+    medicationId?: Types.ObjectId;
 
     @IsInt()
-    @IsNotEmpty()
-    quantityPrescribed: number;
+    @IsOptional()
+    quantityPrescribed?: number;
 }
