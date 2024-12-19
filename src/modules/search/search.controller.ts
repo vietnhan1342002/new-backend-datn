@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { Public } from '../user-auth/guard/public.guard';
+import { Medication } from '../medications/schemas/medication.schema';
 
 @Public()
 @Controller('search')
@@ -42,4 +43,10 @@ export class SearchController {
   ) {
     return this.searchService.searchAppointments(query, +page, +limit);
   }
+
+  @Get('medications')
+  async searchMedications(@Query('name') name: string): Promise<Medication[]> {
+    return this.searchService.searchMedication(name);
+  }
+
 }

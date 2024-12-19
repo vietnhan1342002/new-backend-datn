@@ -14,34 +14,29 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   canActivate(context: ExecutionContext) {
-    // Kiểm tra nếu route có metadata @Public()
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
     if (isPublic) {
-      return true; // Nếu là @Public, bỏ qua kiểm tra JWT
+      return true;
     }
-    return super.canActivate(context); // Nếu không, tiếp tục kiểm tra JWT như bình thường
+    return super.canActivate(context);
   }
 
   handleRequest(err, user, info) {
     if (user) {
       return user;
     }
-
-    // Nếu có lỗi, xác định lỗi chính xác
-    if (err) {
-      if (err.name === 'TokenExpiredError') {
+    if (info) {
+      if (info.name === 'TokenExpiredError') {
         throw new UnauthorizedException('Token has expired');
       }
-      if (err.name === 'JsonWebTokenError') {
+      if (info.name === 'JsonWebTokenError') {
         throw new UnauthorizedException('Invalid token');
       }
     }
-
-    // Nếu không có thông tin xác thực, ném lỗi chung
-    throw new UnauthorizedException('User not authenticated');
+    throw new UnauthorizedException('User not authenticated - jwt');
   }
 
 }

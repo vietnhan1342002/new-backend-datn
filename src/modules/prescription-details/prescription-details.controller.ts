@@ -51,7 +51,6 @@ export class PrescriptionDetailsController {
     return this.prescriptionDetailsService.findOne(_id);
   }
 
-
   @UsePipes(new ValidationPipe())
   @Patch(':_id')
   update(@Param('_id') _id: Types.ObjectId, @Body() updatePrescriptionDetailDto: UpdatePrescriptionDetailDto) {

@@ -6,7 +6,7 @@ import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class RolesService {
-  constructor(@InjectModel(Role.name) private roleModel: Model<Role>) {}
+  constructor(@InjectModel(Role.name) private roleModel: Model<Role>) { }
 
   async create(createRoleDto: CreateRoleDto) {
     return this.roleModel.create(createRoleDto);
@@ -16,7 +16,6 @@ export class RolesService {
     return this.roleModel.find();
   }
 
-  // Tìm role bằng ObjectId
   async findRoleById(roleId: Types.ObjectId) {
     return this.roleModel.findById(roleId);
   }

@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { UserAuth } from '../user-auth/schemas/user-auth.schema';
 import { Specialty } from '../specialties/schemas/specialty.schema';
 import { Appointment } from '../appointments/schemas/appointment.schema';
+import { Medication } from '../medications/schemas/medication.schema';
 
 @Injectable()
 export class SearchService {
@@ -12,6 +13,7 @@ export class SearchService {
     @InjectModel(Doctor.name) private doctorModel: Model<Doctor>,
     @InjectModel(UserAuth.name) private userAuthModel: Model<UserAuth>,
     @InjectModel(Specialty.name) private specialtyModel: Model<Specialty>,
+    @InjectModel(Medication.name) private medicationModel: Model<Medication>,
     @InjectModel(Appointment.name)
     private appointmentModel: Model<Appointment>,
   ) { }
@@ -200,6 +202,9 @@ export class SearchService {
     return appointments;
   }
 
-
+  async searchMedication(name: string): Promise<Medication[]> {
+    const regex = new RegExp(name, 'i'); // 'i' để tìm kiếm không phân biệt hoa thường
+    return this.medicationModel.find({ name: { $regex: regex } }).exec();
+  }
 
 }

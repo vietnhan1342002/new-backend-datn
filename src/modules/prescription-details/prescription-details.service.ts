@@ -42,13 +42,12 @@ export class PrescriptionDetailsService {
     return { _id: prescriptionDetail._id };
   }
 
-
   async findMedicationsByPrescriptionId(prescriptionId: Types.ObjectId) {
 
     const prescriptionDetails = await this.prescriptionDetailModel
       .find({ prescriptionId: new Types.ObjectId(prescriptionId) })
       .select('_id prescriptionId quantityPrescribed')
-      .populate('medicationId', 'name description usage_instructions price unit');
+      .populate('medicationId', 'name description sideEffects usageInstructions price unit');
 
     if (!prescriptionDetails || prescriptionDetails.length === 0) {
       throw new NotFoundException(`No medications found for prescription ID ${prescriptionId}`);
@@ -205,6 +204,7 @@ export class PrescriptionDetailsService {
   }
 
 
+
   //------------------------------------------------------------------------------------------//
 
   private async checkMedicationExistsInPrescription(prescriptionId: Types.ObjectId, medicationId: Types.ObjectId) {
@@ -214,7 +214,10 @@ export class PrescriptionDetailsService {
     });
 
     if (existingDetail) {
-      throw new BadRequestException(`Medication with ID ${medicationId} already exists in this prescription`);
+      const medication = await this.medicationsService.findOne(medicationId);
+      throw new BadRequestException(
+        `Medication "${medication.name}" already exists in this prescription`,
+      );
     }
   }
 }

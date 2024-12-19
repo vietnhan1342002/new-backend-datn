@@ -16,7 +16,6 @@ export class MedicalRecordsController {
     return this.medicalRecordsService.create(createMedicalRecordDto);
   }
 
-
   @Get()
   async findAll(
     @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query

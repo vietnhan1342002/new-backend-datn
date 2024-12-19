@@ -67,7 +67,7 @@ export class DoctorsController {
     return this.doctorsService.findOne(_id);
   }
 
-  @Public()
+  @Permissions([{ resource: Resource.DOCTOR, actions: [Action.UPDATE] }])
   @Patch(':_id')
   @UseInterceptors(FileInterceptor('avatar'))
   update(@Param('_id') _id: string,
@@ -79,8 +79,6 @@ export class DoctorsController {
       file
     );
   }
-
-
 
   @Delete(':_id')
   remove(@Param('_id') _id: string) {

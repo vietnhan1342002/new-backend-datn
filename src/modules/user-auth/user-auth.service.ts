@@ -173,10 +173,10 @@ export class UserAuthService {
 
   async getUserPermissions(userId: string) {
     const user = await this.userAuthModel.findById(userId);
-
     if (!user) throw new BadRequestException('User does not exist');
 
-    const role = await this.roleService.findRoleById(user.roleId);
+    const role = await this.roleService.findRoleById(new Types.ObjectId(user.roleId));
+    console.log(role);
 
     return role.permissions;
   }

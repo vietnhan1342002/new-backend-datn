@@ -28,20 +28,21 @@ export class PrescriptionsService {
       detailMedicalRecordId: new Types.ObjectId(detailMedicalRecordId),
     });
 
-    let prescriptionDetail;
-    if (prescription) {
-      prescriptionDetail = await this.prescriptionDetailsService.create({
-        prescriptionId: prescription.id,
-      });
-    }
+    // let prescriptionDetail;
+    // if (prescription) {
+    //   prescriptionDetail = await this.prescriptionDetailsService.create({
+    //     prescriptionId: prescription.id,
+    //   });
+    // }
 
-    return { _id: prescription.id, prescriptionDetailId: prescriptionDetail._id };
+    return {
+      _id: prescription.id,
+      // , prescriptionDetailId: prescriptionDetail._id 
+    };
   }
 
-
-  // Tìm một Prescription dựa trên detail_medical_record_id
-  async findByDetailMedicalRecordId(detail_medical_record_id: Types.ObjectId) {
-    return await this.prescriptionModel.find({ detail_medical_record_id });
+  async findByDetailMedicalRecordId(detailMedicalRecordId: Types.ObjectId) {
+    return await this.prescriptionModel.find({ detailMedicalRecordId: new Types.ObjectId(detailMedicalRecordId) });
   }
 
   async findAll(query: string, current: number, pageSize: number) {

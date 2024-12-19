@@ -52,12 +52,10 @@ export class UserAuthController {
   async logout(@Body() body: { refreshToken: string }) {
     const { refreshToken } = body;
 
-    // Kiểm tra refresh token có hợp lệ hay không trước khi logout
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is required');
     }
 
-    // Gọi phương thức logout từ service
     return this.userAuthService.logout(refreshToken);
   }
 
@@ -73,15 +71,15 @@ export class UserAuthController {
     return this.userAuthService.verifyToken(token);
   }
 
-  @Permissions([{ resource: Resource.PASSWORD, actions: [Action.UPDATE] }])
-  @Patch('update-password/')
-  async updatePassword(
-    @Request() req, // Lấy thông tin user từ token
-    @Body() updatePasswordDto: UpdatePasswordDto,
-  ) {
-    const _id = req.user._id;
-    return this.userAuthService.updatePassword(_id, updatePasswordDto);
-  }
+  // @Permissions([{ resource: Resource.PASSWORD, actions: [Action.UPDATE] }])
+  // @Patch('update-password/')
+  // async updatePassword(
+  //   @Request() req,
+  //   @Body() updatePasswordDto: UpdatePasswordDto,
+  // ) {
+  //   const _id = req.user._id;
+  //   return this.userAuthService.updatePassword(_id, updatePasswordDto);
+  // }
 
   //Part User
   @Post()
@@ -101,7 +99,7 @@ export class UserAuthController {
     return this.userAuthService.findAll(query, currentPage, pageLimit);
   }
 
-  @Get('/employee')
+  @Get('employee')
   async findEmployee(
     @Query('query') query: string = '',
     @Query('current') current: string = '1',
@@ -113,16 +111,18 @@ export class UserAuthController {
     return this.userAuthService.findEmployee(query, currentPage, pageLimit);
   }
 
-  @Public()
+  @Permissions([{ resource: Resource.USER, actions: [Action.ALL] }])
+  @Patch(':_id')
+  update(@Param('_id') _id: string, @Body() updateUserDto: UpdateUserAuthDto) {
+    return this.userAuthService.update(_id, updateUserDto);
+  }
+
+  @Permissions([{ resource: Resource.USER, actions: [Action.ALL] }])
   @Get(':id')
   findById(@Param('id') id: string) {
     return this.userAuthService.findById(id);
   }
 
-  @Patch(':_id')
-  update(@Param('_id') _id: string, @Body() updateUserDto: UpdateUserAuthDto) {
-    return this.userAuthService.update(_id, updateUserDto);
-  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

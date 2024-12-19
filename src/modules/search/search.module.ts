@@ -6,6 +6,7 @@ import { Doctor, DoctorSchema } from '../doctors/schemas/doctor.schema';
 import { UserAuth, UserAuthSchema } from '../user-auth/schemas/user-auth.schema';
 import { Specialty, SpecialtySchema } from '../specialties/schemas/specialty.schema';
 import { Appointment, AppointmentSchema } from '../appointments/schemas/appointment.schema';
+import { Medication, MedicationSchema } from '../medications/schemas/medication.schema';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { Appointment, AppointmentSchema } from '../appointments/schemas/appointm
     MongooseModule.forFeature([{ name: UserAuth.name, schema: UserAuthSchema }]),
     MongooseModule.forFeature([{ name: Specialty.name, schema: SpecialtySchema }]),
     MongooseModule.forFeature([{ name: Appointment.name, schema: AppointmentSchema },]),
+    MongooseModule.forFeature([{ name: Medication.name, schema: MedicationSchema },]),
   ],
   controllers: [SearchController],
   providers: [SearchService],
