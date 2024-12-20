@@ -74,7 +74,7 @@ export class PatientsService {
   async findOne(_id: string): Promise<Patient> {
     await this.checkPatientExists(_id);
 
-    const patient = await await this.populatePatientQuery(
+    const patient = await this.populatePatientQuery(
       this.patientModel.findById(new Types.ObjectId(_id)),
     ).exec();
 

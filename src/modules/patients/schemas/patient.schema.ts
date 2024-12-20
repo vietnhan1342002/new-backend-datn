@@ -23,6 +23,9 @@ export class Patient {
 
   @Prop({ enum: Gender })
   gender: Gender;
+
+  @Prop()
+  email: string;
 }
 
 export const PatientSchema = SchemaFactory.createForClass(Patient);

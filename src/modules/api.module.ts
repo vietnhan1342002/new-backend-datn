@@ -22,6 +22,8 @@ import { DetailMedicalRecordModule } from './detail-medical-record/detail-medica
 import { PrescriptionsModule } from './prescriptions/prescriptions.module';
 import { MedicationsModule } from './medications/medications.module';
 import { PrescriptionDetailsModule } from './prescription-details/prescription-details.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { MailConfig } from '@/config/mail.config';
 
 @Module({
   imports: [
@@ -38,6 +40,9 @@ import { PrescriptionDetailsModule } from './prescription-details/prescription-d
       imports: [ConfigModule],
       useFactory: jwtConfig,
       inject: [ConfigService],
+    }),
+    MailerModule.forRootAsync({
+      useFactory: () => MailConfig(),
     }),
 
     UserAuthModule,

@@ -119,9 +119,9 @@ export class DoctorsService {
       s3Url = `${process.env.S3_BASE_URL}/${fileKey}`;
     }
 
-    if (updateDoctorDto.specialty) {
+    if (updateDoctorDto.specialtyId) {
       try {
-        updateDoctorDto.specialty = new Types.ObjectId(updateDoctorDto.specialty);
+        updateDoctorDto.specialtyId = new Types.ObjectId(updateDoctorDto.specialtyId);
       } catch (error) {
         throw new BadRequestException('Invalid specialtyId format');
       }

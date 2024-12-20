@@ -125,7 +125,8 @@ export class FilterService {
   async fieldDoctorBySpecialtyId(filterCriteria: { specialtyId?: string }): Promise<Doctor[]> {
     const filter: any = {};
     if (filterCriteria.specialtyId) filter.specialtyId = new Types.ObjectId(filterCriteria.specialtyId);
-    const doctors = await this.doctorModel.find({ specialtyId: new Types.ObjectId(filterCriteria.specialtyId) }).populate({
+
+    const doctors = await this.doctorModel.find({ specialtyId: filter.specialtyId }).populate({
       path: 'userId',
       select: 'fullName'
     }).exec();
