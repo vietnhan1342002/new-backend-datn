@@ -125,7 +125,7 @@ export class FilterService {
   async fieldDoctorBySpecialtyId(filterCriteria: { specialtyId?: string }): Promise<Doctor[]> {
     const filter: any = {};
     if (filterCriteria.specialtyId) filter.specialtyId = new Types.ObjectId(filterCriteria.specialtyId);
-    const doctors = await this.doctorModel.find({ specialtyId: filterCriteria.specialtyId }).populate({
+    const doctors = await this.doctorModel.find({ specialtyId: new Types.ObjectId(filterCriteria.specialtyId) }).populate({
       path: 'userId',
       select: 'fullName'
     }).exec();
@@ -176,12 +176,21 @@ export class FilterService {
   }
 
   async countAppointments(doctorId?: string): Promise<number> {
-    const count = await this.appointmentModel.find({ status: 'confirmed', doctorId: new Types.ObjectId(doctorId) }).countDocuments()
+    let count;
+    if (doctorId) {
+      count = await this.appointmentModel.find({ status: 'confirmed', doctorId: new Types.ObjectId(doctorId) }).countDocuments()
+    } else {
+      count = await this.appointmentModel.find({ status: 'confirmed' }).countDocuments()
+    }
     return count
   }
 
   async filterAppointmentConfirmed(doctorId?: string): Promise<Appointment[]> {
-    return this.appointmentModel.find({ doctorId: new Types.ObjectId(doctorId), status: 'confirmed' }).exec();
+    if (doctorId) {
+      return this.appointmentModel.find({ doctorId: new Types.ObjectId(doctorId), status: 'confirmed' }).exec();
+    } else {
+      return this.appointmentModel.find({ status: 'confirmed' }).exec();
+    }
   }
 
 }
