@@ -14,6 +14,10 @@ import aqp from 'api-query-params';
 import { MedicalRecordsService } from '../medical_records/medical_records.service';
 import { CreateMedicalRecordDto } from '../medical_records/dto/create-medical_record.dto';
 import { UpdateStatusAppointmentDto } from './dto/update-status.dto';
+import { NotificationsGateway } from '@/notification.gateway';
+import { MailerService } from '@nestjs-modules/mailer';
+import { PatientsService } from '../patients/patients.service';
+import { DoctorsService } from '../doctors/doctors.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -22,7 +26,11 @@ export class AppointmentsService {
     @InjectModel(Appointment.name)
     private readonly appointmentModel: Model<Appointment>,
     private readonly doctorScheduleService: DoctorSchedulesService,
+    private readonly patientsService: PatientsService,
+    private readonly doctorsService: DoctorsService,
     private readonly medicalRecordsService: MedicalRecordsService,
+    private readonly notificationsGateway: NotificationsGateway,
+    private mailerService: MailerService
   ) { }
 
   // ------------------------- CREATE APPOINTMENT -------------------------
@@ -139,20 +147,44 @@ export class AppointmentsService {
     appointment.status = status.status;
     await appointment.save();
 
-    // Tạo Medical Record nếu trạng thái là CONFIRMED hoặc COMPLETED
-    if (status.status === Status.CONFIRMED) {
-      const existingRecord = await this.medicalRecordsService.findOneByAppointmentId(appointment._id);
-      if (!existingRecord) {
-        const createMedicalRecordDto: CreateMedicalRecordDto = {
-          patientId: new Types.ObjectId(appointment.patientId),
-          doctorId: new Types.ObjectId(appointment.doctorId),
-          appointmentId: new Types.ObjectId(appointment._id),
-          diagnosis: '', // Để trống ban đầu
-          note: '',      // Để trống ban đầu
-        };
-        await this.medicalRecordsService.create(createMedicalRecordDto);
-      }
+    // Gửi thông báo tới bác sĩ nếu trạng thái là CONFIRMED hoặc COMPLETED
+    if (status.status === Status.CONFIRMED || status.status === Status.COMPLETED) {
+      const doctorId = appointment.doctorId.toString();
+      const doctor = await this.doctorsService.findOne(doctorId)
+      const userId = doctor.userId.toString()
+      const message = `Appointment with ID ${id} is now ${status.status}`;
+      console.log("doctorId appointment:", doctorId);
+
+      this.notificationsGateway.sendNotificationToDoctor(userId, doctorId, message);
     }
+
+    // Tạo Medical Record nếu trạng thái là CONFIRMED hoặc COMPLETED
+    // if (status.status === Status.CONFIRMED) {
+    //   const patient = await this.patientsService.findOne(appointment.patientId.toString())
+    //   const email = patient.email
+    //   console.log(email);
+    //   await this.mailerService.sendMail({
+    //     to: email,
+    //     subject: 'Confirm appointment',
+    //     template: './confirmAppointment',
+    //     context: {
+    //       appointmentDate: appointment.appointmentDate,
+    //     },
+    //   });
+
+
+    //   // const existingRecord = await this.medicalRecordsService.findOneByAppointmentId(appointment._id);
+    //   // if (!existingRecord) {
+    //   //   const createMedicalRecordDto: CreateMedicalRecordDto = {
+    //   //     patientId: new Types.ObjectId(appointment.patientId),
+    //   //     doctorId: new Types.ObjectId(appointment.doctorId),
+    //   //     appointmentId: new Types.ObjectId(appointment._id),
+    //   //     diagnosis: '', // Để trống ban đầu
+    //   //     note: '',      // Để trống ban đầu
+    //   //   };
+    //   //   await this.medicalRecordsService.create(createMedicalRecordDto);
+    //   // }
+    // }
 
     if (status.status === Status.COMPLETED || status.status === Status.CANCELED) {
       this.remove(new Types.ObjectId(id))
