@@ -102,8 +102,8 @@ export class RoleGuard implements CanActivate {
     const userPermissions = await this.userAuthService.getUserPermissions(
       user._id,
     );
-    console.log('routePermissions', routePermissions);
-    console.log('userPermissions', userPermissions);
+    // console.log('routePermissions', routePermissions);
+    // console.log('userPermissions', userPermissions);
     if (
       userPermissions.some(
         (perm) =>

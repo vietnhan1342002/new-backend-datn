@@ -19,22 +19,25 @@ export class NotificationsGateway
 
     private doctorsSockets: { [doctorId: string]: Socket } = {};
 
+    afterInit(server: Server) {
+        console.log('WebSocket Initialized');
+    }
+
     async handleConnection(socket: Socket) {
-        const authHeader = socket.handshake.headers.authorization;
+        const authHeader = socket.handshake.auth;
         if (authHeader) {
-            const token = (authHeader as string).split(' ')[1];
+            const token = authHeader.token
             try {
                 socket.data.userId = await this.userAuthService.handleVerifyToken(token);
                 console.log("Connect success:", socket.data.userId);
-                socket.join(socket.data.userId); // Đảm bảo socket được tham gia vào phòng với userId
+                socket.join(socket.data.userId);
             } catch (error) {
                 console.error('Token verification failed', error);
-                socket.disconnect(); // Nếu token không hợp lệ, ngắt kết nối
+                socket.disconnect();
             }
         }
         console.log(`A new client connected: ${socket.id}`);
     }
-
 
     @SubscribeMessage('disconnect')
     async handleDisconnect(@ConnectedSocket() socket: Socket) {
@@ -44,16 +47,4 @@ export class NotificationsGateway
         }
     }
 
-    afterInit(server: Server) {
-        console.log('WebSocket Initialized');
-    }
-
-    // Gửi thông báo đến bác sĩ theo ID
-    sendNotificationToDoctor(@ConnectedSocket() socket: Socket, doctorId: string, status: string): void {
-        const doctorSocket = this.doctorsSockets[doctorId];
-        if (doctorSocket) {
-            this.server.to(doctorId).emit('appointmentConfirmed', status);
-
-        }
-    }
 }
