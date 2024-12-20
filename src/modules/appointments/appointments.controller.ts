@@ -22,6 +22,7 @@ import { Status } from './schemas/appointment.schema';
 import { UpdateStatusAppointmentDto } from './dto/update-status.dto';
 import { Public } from '../user-auth/guard/public.guard';
 import { Types } from 'mongoose';
+import { NotificationsGateway } from '@/notification.gateway';
 
 // @UseGuards(JwtAuthGuard, RoleGuard)
 // @Permissions([{ resource: Resource.APPOINTMENT, actions: [Action.ALL] }])
@@ -30,7 +31,8 @@ import { Types } from 'mongoose';
 @Controller('appointments')
 @Permissions([{ resource: Resource.APPOINTMENT, actions: [Action.ALL] }])
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) { }
+  constructor(private readonly appointmentsService: AppointmentsService,
+    private readonly notificationsGateway: NotificationsGateway) { }
 
   @Post()
   create(@Body() createAppointmentDto: CreateAppointmentDto) {
@@ -76,11 +78,13 @@ export class AppointmentsController {
   }
 
   @Patch('/status/:_id')
-  updateStatus(
+  async updateStatus(
     @Param('_id') _id: Types.ObjectId,
     @Body() status: UpdateStatusAppointmentDto,
   ) {
-    return this.appointmentsService.updateStatus(_id, status);
+    const appointment = await this.appointmentsService.updateStatus(_id, status);
+
+    return appointment;
   }
 
   @Patch('/status/completed/:_id')
