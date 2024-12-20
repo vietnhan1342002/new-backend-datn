@@ -10,7 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { Types } from 'mongoose';
 
-export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
+export class UpdateDoctorDto {
   @IsOptional()
   @IsNotEmpty({ message: 'licenseNumber cannot be empty' })
   @IsString({ message: 'licenseNumber phải là một chuỗi' })
@@ -25,5 +25,5 @@ export class UpdateDoctorDto extends PartialType(CreateDoctorDto) {
   @IsOptional()
   @IsNotEmpty({ message: 'specialtyId cannot be empty' })
   @IsMongoId({ message: 'specialtyId invalid' })
-  specialty?: string | Types.ObjectId;
+  specialtyId?: string | Types.ObjectId;
 }
