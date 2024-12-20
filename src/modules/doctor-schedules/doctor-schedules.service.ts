@@ -6,7 +6,7 @@ import {
 import { CreateDoctorScheduleDto } from './dto/create-doctor-schedule.dto';
 import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { DoctorSchedule } from './schemas/doctor-schedule.schema';
+import { DoctorSchedule, Status } from './schemas/doctor-schedule.schema';
 import { Model, Types } from 'mongoose';
 import aqp from 'api-query-params';
 import { preparePaginationFilter } from '@/helpers/utils';
@@ -55,6 +55,9 @@ export class DoctorSchedulesService {
 
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
+
+    filter.status = Status.ACTIVE
+
     const { totalItems, totalPages } = await preparePaginationFilter(
       this.doctorScheduleModel,
       filter,
