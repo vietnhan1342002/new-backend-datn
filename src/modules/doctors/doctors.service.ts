@@ -14,6 +14,7 @@ import aqp from 'api-query-params';
 import { calculateSkip, preparePaginationFilter } from '@/helpers/utils';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { UserAuthService } from '../user-auth/user-auth.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class DoctorsService {
@@ -23,6 +24,17 @@ export class DoctorsService {
     private userAuthService: UserAuthService,
   ) { }
 
+  @Cron(CronExpression.EVERY_YEAR)
+  async incrementYearsOfExperience() {
+    const doctors = await this.doctorModel.find().exec();
+
+    for (const doctor of doctors) {
+      doctor.yearsOfExperience += 1;
+      await doctor.save();
+    }
+    console.log('Successfully incremented years of experience for all doctors');
+  }
+
   private async checkDoctorExists(_id: string) {
     const doctor = await this.doctorModel.findById(_id);
     if (!doctor) {
@@ -31,7 +43,6 @@ export class DoctorsService {
     return doctor;
   }
 
-  // Tạo dữ liệu bác sĩ với ObjectId
   private async createDoctorData(createDoctorDto: CreateDoctorDto) {
 
     const { userId, specialtyId, licenseNumber, yearsOfExperience } =
@@ -149,7 +160,6 @@ export class DoctorsService {
   }
 
   async getDoctorByUserId(userId: string): Promise<Doctor> {
-    // Chuyển userId từ string sang ObjectId
     const objectId = new Types.ObjectId(userId);
     const doctor = await this.doctorModel.findOne({ userId: objectId }).exec();
     if (!doctor) {

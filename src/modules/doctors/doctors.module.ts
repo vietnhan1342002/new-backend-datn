@@ -6,12 +6,13 @@ import { Doctor, DoctorSchema } from './schemas/doctor.schema';
 import { UserAuthModule } from '../user-auth/user-auth.module';
 import { S3Config } from '@/config/s3.config';
 import { S3Client } from '@aws-sdk/client-s3';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Doctor.name, schema: DoctorSchema }]),
     UserAuthModule,
-
+    ScheduleModule.forRoot()
   ],
   controllers: [DoctorsController],
   providers: [DoctorsService,
