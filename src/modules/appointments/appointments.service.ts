@@ -189,12 +189,13 @@ export class AppointmentsService {
       // });
 
 
-    if (status.status === Status.COMPLETED || status.status === Status.CANCELED) {
-      appointment.status = status.status;
-      await appointment.save();
-    }
+      if (status.status === Status.CONFIRMED || status.status === Status.CANCELED) {
+        appointment.status = status.status;
+        await appointment.save();
+      }
 
-    return appointment;
+      return appointment;
+    }
   }
 
   // ------------------------- UPDATE APPOINTMENT -------------------------
