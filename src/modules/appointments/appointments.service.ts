@@ -187,7 +187,7 @@ export class AppointmentsService {
       //     appointmentDate: appointment.appointmentDate,
       //   },
       // });
-    }
+
 
     if (status.status === Status.COMPLETED || status.status === Status.CANCELED) {
       appointment.status = status.status;
