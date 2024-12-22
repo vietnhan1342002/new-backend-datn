@@ -164,7 +164,7 @@ export class MedicationsService {
 
   async remove(_id: Types.ObjectId) {
     try {
-      const deletedItem = await this.medicationModel.findByIdAndDelete(_id);
+      const deletedItem = await this.medicationModel.findByIdAndDelete(new Types.ObjectId(_id));
 
       if (!deletedItem) {
         throw new BadRequestException('Item not found');

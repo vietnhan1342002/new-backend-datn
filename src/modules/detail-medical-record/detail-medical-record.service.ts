@@ -151,6 +151,8 @@ export class DetailMedicalRecordService {
 
   // Phương thức này để populate các thông tin cần thiết từ các bảng liên quan
   private populateDetailMedicalRecordQuery(query: any) {
-    return query.select('medicalRecordId symptoms disease treatmentPlan');
+    return query
+      .select('symptoms disease treatmentPlan medicalRecordId')  // Chọn các trường trong bảng hiện tại
+      .populate('medicalRecordId', 'note diagnosis');  // Populate thông tin từ bảng `medicalRecord` và chỉ lấy trường `note`
   }
 }

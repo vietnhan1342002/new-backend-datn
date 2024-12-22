@@ -50,15 +50,17 @@ export class AppointmentsController {
     return this.appointmentsService.findAll(query, currentPage, pageLimit);
   }
 
-  @Get('/pending')
+  @Get('/status')
   async findAllPending(
     @Query('query') query: string = '',
+    @Query('status') status: string = '',
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
   ) {
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
-    return this.appointmentsService.findAllPending(query, currentPage, pageLimit);
+
+    return this.appointmentsService.findAllStatus(query, status, currentPage, pageLimit);
   }
 
   @Permissions([

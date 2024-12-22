@@ -24,6 +24,7 @@ export class MedicalRecordsService {
     const medical_record = await this.medicalRecordModel.create({
       appointmentId, doctorId, patientId, diagnosis, note
     });
+    console.log("medical_record", medical_record);
     return { _id: medical_record.id };
   }
 
@@ -122,7 +123,6 @@ export class MedicalRecordsService {
       session.endSession();
     }
   }
-
 
   async findAllSoftDelete(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);

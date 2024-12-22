@@ -56,14 +56,14 @@ export class NotificationsGateway
     async handleDisconnect(@ConnectedSocket() socket: Socket) {
         console.log('Disconnect:', socket.id, socket.data.userId);
         if (socket.data.userId) {
-            delete this.doctorsSockets[0].userId;
+            delete this.doctorsSockets[0];
         }
     }
 
     sendNotificationToDoctor(userId: string, doctorId: string, message: string,) {
         console.log("doctorId", doctorId);
 
-        console.log("doctorsSockets", this.doctorsSockets[0].userId);
+        console.log("doctorsSockets", this.doctorsSockets[0]);
 
         const doctorSocket = this.doctorsSockets[0].userId;
         console.log("doctorSocket", doctorSocket);

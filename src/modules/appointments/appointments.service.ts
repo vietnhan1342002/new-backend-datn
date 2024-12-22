@@ -100,11 +100,10 @@ export class AppointmentsService {
     return { result, totalItems, totalPages };
   }
 
-  async findAllPending(query: string, current: number, pageSize: number) {
+  async findAllStatus(query: string, status: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
-
     // Thêm điều kiện lọc status là 'pending'
-    filter.status = Status.PENDING;
+    filter.status = status;
 
     const { result, totalPages, totalItems } = await paginateAndPopulate(
       this.appointmentModel,
@@ -146,30 +145,26 @@ export class AppointmentsService {
     appointment.status = status.status;
     await appointment.save();
 
-    if (status.status === Status.CONFIRMED || status.status === Status.COMPLETED) {
-      const doctorId = appointment.doctorId.toString();
-      const doctor = await this.doctorsService.findOne(doctorId)
-      const userId = doctor.userId.toString()
-      const message = `Appointment with ID ${id} is now ${status.status}`;
-      console.log("doctorId appointment:", doctorId);
+    // if (status.status === Status.CONFIRMED || status.status === Status.COMPLETED) {
+    //   const doctorId = appointment.doctorId.toString();
+    //   const doctor = await this.doctorsService.findOne(doctorId)
+    //   console.log("doctor", doctor);
 
-      this.notificationsGateway.sendNotificationToDoctor(userId, doctorId, message);
-    }
+    //   const userId = doctor.userId.toString()
+    //   console.log("userId", userId);
+
+    //   const message = `Appointment with ID ${id} is now ${status.status}`;
+    //   console.log("doctorId appointment:", doctorId);
+
+    //   this.notificationsGateway.sendNotificationToDoctor(userId, doctorId, message);
+    // }
 
     if (status.status === Status.CONFIRMED) {
-      const patient = await this.patientsService.findOne(appointment.patientId.toString())
-      const email = patient.email
-      await this.mailerService.sendMail({
-        to: email,
-        subject: 'Confirm appointment',
-        template: './confirmAppointment',
-        context: {
-          appointmentDate: appointment.appointmentDate,
-        },
-      });
-
       const existingRecord = await this.medicalRecordsService.findOneByAppointmentId(appointment._id);
+      console.log("existingRecord", existingRecord);
       if (!existingRecord) {
+        console.log("appointment", appointment);
+
         const createMedicalRecordDto: CreateMedicalRecordDto = {
           patientId: new Types.ObjectId(appointment.patientId),
           doctorId: new Types.ObjectId(appointment.doctorId),
@@ -177,12 +172,26 @@ export class AppointmentsService {
           diagnosis: '',
           note: '',
         };
+
         await this.medicalRecordsService.create(createMedicalRecordDto);
       }
+
+      // const patient = await this.patientsService.findOne(appointment.patientId.toString())
+      // const email = patient.email
+      // console.log("email", email);
+      // await this.mailerService.sendMail({
+      //   to: email,
+      //   subject: 'Confirm appointment',
+      //   template: './confirmAppointment',
+      //   context: {
+      //     appointmentDate: appointment.appointmentDate,
+      //   },
+      // });
     }
 
     if (status.status === Status.COMPLETED || status.status === Status.CANCELED) {
-      this.remove(new Types.ObjectId(id))
+      appointment.status = status.status;
+      await appointment.save();
     }
 
     return appointment;
