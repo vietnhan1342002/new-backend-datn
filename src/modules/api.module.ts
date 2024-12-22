@@ -24,6 +24,7 @@ import { MedicationsModule } from './medications/medications.module';
 import { PrescriptionDetailsModule } from './prescription-details/prescription-details.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailConfig } from '@/config/mail.config';
+import { BillsModule } from './bills/bills.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { MailConfig } from '@/config/mail.config';
     PrescriptionsModule,
     MedicationsModule,
     PrescriptionDetailsModule,
+    BillsModule,
   ],
   providers: [JwtStrategy],
   exports: [JwtModule, UserAuthModule],
