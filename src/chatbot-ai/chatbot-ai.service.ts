@@ -12,6 +12,8 @@ import { Status } from '@/modules/doctor-schedules/schemas/doctor-schedule.schem
 import { PatientsService } from '@/modules/patients/patients.service';
 import { AppointmentsService } from '@/modules/appointments/appointments.service';
 import { CreateAppointmentDto } from '@/modules/appointments/dto/create-appointment.dto';
+import { ChatDTO } from './dto/chat.dto';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface UserDetails {
   name: string;
@@ -37,19 +39,17 @@ export class ChatbotAiService {
     private filterService: FilterService,
     private patientsService: PatientsService,
     private appointmentsService: AppointmentsService,
+    private readonly genAI: GoogleGenerativeAI
   ) {
     const apiKey = "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";
     this.llm = new ChatGroq({
       model: 'gemma2-9b-it',
-      temperature: 0,
-      apiKey
+      temperature: 0.4,
+      apiKey,
+      maxTokens: 3000,
+      maxRetries: 2,
     });
-
-    const pc = new Pinecone({
-      apiKey: "pcsk_6exEkN_LwZnN4UQRXRdb1qYnRg4JGdkn8ewi6zG8pRkwRyuLAXQB4ZGgiLsMKXXwQTHCFd"
-    });
-    const index = pc.index('langchain-chatbot');
-    this.vectorStore = index; // Use later if you need to integrate search functionality.
+    this.genAI = new GoogleGenerativeAI("AIzaSyCYqyTjiUU6-V8JKjEM7GNwF_lruiS2qRM")
   }
 
 
@@ -260,12 +260,81 @@ export class ChatbotAiService {
         this.chatHistory.push(new AIMessage({ content: response }));
         return { message: response };
       }
+
       return jsonResponse;
     } catch (error) {
       console.error('Error processing message:', error);
       return { message: 'Sorry, there was an error processing your request. Please try again later.' };
     }
 
+  }
+
+  async chatWithAI(chatDTO: ChatDTO) {
+    const pc = new Pinecone({
+      apiKey: "pcsk_6B2zbn_68sJ4fEuQE5U5amWME5LFjPG15B71T7UsBSztRdm8ratCPQPvim2NSacPJWYjg7"
+    });
+    const index = pc.Index('chatbot');
+
+    try {
+      const queryEmbedding = await this.createEmbedding(chatDTO.message);
+
+      const searchResults = await index.query({
+        vector: queryEmbedding,
+        topK: 5,
+        includeMetadata: true,
+      });
+      const context = searchResults.matches
+        .map((match: any) => match.metadata.text)
+        .join("\n");
+
+      const prompt = `
+      You are a helpful assistant in health.
+        Say greetings first. Then ask how you can help.
+        You can only ask one question at a time and give examples for them.
+        Ask and wait for them to answer.
+        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
+        Next Answer" "Specialty can be: **speciaty predict**."
+        Finally, ask them Would you like to make an appointment?.
+        If user agree. Ask What is your name? Format: My name is [your name], [your phone number][only 10 numbers]. 
+        Else, answer: "Have a good day!".
+    Use the following pieces of information to answer the user's question.
+    If you don't know the answer. You can research on google, just say that you don't know. don't try to make up an answer.
+    Context: ${context}
+
+    User Question: ${chatDTO.message}
+      
+    Only return the helpful answer below and nothing else.
+    Helpful answer:
+  `;
+
+      // const llm = new ChatGroq({
+      //   model: "mixtral-8x7b-32768",
+      //   temperature: 0.7,
+      //   maxTokens: 3000,
+      //   maxRetries: 2,
+      // });
+
+      const aiMsg = await this.llm.invoke([
+        {
+          role: "system",
+          content:
+            "You are a helpful assistant.",
+        },
+        { role: "user", content: prompt },
+      ]);
+
+      return aiMsg.content;
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async createEmbedding(text: string): Promise<number[]> {
+    const model = this.genAI.getGenerativeModel({ model: "text-embedding-004" })
+    const response = await model.embedContent(text)
+    return response.embedding.values.slice(0, 384);
   }
 
 }

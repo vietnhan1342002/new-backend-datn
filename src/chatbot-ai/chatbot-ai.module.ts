@@ -6,6 +6,8 @@ import { SpecialtiesModule } from '@/modules/specialties/specialties.module';
 import { FilterModule } from '@/modules/filter/filter.module';
 import { PatientsModule } from '@/modules/patients/patients.module';
 import { AppointmentsModule } from '@/modules/appointments/appointments.module';
+import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Module({
   imports: [
@@ -13,9 +15,9 @@ import { AppointmentsModule } from '@/modules/appointments/appointments.module';
     SpecialtiesModule,
     FilterModule,
     PatientsModule,
-    AppointmentsModule
+    AppointmentsModule,
   ],
   controllers: [ChatBotAiController],
-  providers: [ChatbotAiService],
+  providers: [ChatbotAiService, GoogleGenerativeAI],
 })
 export class ChatbotAiModule { }

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.712.0",
+    "@google/generative-ai": "^0.21.0",
     "@langchain/core": "^0.3.19",
     "@langchain/groq": "^0.1.2",
     "@nestjs-modules/mailer": "^2.0.2",
