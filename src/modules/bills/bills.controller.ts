@@ -31,6 +31,11 @@ export class BillsController {
     return this.billsService.findOne(id);
   }
 
+  @Patch('/status/:id')
+  updateStatus(@Param('id') id: string): Promise<Bill> {
+    return this.billsService.updateStatus(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBillDto: CreateBillDto): Promise<Bill> {
     return this.billsService.update(id, updateBillDto);
