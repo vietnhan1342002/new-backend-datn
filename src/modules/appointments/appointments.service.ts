@@ -145,19 +145,19 @@ export class AppointmentsService {
     appointment.status = status.status;
     await appointment.save();
 
-    // if (status.status === Status.CONFIRMED || status.status === Status.COMPLETED) {
-    //   const doctorId = appointment.doctorId.toString();
-    //   const doctor = await this.doctorsService.findOne(doctorId)
-    //   console.log("doctor", doctor);
+    if (status.status === Status.CONFIRMED || status.status === Status.COMPLETED) {
+      const doctorId = appointment.doctorId.toString();
+      const doctor = await this.doctorsService.findOne(doctorId)
+      console.log("doctor", doctor);
 
-    //   const userId = doctor.userId.toString()
-    //   console.log("userId", userId);
+      const userId = doctor.userId.toString()
+      console.log("userId", userId);
 
-    //   const message = `Appointment with ID ${id} is now ${status.status}`;
-    //   console.log("doctorId appointment:", doctorId);
+      const message = `Appointment date ${appointment.appointmentDate} is now ${status.status}`;
+      console.log("doctorId appointment:", doctorId);
 
-    //   this.notificationsGateway.sendNotificationToDoctor(userId, doctorId, message);
-    // }
+      this.notificationsGateway.sendNotificationToDoctor(userId, doctorId, message);
+    }
 
     if (status.status === Status.CONFIRMED) {
       const existingRecord = await this.medicalRecordsService.findOneByAppointmentId(appointment._id);

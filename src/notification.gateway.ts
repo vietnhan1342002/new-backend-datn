@@ -36,38 +36,32 @@ export class NotificationsGateway
             const token = authHeader.token;
             try {
                 const userId = await this.userAuthService.handleVerifyToken(token);
-                socket.data.userId = userId;
                 const user = await this.userAuthService.findById(userId);
-
                 if (user && user.roleId._id.toString() === '673d935335e97c832bfa6356') {
+                    socket.data.userId = userId;
                     this.doctorsSockets.push({ userId, socket })
                     console.log('Doctor connected:', userId);
                 }
-                socket.join(userId);
+                // socket.join(userId);
             } catch (error) {
                 console.error('Token verification failed', error);
                 socket.disconnect();
             }
+            console.log(`A new client connected: ${socket.id}`);
         }
-        console.log(`A new client connected: ${socket.id}`);
     }
 
     @SubscribeMessage('disconnect')
     async handleDisconnect(@ConnectedSocket() socket: Socket) {
         console.log('Disconnect:', socket.id, socket.data.userId);
         if (socket.data.userId) {
-
-            delete this.doctorsSockets[0].userId;
-
+            delete socket.data.userId;
         }
     }
 
     sendNotificationToDoctor(userId: string, doctorId: string, message: string,) {
         console.log("doctorId", doctorId);
-
-        console.log("doctorsSockets", this.doctorsSockets[0].userId);
-
-
+        console.log("doctorsSockets", this.doctorsSockets[0]);
         const doctorSocket = this.doctorsSockets[0].userId;
         console.log("doctorSocket", doctorSocket);
 
