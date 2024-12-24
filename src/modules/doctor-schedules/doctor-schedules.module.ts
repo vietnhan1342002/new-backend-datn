@@ -7,6 +7,7 @@ import {
 import { UserAuthModule } from '../user-auth/user-auth.module';
 import { DoctorSchedulesController } from './doctor-schedules.controller';
 import { DoctorSchedulesService } from './doctor-schedules.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -14,9 +15,10 @@ import { DoctorSchedulesService } from './doctor-schedules.service';
       { name: DoctorSchedule.name, schema: DoctorScheduleSchema },
     ]),
     UserAuthModule,
+    ScheduleModule.forRoot()
   ],
   controllers: [DoctorSchedulesController],
   providers: [DoctorSchedulesService],
   exports: [DoctorSchedulesService],
 })
-export class DoctorSchedulesModule {}
+export class DoctorSchedulesModule { }

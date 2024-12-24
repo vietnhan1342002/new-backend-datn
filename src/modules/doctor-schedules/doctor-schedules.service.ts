@@ -10,6 +10,7 @@ import { DoctorSchedule, Status } from './schemas/doctor-schedule.schema';
 import { Model, Types } from 'mongoose';
 import aqp from 'api-query-params';
 import { preparePaginationFilter } from '@/helpers/utils';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class DoctorSchedulesService {
@@ -17,6 +18,11 @@ export class DoctorSchedulesService {
     @InjectModel(DoctorSchedule.name)
     private doctorScheduleModel: Model<DoctorSchedule>,
   ) { }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async handleCron() {
+    await this.updateExpiredStatus();
+  }
 
   private async checkDoctorScheduleExistence(
     doctorId: Types.ObjectId,
@@ -56,7 +62,7 @@ export class DoctorSchedulesService {
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    filter.status = Status.ACTIVE
+    filter.status = { $ne: Status.EXPIRED };
 
     const { totalItems, totalPages } = await preparePaginationFilter(
       this.doctorScheduleModel,
@@ -110,6 +116,23 @@ export class DoctorSchedulesService {
       { _id },
       { doctorId, shiftId, date, status },
     );
+  }
+
+  async updateExpiredStatus() {
+    const today = new Date();
+    const expiredSchedules = await this.doctorScheduleModel.updateMany(
+      {
+        date: { $lt: today },
+        status: { $ne: Status.EXPIRED },
+      },
+      {
+        $set: { status: Status.EXPIRED },
+      },
+    );
+
+    return {
+      message: `${expiredSchedules.modifiedCount} doctor schedules have been marked as EXPIRED.`,
+    };
   }
 
   async remove(_id: Types.ObjectId) {
