@@ -4,6 +4,9 @@ import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 import { Gender } from '../schemas/patient.schema';
 
 export class UpdatePatientDto extends PartialType(CreatePatientDto) {
+  @IsOptional()
+  email?: string;
+
   @IsOptional() // Trường này không bắt buộc
   @IsDateString()
   dateOfBirth?: string; // Chỉ cần cập nhật nếu muốn

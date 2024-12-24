@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsMongoId, IsNotEmpty } from 'class-validator';
+import { IsDateString, IsEnum, IsMongoId, IsNotEmpty, IsOptional } from 'class-validator';
 import { Gender } from '../schemas/patient.schema';
 
 export class CreatePatientDto {
@@ -6,11 +6,14 @@ export class CreatePatientDto {
   @IsNotEmpty({ message: 'userId cannot be empty' })
   userId?: string;
 
-  @IsNotEmpty({ message: 'dateOfBirth cannot be empty' })
+  @IsOptional()
+  email?: string;
+
+  @IsOptional()
   @IsDateString()
   dateOfBirth?: string;
 
-  @IsNotEmpty({ message: 'address cannot be empty' })
+  @IsOptional()
   address?: string;
 
   @IsEnum(Gender)
