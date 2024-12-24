@@ -6,6 +6,7 @@ import { Date, HydratedDocument, Types } from 'mongoose';
 export enum Status {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
+  EXPIRED = 'expired'
 }
 
 export type DoctorScheduleDocument = HydratedDocument<DoctorSchedule>;
