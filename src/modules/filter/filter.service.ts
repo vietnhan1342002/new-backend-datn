@@ -25,14 +25,31 @@ export class FilterService {
   async filterDoctorSchedules(filterCriteria: { doctorId?: string; date?: string; status?: string; shiftId?: string }) {
     const filter: any = {};
 
+    // Lọc theo doctorId, shiftId, và status (nếu có)
     if (filterCriteria.doctorId) filter.doctorId = new Types.ObjectId(filterCriteria.doctorId);
-    if (filterCriteria.date) filter.date = filterCriteria.date;
-    if (filterCriteria.status) filter.status = filterCriteria.status;
     if (filterCriteria.shiftId) filter.shiftId = new Types.ObjectId(filterCriteria.shiftId);
-    const doctor_schedules = await this.doctorScheduleModel.find(filter).populate({
-      path: 'shiftId',
-      select: 'name'
-    }).exec();
+    if (filterCriteria.status) filter.status = filterCriteria.status;
+
+    // Lọc theo ngày (nếu có)
+    if (!filterCriteria.date) {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      filter.date = { $gte: date };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    console.log(filter);
+
+
+    const doctor_schedules = await this.doctorScheduleModel
+      .find({ ...filter, date: { $gte: today } })
+      .populate({
+        path: 'shiftId',
+        select: 'name',
+      })
+      .exec();
 
     if (doctor_schedules.length === 0) {
       throw new NotFoundException("Don't have any schedule suitable");
