@@ -61,6 +61,7 @@ export class UserAuthService {
     if (user.roleId.toString() === '673d931c35e97c832bfa6351') {
       const newPatient = new this.patientModel({
         userId: user._id,
+        email: createUserDto.email
       });
       await newPatient.save();
     }

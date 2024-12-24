@@ -12,6 +12,9 @@ export class CreateUserAuthDto {
   @IsNotEmpty({ message: 'phoneNumber cannot be empty' })
   phoneNumber: string;
 
+  @IsOptional()
+  email?: string;
+
   @IsNotEmpty({ message: 'Password cannot be empty' })
   password: string;
 
