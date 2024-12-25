@@ -14,7 +14,7 @@ export class SearchController {
     @Query('limit') limit = 10,
     @Query('page') page = 1,
   ) {
-    return this.searchService.searchDoctors(query, +page, +limit);
+    return this.searchService.searchDoctors(query || '', +page, +limit);
   }
 
   @Get('users')
