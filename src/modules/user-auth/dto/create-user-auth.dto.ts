@@ -19,5 +19,5 @@ export class CreateUserAuthDto {
   password: string;
 
   @IsOptional()
-  roleId: Types.ObjectId;
+  roleId?: Types.ObjectId;
 }

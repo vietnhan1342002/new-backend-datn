@@ -68,34 +68,114 @@ export class DoctorsService {
   }
 
   async findAll(query: string, current: number, pageSize: number) {
-    const { filter, sort } = aqp(query);
+    const { filter, sort } = aqp(query);  // Xử lý filter và sort từ query
+    console.log(query);
 
-    const { totalItems, totalPages } = await preparePaginationFilter(
-      this.doctorModel,
-      filter,
-      current,
-      pageSize,
-    );
-
-    // Tính toán skip để phân trang
+    // Tính toán skip và limit cho phân trang
     const skip = calculateSkip(current, pageSize);
+    const limit = pageSize;
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
-    const result = await this.populateDoctorQuery(
-      this.doctorModel
-        .find(filter)
-        .limit(pageSize)
-        .skip(skip)
-        .sort(sort as any),
-    ).exec();
+    // Xây dựng truy vấn aggregate với điều kiện tìm kiếm theo fullName và specialty
+    const doctors = await this.doctorModel.aggregate([
+      {
+        $lookup: {
+          from: 'userauths',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'userId',
+        },
+      },
+      {
+        $unwind: '$userId',
+      },
+      {
+        $lookup: {
+          from: 'specialties',
+          localField: 'specialtyId',
+          foreignField: '_id',
+          as: 'specialtyId',
+        },
+      },
+      {
+        $unwind: '$specialtyId',
+      },
+      {
+        $match: {
+          $or: [
+            { 'userId.fullName': { $regex: query, $options: 'i' } },
+            { 'specialtyId.name': { $regex: query, $options: 'i' } },
+          ],
+        },
+      },
+      {
+        $project: {
+          'userId.email': 1,
+          licenseNumber: 1,
+          yearsOfExperience: 1,
+          'userId.fullName': 1,
+          'userId.phoneNumber': 1,
+          avatar: 1,
+          'specialtyId.name': 1,
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
+    // Tính tổng số bản ghi với aggregate
+    const totalItems = await this.doctorModel.aggregate([
+      {
+        $lookup: {
+          from: 'userauths',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'userId',
+        },
+      },
+      {
+        $unwind: '$userId',
+      },
+      {
+        $lookup: {
+          from: 'specialties',
+          localField: 'specialtyId',
+          foreignField: '_id',
+          as: 'specialtyId',
+        },
+      },
+      {
+        $unwind: '$specialtyId',
+      },
+      {
+        $match: {
+          $or: [
+            { 'userId.fullName': { $regex: query, $options: 'i' } },
+            { 'specialtyId.name': { $regex: query, $options: 'i' } },
+          ],
+        },
+      },
+      {
+        $count: 'totalItems', // Đếm tổng số bản ghi
+      },
+    ]);
+
+    // Lấy tổng số bản ghi và số trang
+    const totalItemsCount = totalItems.length > 0 ? totalItems[0].totalItems : 0;
+    const totalPages = totalItemsCount > 0 ? Math.ceil(totalItemsCount / pageSize) : 0;
 
     // Nếu không có dữ liệu, ném ngoại lệ
-    if (result.length === 0) {
+    if (doctors.length === 0) {
       throw new NotFoundException('No doctors available');
     }
 
-    return { result, totalItems, totalPages };
+    return { result: doctors, totalItems: totalItemsCount, totalPages };
   }
+
+
 
   async findOne(_id: string): Promise<Doctor> {
     await this.checkDoctorExists(_id);
