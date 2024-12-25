@@ -50,7 +50,6 @@ export class UserAuthService {
     if (existingUser) {
       throw new BadRequestException('Phone number already exists. Please use a different phone number.')
     }
-
     const user = await this.createUser(createUserDto);
 
     // Set default role to 'patient'

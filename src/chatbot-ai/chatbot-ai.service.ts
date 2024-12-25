@@ -14,15 +14,17 @@ import { AppointmentsService } from '@/modules/appointments/appointments.service
 import { CreateAppointmentDto } from '@/modules/appointments/dto/create-appointment.dto';
 import { ChatDTO } from './dto/chat.dto';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { resolveHttpAuthSchemeConfig } from '@aws-sdk/client-s3/dist-types/auth/httpAuthSchemeProvider';
 
 interface UserDetails {
   name: string;
   phone: string;
+  email: string
 }
 
 @Injectable()
 export class ChatbotAiService {
-  private userDetails: UserDetails = { name: '', phone: '' };
+  private userDetails: UserDetails = { name: '', phone: '', email: '' };
   private llm;
   private chatHistory = [];
   private specialtiesData: string[] = [];
@@ -77,8 +79,10 @@ export class ChatbotAiService {
     const greetingKeywords = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'howdy'];
 
     //REGEX
-    const namePhoneRegex = /My name is ([A-Za-z\s]+), (\d{10}).?$/;
     const specialtyRegex = /Specialty can be:\s*(.*?)(\.|\n|$)/;
+    const nameRegex = /My name is ([a-zA-Z\s]+)/;
+    const phoneRegex = /\b\d{10}\b/;
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/;
     const dateRegex = /\b(\d{4}-\d{2}-\d{2})\b/;
     const Shiftregex = /\d{2}:\d{2} - \d{2}:\d{2}/g;
 
@@ -111,12 +115,13 @@ export class ChatbotAiService {
         Say greetings first. Then ask how you can help.
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
-        After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
         Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
         Next Answer" "Specialty can be: **speciaty predict**."
         Finally, ask them Would you like to make an appointment?.
-        If user agree. Ask What is your name? Format: My name is [your name], [your phone number][only 10 numbers]. 
-        Else, answer: "Have a good day!".
+        - If the user agrees, ask: "What is your name? Format: My name is [your name]."
+        - Once the user provides their name, ask: "What is your phone number? [only 10 numbers]."
+        - If the user declines, answer: "Have a good day!".
       `],
       new MessagesPlaceholder({ variableName: 'chat_history' }),
       ['human', '{input}'],
@@ -159,44 +164,70 @@ export class ChatbotAiService {
 
       //collect user information
       if (input.includes('My name is')) {
-        const match = input.match(namePhoneRegex);
+        const nameMatch = input.match(nameRegex);
 
-        if (match) {
-          const fullName = (this.userDetails.name = match[1]);
-          const phoneNumber = (this.userDetails.phone = match[2]).toString();
-          const existingUser = await this.userAuthService.checkPhoneExists(phoneNumber);
-          if (existingUser) {
-            return { message: 'Phone number already exists. Please use a different phone number.' };
-          }
-          const createUserAuthDto: CreateUserAuthDto = {
-            fullName,
-            phoneNumber,
-            password: phoneNumber,
-            roleId: new Types.ObjectId('673d931c35e97c832bfa6351')
-          };
-          const user = await this.userAuthService.register(createUserAuthDto);
-          const patient = await this.patientsService.findPatientByUserId(user._id)
-          this.patientId = patient
-          console.log('this.patientId', this.patientId);
-
-          const response = `I created an account for you with a phone and password is your phone number.\nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
-          this.chatHistory.push(new AIMessage({ content: response }));
-          return {
-            message: response,
-            dateList: this.dateList
-            // _id: user._id
-          };
-        } else {
-          return { message: 'Invalid input format. Please ensure your name and phone number are entered correctly.' };
+        if (!nameMatch || !nameMatch[1]) {
+          const response = 'Invalid input format. Please enter your name correctly after "My name is".'
+          this.chatHistory.push(new AIMessage({ content: response }))
         }
+        const fullName = nameMatch[1].trim();
+        this.userDetails.name = fullName;
+        const response = `Thank you, ${fullName}. What is your phone number? (Enter 10 digits only).`
+        this.chatHistory.push(new AIMessage({ content: response }));
+        return { message: response }
       }
 
-      //collect date
-      if (input.match(/My name is [A-Za-z\s]+, (\d{10})/)) {
-        const response = `What date would you like to schedule your appointment?`;
+      const phoneMatch = input.match(phoneRegex);
+      if (phoneMatch) {
+        const phoneNumber = phoneMatch[0].trim();
+        this.userDetails.phone = phoneNumber;
+        const existingUser = await this.userAuthService.checkPhoneExists(phoneNumber);
+        if (existingUser) {
+          const response = `Phone number already exists. Please use a different phone number.`
+          this.chatHistory.push(new AIMessage({ content: response }))
+        }
+
+        const response = `Thank you, ${this.userDetails.name}. What is your email?`;
+        this.chatHistory.push(new AIMessage({ content: response }));
+        return {
+          message: response,
+        };
+      }
+
+      const emailMatch = input.match(emailRegex);
+      if (emailMatch) {
+        if (!emailMatch) {
+          const response = 'Invalid email format. Please enter a valid email address after "My email is".'
+          this.chatHistory.push(new AIMessage({ content: response }));
+        }
+        const email = emailMatch[0].trim();
+        this.userDetails.email = email;
+
+        const createUserAuthDto: CreateUserAuthDto = {
+          fullName: this.userDetails.name,
+          phoneNumber: this.userDetails.phone,
+          password: this.userDetails.phone,
+          email,
+          roleId: new Types.ObjectId('673d931c35e97c832bfa6351'),
+        };
+        const user = await this.userAuthService.register(createUserAuthDto);
+        const patient = await this.patientsService.findPatientByUserId(user._id);
+        this.patientId = patient;
+        console.log('this.patientId', this.patientId);
+
+        const response = `Thank you, ${this.userDetails.name}. I created an account for you with a phone and password is your phone number. \nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
         this.chatHistory.push(new AIMessage({ content: response }));
         return { message: response, dateList: this.dateList };
       }
+
+
+      // if (phoneMatch) {
+      //   const response = `What date would you like to schedule your appointment?`;
+      //   this.chatHistory.push(new AIMessage({ content: response }));
+      //   return { message: response, dateList: this.dateList };
+      // }
+
+      //collect date
       const dateMatch = input.match(dateRegex);
       if (dateMatch) {
         const appointmentDate = dateMatch[1];
@@ -269,72 +300,72 @@ export class ChatbotAiService {
 
   }
 
-  async chatWithAI(chatDTO: ChatDTO) {
-    const pc = new Pinecone({
-      apiKey: "pcsk_6B2zbn_68sJ4fEuQE5U5amWME5LFjPG15B71T7UsBSztRdm8ratCPQPvim2NSacPJWYjg7"
-    });
-    const index = pc.Index('chatbot');
+  // async chatWithAI(chatDTO: ChatDTO) {
+  //   const pc = new Pinecone({
+  //     apiKey: "pcsk_6B2zbn_68sJ4fEuQE5U5amWME5LFjPG15B71T7UsBSztRdm8ratCPQPvim2NSacPJWYjg7"
+  //   });
+  //   const index = pc.Index('chatbot');
 
-    try {
-      const queryEmbedding = await this.createEmbedding(chatDTO.message);
+  //   try {
+  //     const queryEmbedding = await this.createEmbedding(chatDTO.message);
 
-      const searchResults = await index.query({
-        vector: queryEmbedding,
-        topK: 5,
-        includeMetadata: true,
-      });
-      const context = searchResults.matches
-        .map((match: any) => match.metadata.text)
-        .join("\n");
+  //     const searchResults = await index.query({
+  //       vector: queryEmbedding,
+  //       topK: 5,
+  //       includeMetadata: true,
+  //     });
+  //     const context = searchResults.matches
+  //       .map((match: any) => match.metadata.text)
+  //       .join("\n");
 
-      const prompt = `
-      You are a helpful assistant in health.
-        Say greetings first. Then ask how you can help.
-        You can only ask one question at a time and give examples for them.
-        Ask and wait for them to answer.
-        After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
-        Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
-        Next Answer" "Specialty can be: **speciaty predict**."
-        Finally, ask them Would you like to make an appointment?.
-        If user agree. Ask What is your name? Format: My name is [your name], [your phone number][only 10 numbers]. 
-        Else, answer: "Have a good day!".
-    Use the following pieces of information to answer the user's question.
-    If you don't know the answer. You can research on google, just say that you don't know. don't try to make up an answer.
-    Context: ${context}
+  //     const prompt = `
+  //     You are a helpful assistant in health.
+  //       Say greetings first. Then ask how you can help.
+  //       You can only ask one question at a time and give examples for them.
+  //       Ask and wait for them to answer.
+  //       After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+  //       Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
+  //       Next Answer" "Specialty can be: **speciaty predict**."
+  //       Finally, ask them Would you like to make an appointment?.
+  //       If user agree. Ask What is your name? Format: My name is [your name], [your phone number][only 10 numbers]. 
+  //       Else, answer: "Have a good day!".
+  //   Use the following pieces of information to answer the user's question.
+  //   If you don't know the answer. You can research on google, just say that you don't know. don't try to make up an answer.
+  //   Context: ${context}
 
-    User Question: ${chatDTO.message}
+  //   User Question: ${chatDTO.message}
       
-    Only return the helpful answer below and nothing else.
-    Helpful answer:
-  `;
+  //   Only return the helpful answer below and nothing else.
+  //   Helpful answer:
+  // `;
 
-      // const llm = new ChatGroq({
-      //   model: "mixtral-8x7b-32768",
-      //   temperature: 0.7,
-      //   maxTokens: 3000,
-      //   maxRetries: 2,
-      // });
+  //     // const llm = new ChatGroq({
+  //     //   model: "mixtral-8x7b-32768",
+  //     //   temperature: 0.7,
+  //     //   maxTokens: 3000,
+  //     //   maxRetries: 2,
+  //     // });
 
-      const aiMsg = await this.llm.invoke([
-        {
-          role: "system",
-          content:
-            "You are a helpful assistant.",
-        },
-        { role: "user", content: prompt },
-      ]);
+  //     const aiMsg = await this.llm.invoke([
+  //       {
+  //         role: "system",
+  //         content:
+  //           "You are a helpful assistant.",
+  //       },
+  //       { role: "user", content: prompt },
+  //     ]);
 
-      return aiMsg.content;
+  //     return aiMsg.content;
 
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }
 
-  async createEmbedding(text: string): Promise<number[]> {
-    const model = this.genAI.getGenerativeModel({ model: "text-embedding-004" })
-    const response = await model.embedContent(text)
-    return response.embedding.values.slice(0, 384);
-  }
+  // async createEmbedding(text: string): Promise<number[]> {
+  //   const model = this.genAI.getGenerativeModel({ model: "text-embedding-004" })
+  //   const response = await model.embedContent(text)
+  //   return response.embedding.values.slice(0, 384);
+  // }
 
 }
