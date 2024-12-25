@@ -21,6 +21,7 @@ export class DoctorSchedulesService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleCron() {
+    console.log('Cron job started');
     await this.updateExpiredStatus();
   }
 
@@ -120,6 +121,8 @@ export class DoctorSchedulesService {
 
   async updateExpiredStatus() {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    console.log("today", today);
     const expiredSchedules = await this.doctorScheduleModel.updateMany(
       {
         date: { $lt: today },
@@ -134,6 +137,7 @@ export class DoctorSchedulesService {
       message: `${expiredSchedules.modifiedCount} doctor schedules have been marked as EXPIRED.`,
     };
   }
+
 
   async remove(_id: Types.ObjectId) {
     const schedule = await this.findOne(_id);
