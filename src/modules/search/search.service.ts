@@ -121,7 +121,6 @@ export class SearchService {
     const skip = (page - 1) * limit;
 
     const appointments = await this.appointmentModel.aggregate([
-      // Lookup với bảng patients
       {
         $lookup: {
           from: 'patients',
@@ -132,7 +131,6 @@ export class SearchService {
       },
       { $unwind: '$patientDetails' },
 
-      // Lookup với bảng doctors
       {
         $lookup: {
           from: 'doctors',
@@ -143,29 +141,26 @@ export class SearchService {
       },
       { $unwind: '$doctorDetails' },
 
-      // Lookup user từ doctorId (liên kết thông qua doctor.userId)
       {
         $lookup: {
           from: 'userauths',
-          localField: 'doctorDetails.userId', // `userId` trong bảng doctors
+          localField: 'doctorDetails.userId',
           foreignField: '_id',
           as: 'doctorUser',
         },
       },
       { $unwind: '$doctorUser' },
 
-      // Lookup user từ patientId
       {
         $lookup: {
           from: 'userauths',
-          localField: 'patientDetails.userId', // `userId` trong bảng patients
+          localField: 'patientDetails.userId',
           foreignField: '_id',
           as: 'patientUser',
         },
       },
       { $unwind: '$patientUser' },
 
-      // Filter theo fullName hoặc phoneNumber
       {
         $match: {
           $or: [
@@ -177,11 +172,9 @@ export class SearchService {
         },
       },
 
-      // Phân trang
       { $skip: skip },
       { $limit: limit },
 
-      // Dự án kết quả trả về
       {
         $project: {
           'patientUser.fullName': 1,
@@ -203,7 +196,7 @@ export class SearchService {
   }
 
   async searchMedication(name: string): Promise<Medication[]> {
-    const regex = new RegExp(name, 'i'); // 'i' để tìm kiếm không phân biệt hoa thường
+    const regex = new RegExp(name, 'i'); 
     return this.medicationModel.find({ name: { $regex: regex } }).exec();
   }
 

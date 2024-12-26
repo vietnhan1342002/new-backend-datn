@@ -19,7 +19,6 @@ export class PatientsService {
     @InjectModel(Patient.name) private patientModel: Model<Patient>,
     private userAuthService: UserAuthService,
   ) { }
-  // create date patient with ObjectId
   private createPatientData(createPatientDto: CreatePatientDto) {
     const { userId, address, dateOfBirth, gender } = createPatientDto;
     return {
@@ -109,14 +108,13 @@ export class PatientsService {
         },
       },
       {
-        $count: 'totalItems', // Đếm tổng số bản ghi
+        $count: 'totalItems', 
       },
     ]);
 
     const totalItemsCount = totalItems.length > 0 ? totalItems[0].totalItems : 0;
     const totalPages = totalItemsCount > 0 ? Math.ceil(totalItemsCount / pageSize) : 0;
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (patients.length === 0) {
       throw new NotFoundException('No patient available');
     }
@@ -148,11 +146,10 @@ export class PatientsService {
     updateUserDto: UpdateUserAuthDto,
   ) {
     await this.checkPatientExists(_id);
-    // Cập nhật thông tin Patient
     const updatedPatient = await this.patientModel.findByIdAndUpdate(
       _id,
       { $set: updatePatientDto },
-      { new: true }, // Trả về bản ghi đã cập nhật
+      { new: true }, 
     );
 
     if (updatedPatient?.userId) {

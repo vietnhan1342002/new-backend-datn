@@ -43,8 +43,6 @@ export class UserAuthService {
     private roleService: RolesService,
   ) { }
 
-  //-------------------------------------------------------------------------//
-
   async register(createUserDto: CreateUserAuthDto) {
     const existingUser = await this.checkPhoneExists(createUserDto.phoneNumber);
     if (existingUser) {
@@ -52,11 +50,9 @@ export class UserAuthService {
     }
     const user = await this.createUser(createUserDto);
 
-    // Set default role to 'patient'
     user.roleId = new Types.ObjectId('673d931c35e97c832bfa6351');
     await user.save();
 
-    // Create Patient record with only userId (no other information required)
     if (user.roleId.toString() === '673d931c35e97c832bfa6351') {
       const newPatient = new this.patientModel({
         userId: user._id,
@@ -74,7 +70,6 @@ export class UserAuthService {
     const { phoneNumber, password } = loginDto;
     const user = await this.validateUser(phoneNumber, password);
 
-    //Generate JWT tokens
     const tokens = await this.generateUserTokens(user._id);
 
     return {
@@ -84,7 +79,6 @@ export class UserAuthService {
   }
 
   async logout(refreshToken: string) {
-    // Xóa refresh token khỏi cơ sở dữ liệu
     const result = await this.refreshTokenModel.deleteOne({
       token: refreshToken,
     });
@@ -101,13 +95,11 @@ export class UserAuthService {
   async updatePassword(_id: string, updatePasswordDto: UpdatePasswordDto) {
     const { currentPassword, newPassword } = updatePasswordDto;
 
-    // Lấy người dùng theo _id
     const user = await this.userAuthModel.findById({ _id });
     if (!user) {
       throw new NotFoundException(`User not found : ${_id}`);
     }
 
-    // Kiểm tra mật khẩu hiện tại
     const isValidPassword = await comparePasswordHelper(
       currentPassword,
       user.password,
@@ -122,7 +114,6 @@ export class UserAuthService {
       );
     }
 
-    // Cập nhật mật khẩu mới sau khi hash
     user.password = await hashPasswordHelper(newPassword);
     await user.save();
 
@@ -144,7 +135,6 @@ export class UserAuthService {
   }
 
   async storeRefreshToken(token: string, userId: string) {
-    // Calculate expiry date 3 days from now
     const expiryDate = new Date();
     expiryDate.setDate(
       expiryDate.getDate() + Number(process.env.JWT_REFRESH_TOKEN_EXPIRED || 3),
@@ -178,8 +168,6 @@ export class UserAuthService {
     return role.permissions;
   }
 
-  //--------------------------------------Part for User------------------------------------------------------------//
-
   async create(createUserDto: CreateUserAuthDto) {
 
     const existingUser = await this.checkPhoneExists(createUserDto.phoneNumber);
@@ -188,7 +176,6 @@ export class UserAuthService {
     }
 
     const user = await this.createUser(createUserDto);
-    // Create Patient record with only userId (no other information required)
     if (user.roleId.toString() === '673d935335e97c832bfa6356') {
       const newDoctor = new this.doctorModel({
         userId: user._id,
@@ -211,10 +198,8 @@ export class UserAuthService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await
       this.userAuthModel
         .find(filter)
@@ -225,7 +210,6 @@ export class UserAuthService {
         .sort(sort as any)
         .exec();
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (result.length === 0) {
       throw new NotFoundException('No user available');
     }
@@ -236,7 +220,6 @@ export class UserAuthService {
   async findEmployee(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    // Thêm điều kiện loại trừ roleId vào filter
     const roleIdToExclude = '673d931c35e97c832bfa6351';
     filter.roleId = { $ne: new Types.ObjectId(roleIdToExclude) };
 
@@ -247,27 +230,23 @@ export class UserAuthService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await this.userAuthModel
       .find(filter)
       .limit(pageSize)
       .skip(skip)
       .populate({ path: 'roleId', select: 'nameRole' })
-      .select('-password') // Loại bỏ trường password trong kết quả trả về
+      .select('-password')
       .sort(sort as any)
       .exec();
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (result.length === 0) {
       throw new NotFoundException('No user available');
     }
 
     return { result, totalItems, totalPages };
   }
-
 
   async findById(userId: string) {
     const user = await this.userAuthModel
@@ -309,7 +288,6 @@ export class UserAuthService {
     }
   }
 
-  //-------------------------HELPER--------------------------------------------//
   async validateUser(emailOrPhone: string, password: string): Promise<any> {
     const user = await this.userAuthModel.findOne({
       $or: [{ email: emailOrPhone }, { phoneNumber: emailOrPhone }],
@@ -334,10 +312,8 @@ export class UserAuthService {
   async createUser(createUserDto: CreateUserAuthDto) {
     const { password, fullName, phoneNumber, roleId } = createUserDto;
 
-    // Mã hóa mật khẩu
     const hashPassword = await hashPasswordHelper(password);
 
-    // Tạo người dùng mới
     const user = await this.userAuthModel.create({
       password: hashPassword,
       fullName,
@@ -350,7 +326,7 @@ export class UserAuthService {
 
   async checkPhoneExists(phoneNumber: string): Promise<boolean> {
     const user = await this.userAuthModel.findOne({ phoneNumber }).exec();
-    return user ? true : false;  // Return true if a user with the phone number exists, false otherwise
+    return user ? true : false;
   }
 
   async handleVerifyToken(token) {

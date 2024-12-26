@@ -44,7 +44,6 @@ export class PatientsController {
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
 
-    // Tìm tất cả bác sĩ hoặc theo query
     return this.patientsService.findAll(query, currentPage, pageLimit);
   }
 

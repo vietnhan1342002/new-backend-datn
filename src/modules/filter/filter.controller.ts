@@ -15,7 +15,6 @@ export class FilterController {
   ) {
     return this.filterService.fieldDoctorBySpecialtyId({ specialtyId });
   }
-  // Lấy lịch bác sĩ với chi tiết thông tin
   @Get('doctor-schedules/details')
   async getFilteredSchedulesWithDetails(
     @Query('doctorId') doctorId?: string,
@@ -24,8 +23,6 @@ export class FilterController {
   ) {
     return this.filterService.filterDoctorSchedulesWithDetails({ doctorId, date, status });
   }
-
-  // Lấy lịch bác sĩ đơn giản
   @Get('doctor-schedules')
   async getFilteredSchedules(
     @Query('doctorId') doctorId?: string,
@@ -45,10 +42,6 @@ export class FilterController {
   ) {
     return this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId, date, status, shift });
   }
-
-
-
-  // Lấy lịch bác sĩ đơn giản
   @Get('specialties')
   async getFilteredSpecialties(
     @Query('departmentId') departmentId?: string,

@@ -19,8 +19,8 @@ export class CreateDoctorScheduleDto {
   shiftId: Types.ObjectId;
 
   @IsNotEmpty({ message: 'date cannot be empty' })
-  @Type(() => Date) // Chuyển đổi kiểu từ string thành Date
-  date: Date; // Ngày của lịch trình, kiểu Date
+  @Type(() => Date) 
+  date: Date; 
 
   @IsOptional()
   @IsEnum(Status, {

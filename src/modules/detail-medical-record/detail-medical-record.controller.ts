@@ -20,25 +20,25 @@ export class DetailMedicalRecordController {
 
   @Get()
   async findAll(
-    @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
+    @Query('query') query: string = '', 
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
   ) {
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
-    // Tìm tất cả bác sĩ hoặc theo query
+    
     return this.detailMedicalRecordService.findAll(query, currentPage, pageLimit);
   }
   @Get('soft-delete')
   async getSoftDelete(
-    @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
+    @Query('query') query: string = '', 
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
   ) {
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
 
-    // Tìm tất cả bác sĩ hoặc theo query
+    
     return this.detailMedicalRecordService.findAllSoftDelete(query, currentPage, pageLimit);
   }
 

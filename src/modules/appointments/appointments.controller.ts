@@ -64,7 +64,7 @@ export class AppointmentsController {
   }
 
   @Permissions([
-    { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.READ] }, // Patient có quyền 'read'
+    { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.READ] }, 
   ])
   @Get(':_id')
   findOne(@Param('_id') _id: Types.ObjectId) {
@@ -97,7 +97,7 @@ export class AppointmentsController {
   }
 
   @Permissions([
-    { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.DELETE] }, // Receptionist có quyền 'all'
+    { resource: Resource.APPOINTMENT, actions: [Action.ALL, Action.DELETE] }, 
   ])
   @Delete(':_id')
   remove(@Param('_id') _id: Types.ObjectId) {

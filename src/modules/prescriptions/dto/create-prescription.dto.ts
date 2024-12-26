@@ -6,6 +6,6 @@ export class CreatePrescriptionDto {
     @IsMongoId()
     @IsNotEmpty()
     @Type(() => Types.ObjectId)
-    detailMedicalRecordId: Types.ObjectId; // Liên kết đến bệnh án chi tiết
+    detailMedicalRecordId: Types.ObjectId; 
 
 }

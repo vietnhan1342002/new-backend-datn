@@ -15,7 +15,7 @@ export class UserAuth {
     ref: Role.name,
     default: new Types.ObjectId('673d935335e97c832bfa6356'),
   })
-  roleId: Types.ObjectId; // Liên kết người dùng với Role
+  roleId: Types.ObjectId; 
 
   @Prop({ required: true })
   fullName: string;

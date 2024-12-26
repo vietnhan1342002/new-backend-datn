@@ -28,10 +28,8 @@ import { BillsModule } from './bills/bills.module';
 
 @Module({
   imports: [
-    // Cấu hình chung
     ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env'] }),
 
-    // Kết nối MongoDB
     MongooseModule.forRootAsync({
       useFactory: mongooseConfig,
       inject: [ConfigService],

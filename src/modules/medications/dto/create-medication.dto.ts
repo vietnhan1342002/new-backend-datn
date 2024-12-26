@@ -3,19 +3,18 @@ import { IsString, IsNotEmpty, IsOptional, IsInt, Min, IsPositive } from 'class-
 export class CreateMedicationDto {
     @IsString()
     @IsNotEmpty()
-    name: string; // Tên thuốc, bắt buộc phải nhập
+    name: string; 
 
     @IsString()
     @IsOptional()
-    description?: string; // Mô tả thuốc, không bắt buộc
+    description?: string;
+    @IsString()
+    @IsOptional()
+    usageInstructions?: string;
 
     @IsString()
     @IsOptional()
-    usageInstructions?: string; // Hướng dẫn sử dụng, không bắt buộc
-
-    @IsString()
-    @IsOptional()
-    sideEffects?: string; // Tác dụng phụ, không bắt buộc
+    sideEffects?: string;
 
     @IsInt({ message: 'Quantity must be an integer' })
     @Min(1, { message: 'Quantity must be greater than or equal to 1' })

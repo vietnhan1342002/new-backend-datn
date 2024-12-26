@@ -14,7 +14,7 @@ async function bootstrap() {
       transform: true
     }),
   );
-  app.enableCors(); // Bật CORS nếu cần thiết
+  app.enableCors(); 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT');
   app.setGlobalPrefix('/api/v1', { exclude: [''] });

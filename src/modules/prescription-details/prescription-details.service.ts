@@ -59,15 +59,12 @@ export class PrescriptionDetailsService {
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    // Thêm điều kiện để chỉ lấy các bản ghi chưa bị xóa (isDeleted: false)
     filter.isDeleted = filter.isDeleted !== undefined ? filter.isDeleted : false;
 
-    // Tính toán phân trang
     const skip = calculateSkip(current, pageSize);
     const limit = pageSize;
 
     try {
-      // Truy vấn các bản ghi với phân trang và sắp xếp
       const result = await this.prescriptionDetailModel
         .find(filter)
         .limit(limit)
@@ -78,7 +75,6 @@ export class PrescriptionDetailsService {
         throw new NotFoundException('No prescriptions available');
       }
 
-      // Chuyển đổi kết quả thành DTO
       const prescriptionDetailsResponse = result.map(detail => new PrescriptionDetailResponseDto({
         _id: detail._id,
         prescriptionId: detail.prescriptionId,
@@ -86,7 +82,6 @@ export class PrescriptionDetailsService {
         quantityPrescribed: detail.quantityPrescribed,
       }));
 
-      // Tính toán tổng số item và số trang
       const { totalItems, totalPages } = await preparePaginationFilter(
         this.prescriptionDetailModel,
         filter,
@@ -132,7 +127,6 @@ export class PrescriptionDetailsService {
       throw new NotFoundException(`Prescription detail with ID ${_id} not found`);
     }
 
-
     const oldQuantity = existingPrescriptionDetail.quantityPrescribed;
     const newQuantity = quantityPrescribed;
     await this.medicationsService.addMedicationQuantity(existingPrescriptionDetail.medicationId, oldQuantity)
@@ -148,7 +142,6 @@ export class PrescriptionDetailsService {
     if (!updatedPrescriptionDetail) {
       throw new NotFoundException(`Prescription detail with ID ${_id} not found`);
     }
-
 
     return updatedPrescriptionDetail;
   }
@@ -174,7 +167,6 @@ export class PrescriptionDetailsService {
   async findAllSoftDelete(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    // Thêm điều kiện để chỉ lấy các bản ghi chưa bị xóa (isDeleted: false)
     filter.isDeleted = filter.isDeleted !== true;
 
     const { totalItems, totalPages } = await preparePaginationFilter(
@@ -184,10 +176,8 @@ export class PrescriptionDetailsService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = this.prescriptionDetailModel
       .find(filter)
       .select("_id detailMedicalRecordId")
@@ -195,17 +185,12 @@ export class PrescriptionDetailsService {
       .skip(skip)
       .sort(sort as any)
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (!result) {
       throw new NotFoundException('No prescriptions found');
     }
 
     return { result, totalItems, totalPages };
   }
-
-
-
-  //------------------------------------------------------------------------------------------//
 
   private async checkMedicationExistsInPrescription(prescriptionId: Types.ObjectId, medicationId: Types.ObjectId) {
     const existingDetail = await this.prescriptionDetailModel.findOne({

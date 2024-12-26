@@ -23,8 +23,8 @@ export class UpdateDoctorScheduleDto extends PartialType(
   shiftId?: Types.ObjectId;
 
   @IsOptional()
-  @Type(() => Date) // Chuyển đổi kiểu từ string thành Date
-  date?: Date; // Ngày của lịch trình, kiểu Date
+  @Type(() => Date) 
+  date?: Date;
   @IsOptional()
   @IsEnum(Status, {
     message: 'status must be active or inactive',
