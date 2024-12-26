@@ -68,14 +68,12 @@ export class DoctorsService {
   }
 
   async findAll(query: string, current: number, pageSize: number) {
-    const { filter, sort } = aqp(query);  // Xử lý filter và sort từ query
+    const { filter, sort } = aqp(query); 
     console.log(query);
 
-    // Tính toán skip và limit cho phân trang
     const skip = calculateSkip(current, pageSize);
     const limit = pageSize;
 
-    // Xây dựng truy vấn aggregate với điều kiện tìm kiếm theo fullName và specialty
     const doctors = await this.doctorModel.aggregate([
       {
         $lookup: {
@@ -126,7 +124,6 @@ export class DoctorsService {
       },
     ]);
 
-    // Tính tổng số bản ghi với aggregate
     const totalItems = await this.doctorModel.aggregate([
       {
         $lookup: {
@@ -159,15 +156,13 @@ export class DoctorsService {
         },
       },
       {
-        $count: 'totalItems', // Đếm tổng số bản ghi
+        $count: 'totalItems',
       },
     ]);
 
-    // Lấy tổng số bản ghi và số trang
     const totalItemsCount = totalItems.length > 0 ? totalItems[0].totalItems : 0;
     const totalPages = totalItemsCount > 0 ? Math.ceil(totalItemsCount / pageSize) : 0;
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (doctors.length === 0) {
       throw new NotFoundException('No doctors available');
     }
@@ -190,7 +185,6 @@ export class DoctorsService {
   async update(_id: string, updateDoctorDto: UpdateDoctorDto,
     file?: Express.Multer.File
   ) {
-    // Kiểm tra xem bác sĩ có tồn tại hay không
     await this.checkDoctorExists(_id);
     let s3Url: string | undefined;
     if (file) {
@@ -203,7 +197,7 @@ export class DoctorsService {
           Key: fileKey,
           Body: file.buffer,
           ACL: 'public-read',
-          ContentType: file.mimetype, // Lấy đúng định dạng file
+          ContentType: file.mimetype, 
         }),
       );
 
@@ -220,7 +214,7 @@ export class DoctorsService {
 
     const updatedData = {
       ...updateDoctorDto,
-      ...(s3Url && { avatar: s3Url }), // Chỉ thêm avatar nếu có file
+      ...(s3Url && { avatar: s3Url }), 
     };
 
     const updatedDoctor = await this.doctorModel.findByIdAndUpdate(

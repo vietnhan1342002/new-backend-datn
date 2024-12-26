@@ -38,10 +38,8 @@ export class SpecialtiesService {
   async create(createSpecialtyDto: CreateSpecialtyDto) {
     const { name, departmentId, description } = createSpecialtyDto;
 
-    // Kiểm tra nếu specialty đã tồn tại
     await this.checkSpecialtyExistence(name);
 
-    // Tạo specialty mới
     const specialty = await this.specialtyModel.create({
       name,
       departmentId: new Types.ObjectId(departmentId),
@@ -60,10 +58,8 @@ export class SpecialtiesService {
       pageSize,
     );
 
-    // Tính toán skip và phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn dữ liệu với phân trang và sắp xếp
     const result = await this.specialtyModel
       .find(filter)
       .limit(pageSize)
@@ -113,7 +109,7 @@ export class SpecialtiesService {
           Key: fileKey,
           Body: file.buffer,
           ACL: 'public-read',
-          ContentType: file.mimetype, // Lấy đúng định dạng file
+          ContentType: file.mimetype, 
         }),
       );
 
@@ -122,13 +118,13 @@ export class SpecialtiesService {
 
     const updatedData = {
       ...updateSpecialtyDto,
-      ...(s3Url && { icon: s3Url }), // Chỉ thêm avatar nếu có file
+      ...(s3Url && { icon: s3Url }), 
     };
 
     const updatedSpecialty = await this.specialtyModel.findByIdAndUpdate(
       _id,
       { $set: updatedData },
-      { upsert: false, new: true }, // Trả về bản ghi đã cập nhật
+      { upsert: false, new: true }, 
     );
 
     return updatedSpecialty;

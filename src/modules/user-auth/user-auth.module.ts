@@ -28,7 +28,6 @@ import { Doctor, DoctorSchema } from '../doctors/schemas/doctor.schema';
       inject: [ConfigService],
     }),
 
-    //schema
     MongooseModule.forFeature([
       { name: UserAuth.name, schema: UserAuthSchema },
       { name: RefreshToken.name, schema: RefreshTokenSchema },
@@ -51,4 +50,4 @@ import { Doctor, DoctorSchema } from '../doctors/schemas/doctor.schema';
   ],
   exports: [UserAuthService],
 })
-export class UserAuthModule {}
+export class UserAuthModule { }

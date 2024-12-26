@@ -25,12 +25,10 @@ export class FilterService {
   async filterDoctorSchedules(filterCriteria: { doctorId?: string; date?: string; status?: string; shiftId?: string }) {
     const filter: any = {};
 
-    // Lọc theo doctorId, shiftId, và status (nếu có)
     if (filterCriteria.doctorId) filter.doctorId = new Types.ObjectId(filterCriteria.doctorId);
     if (filterCriteria.shiftId) filter.shiftId = new Types.ObjectId(filterCriteria.shiftId);
     if (filterCriteria.status) filter.status = filterCriteria.status;
 
-    // Lọc theo ngày (nếu có)
     if (!filterCriteria.date) {
       const date = new Date();
       date.setHours(0, 0, 0, 0);
@@ -60,16 +58,16 @@ export class FilterService {
 
   async filterDoctorSchedulesBySpecialty(filterCriteria: { specialtyId?: string; date?: string; status?: string; shift?: string }) {
     const matchFilter: any = {};
-    if (filterCriteria.date) matchFilter.date = new Date(filterCriteria.date); // Chuyển đổi `date` thành đối tượng `Date`
+    if (filterCriteria.date) matchFilter.date = new Date(filterCriteria.date);
     if (filterCriteria.status) matchFilter.status = filterCriteria.status;
     const doctor_schedules = await this.doctorScheduleModel.aggregate([
-      { $match: matchFilter }, // Lọc dữ liệu cơ bản
+      { $match: matchFilter },
       {
         $lookup: {
-          from: 'doctors',              // Tên collection "doctors"
-          localField: 'doctorId',       // Trường liên kết trong collection "doctor_schedules"
-          foreignField: '_id',          // Trường liên kết trong collection "doctors"
-          as: 'doctorDetails',          // Kết quả lưu trong trường `doctorDetails`
+          from: 'doctors',             
+          localField: 'doctorId',     
+          foreignField: '_id',      
+          as: 'doctorDetails',        
         },
       },
       { $unwind: { path: '$doctorDetails', preserveNullAndEmptyArrays: true } },
@@ -95,12 +93,12 @@ export class FilterService {
         },
       },
       {
-        $project: {                 // Chỉ giữ lại các trường mong muốn
+        $project: {        
           _id: 1,
           doctorId: 1,
           shiftId: 1,
           date: 1,
-          shift: '$shiftDetails.name', // Thêm trường `shift`
+          shift: '$shiftDetails.name', 
         },
       },
     ]).exec();
@@ -118,10 +116,10 @@ export class FilterService {
       { $match: matchFilter },
       {
         $lookup: {
-          from: 'doctors',           // 
-          localField: 'doctorId',   // Trường liên kết trong doctor_schedules
-          foreignField: '_id',       // Trường liên kết trong doctors
-          as: 'doctorDetails',       // Alias để lưu kết quả
+          from: 'doctors',
+          localField: 'doctorId',   
+          foreignField: '_id',    
+          as: 'doctorDetails',    
         },
       },
       { $unwind: '$doctorDetails' },
@@ -156,7 +154,6 @@ export class FilterService {
   async fieldMMedicalRecordsByPatientId(filterCriteria: { patientId?: string }): Promise<MedicalRecord[]> {
     const filter: any = {};
 
-    // Nếu có patientId thì thêm vào filter
     if (filterCriteria.patientId) {
       filter.patientId = new Types.ObjectId(filterCriteria.patientId);
     }
@@ -165,22 +162,22 @@ export class FilterService {
       .find(filter)
       .populate({
         path: 'patientId',
-        select: 'userId', // Chỉ lấy trường userId từ patientId
+        select: 'userId',
         populate: {
-          path: 'userId', // Lấy thông tin userId (ví dụ fullName)
+          path: 'userId',
           select: 'fullName',
         },
       })
       .populate({
-        path: 'doctorId', // Tên trường trong MedicalRecord
-        select: 'userId', // Chỉ lấy trường userId từ doctorId
+        path: 'doctorId',
+        select: 'userId', 
         populate: {
-          path: 'userId', // Lấy thông tin userId (ví dụ fullName)
+          path: 'userId',
           select: 'fullName',
         },
       })
       .populate({
-        path: 'appointmentId', // Tên trường trong MedicalRecord
+        path: 'appointmentId',
         select: 'appointmentDate',
       })
       .exec();
@@ -189,7 +186,7 @@ export class FilterService {
   }
 
   async countDoctors(): Promise<number> {
-    const count = await this.doctorModel.countDocuments();  // Đếm tất cả tài liệu trong collection
+    const count = await this.doctorModel.countDocuments(); 
     return count;
   }
 

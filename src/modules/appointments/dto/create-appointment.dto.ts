@@ -5,17 +5,16 @@ import { Types } from 'mongoose';
 export class CreateAppointmentDto {
   @IsNotEmpty()
   @IsMongoId()
-  patientId: Types.ObjectId | string; // ID của bệnh nhân
+  patientId: Types.ObjectId | string;
+  @IsNotEmpty()
+  @IsMongoId()
+  @Type(() => Types.ObjectId) 
+  doctorId: Types.ObjectId; 
 
   @IsNotEmpty()
   @IsMongoId()
-  @Type(() => Types.ObjectId) // Ánh xạ chuỗi thành ObjectId
-  doctorId: Types.ObjectId; // ID của bác sĩ
-
-  @IsNotEmpty()
-  @IsMongoId()
-  @Type(() => Types.ObjectId) // Ánh xạ chuỗi thành ObjectId
-  doctorScheduleId: Types.ObjectId; // ID của lịch làm việc bác sĩ
+  @Type(() => Types.ObjectId) 
+  doctorScheduleId: Types.ObjectId; 
 
 
   @IsOptional()

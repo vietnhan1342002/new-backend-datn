@@ -21,14 +21,12 @@ export class MedicationsService {
       createMedicationDto
     )
 
-    return { _id: medication.id };;
+    return { _id: medication.id };
   }
-
 
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    // Lấy tổng số bản ghi và số trang
     const { totalItems, totalPages } = await preparePaginationFilter(
       this.medicationModel,
       filter,
@@ -36,10 +34,8 @@ export class MedicationsService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await this.medicationModel
       .find(filter)
       .select('-__v -createdAt -updatedAt')
@@ -48,7 +44,6 @@ export class MedicationsService {
       .sort(sort as any)
       .exec();
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (result.length === 0) {
       throw new NotFoundException('No medications found');
     }
@@ -58,7 +53,6 @@ export class MedicationsService {
 
   async findOne(_id: Types.ObjectId) {
     const medication = await this.medicationModel.findById(new Types.ObjectId(_id))
-    // .select('-__v -createdAt -updatedAt')
 
     if (!medication) {
       throw new NotFoundException(`Medication with ID ${_id} not found`);
@@ -67,30 +61,24 @@ export class MedicationsService {
   }
 
   async update(_id: Types.ObjectId, updateMedicationDto: UpdateMedicationDto) {
-    // Lấy thông tin thuốc hiện tại từ database
     const currentMedication = await this.medicationModel.findById(_id);
 
-    // Nếu tên thuốc có thay đổi, kiểm tra xem tên mới có bị trùng không
     if (updateMedicationDto.name && updateMedicationDto.name !== currentMedication.name) {
       await this.checkNameExists(updateMedicationDto.name);
     }
 
-    // Tạo đối tượng để lưu các trường dữ liệu cần cập nhật
     const updateFields = {};
 
-    // So sánh từng trường và chỉ đưa vào những trường thay đổi
     for (const key in updateMedicationDto) {
       if (updateMedicationDto[key] !== currentMedication[key]) {
         updateFields[key] = updateMedicationDto[key];
       }
     }
 
-    // Nếu không có trường nào thay đổi, không thực hiện update
     if (Object.keys(updateFields).length === 0) {
       return { message: 'No changes detected' };
     }
 
-    // Cập nhật thuốc với chỉ các trường đã thay đổi
     const updatedMedication = await this.medicationModel.findByIdAndUpdate(
       _id,
       updateFields,
@@ -99,8 +87,6 @@ export class MedicationsService {
 
     return { _id: updatedMedication.id };
   }
-
-
 
   async updateMedicationQuantity(
     medicationId: Types.ObjectId,
@@ -111,7 +97,6 @@ export class MedicationsService {
       throw new Error('Medication not found');
     }
 
-    // Kiểm tra nếu số lượng không đủ
     if (quantity > medication.quantity) {
       throw new BadRequestException('Not enough medication in stock');
     }
@@ -147,7 +132,6 @@ export class MedicationsService {
 
     const newQuantity = medication.quantity + quantity;
 
-
     let warningMessage = '';
 
     await this.medicationModel.findByIdAndUpdate(medicationId,
@@ -175,13 +159,9 @@ export class MedicationsService {
         data: deletedItem,
       };
     } catch (error) {
-      // Xử lý lỗi (tùy chỉnh theo yêu cầu)
       throw new BadRequestException(`Failed to delete item: ${error.message}`);
     }
   }
-
-
-  //------------------------------------------------------------------------//
 
   async checkNameExists(name: string) {
     const medicationExists = await isExistHelper(

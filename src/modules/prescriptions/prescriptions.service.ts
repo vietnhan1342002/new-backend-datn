@@ -48,7 +48,6 @@ export class PrescriptionsService {
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    // Thêm điều kiện để chỉ lấy các bản ghi chưa bị xóa (isDeleted: false)
     filter.isDeleted = filter.isDeleted !== undefined ? filter.isDeleted : false;
 
     const { totalItems, totalPages } = await preparePaginationFilter(
@@ -58,10 +57,8 @@ export class PrescriptionsService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await
       this.prescriptionModel
         .find(filter)
@@ -70,7 +67,6 @@ export class PrescriptionsService {
         .skip(skip)
         .sort(sort as any)
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (result.length === 0) {
       throw new NotFoundException('No prescriptions available');
     }
@@ -120,7 +116,6 @@ export class PrescriptionsService {
   async findAllSoftDelete(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    // Thêm điều kiện để chỉ lấy các bản ghi chưa bị xóa (isDeleted: false)
     filter.isDeleted = filter.isDeleted !== true;
 
     const { totalItems, totalPages } = await preparePaginationFilter(
@@ -130,10 +125,8 @@ export class PrescriptionsService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = this.prescriptionModel
       .find(filter)
       .select("_id detailMedicalRecordId")
@@ -141,7 +134,6 @@ export class PrescriptionsService {
       .skip(skip)
       .sort(sort as any)
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (!result) {
       throw new NotFoundException('No prescriptions found');
     }

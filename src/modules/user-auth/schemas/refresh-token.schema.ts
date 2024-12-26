@@ -15,8 +15,6 @@ export class RefreshToken extends Document {
   expiryDate: Date;
 }
 
-// Tạo schema cho RefreshToken
 export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
 
-// Thêm chỉ mục TTL vào trường expiryDate
 RefreshTokenSchema.index({ expiryDate: 1 }, { expireAfterSeconds: 0 });

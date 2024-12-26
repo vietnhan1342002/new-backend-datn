@@ -47,10 +47,8 @@ export class DoctorSchedulesService {
   async create(createDoctorScheduleDto: CreateDoctorScheduleDto) {
     const { doctorId, shiftId, date, status } = createDoctorScheduleDto;
 
-    // Check if the schedule for this doctor on this date and shift already exists
     await this.checkDoctorScheduleExistence(doctorId, shiftId, date);
 
-    // Create a new schedule if no duplicates are found
     const schedule = await this.doctorScheduleModel.create({
       doctorId: new Types.ObjectId(doctorId),
       shiftId: new Types.ObjectId(shiftId),
@@ -75,7 +73,6 @@ export class DoctorSchedulesService {
 
     const skip = (current - 1) * pageSize;
 
-    // Tạo một truy vấn Mongoose và gọi populate trên đó
     const queryResult = this.doctorScheduleModel
       .find(filter)
       .limit(pageSize)
@@ -83,7 +80,6 @@ export class DoctorSchedulesService {
       .sort(sort as any);
 
 
-    // Thực thi truy vấn với populate
     const result = await this.populateDoctorScheduleQuery(queryResult).exec();
 
     if (result.length === 0)
@@ -111,7 +107,6 @@ export class DoctorSchedulesService {
     const schedule = await this.findOne(_id);
     const { doctorId, shiftId, date, status } = updateDoctorScheduleDto;
 
-    // Check if the schedule for this doctor on this date already exists
     await this.checkDoctorScheduleExistence(doctorId, shiftId, date);
 
     return await this.doctorScheduleModel.updateOne(
@@ -122,7 +117,6 @@ export class DoctorSchedulesService {
 
   async updateExpiredStatus() {
     const today = new Date();
-
     today.setHours(0, 0, 0, 0);
     console.log("today", today);
     const expiredSchedules = await this.doctorScheduleModel.updateMany(
@@ -139,6 +133,7 @@ export class DoctorSchedulesService {
       message: `${expiredSchedules.modifiedCount} doctor schedules have been marked as EXPIRED.`,
     };
   }
+
 
   async remove(_id: Types.ObjectId) {
     const schedule = await this.findOne(_id);

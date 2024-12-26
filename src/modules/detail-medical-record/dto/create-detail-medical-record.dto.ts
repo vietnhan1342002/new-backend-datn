@@ -4,14 +4,13 @@ import { Types } from 'mongoose';
 export class CreateDetailMedicalRecordDto {
     @IsMongoId()
     @IsNotEmpty()
-    medicalRecordId: Types.ObjectId;  // ID của MedicalRecord mà bản ghi chi tiết này liên kết
+    medicalRecordId: Types.ObjectId; 
 
     @IsOptional()
-    symptoms?: string;  // Triệu chứng của bệnh nhân
+    symptoms?: string;  
 
     @IsOptional()
-    disease?: string;  // Tên bệnh được chẩn đoán
-
+    disease?: string; 
     @IsOptional()
-    treatmentPlan?: string;  // Kế hoạch điều trị cho bệnh nhân
+    treatmentPlan?: string;  
 }

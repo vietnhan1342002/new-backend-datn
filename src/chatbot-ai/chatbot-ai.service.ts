@@ -59,7 +59,6 @@ export class ChatbotAiService {
     try {
       return JSON.parse(responseContent);
     } catch (error) {
-      // Nếu không thể parse JSON, xử lý như văn bản thông thường
       return { message: responseContent.trim().replace(/^AI:\s*/, '') };
     }
   }
@@ -90,7 +89,6 @@ export class ChatbotAiService {
       this.resetState();
     }
 
-    // Check if input contains the breakup keyword
     if (farewellKeywords.some(keyword => input.toLowerCase().includes(keyword))) {
       this.resetState();
       return {
@@ -98,7 +96,6 @@ export class ChatbotAiService {
       };
     }
 
-    // Check if input Have a good day
     if (this.chatHistory.some(msg => msg.content.includes("Have a good day!"))) {
       this.resetState();
     }
@@ -107,15 +104,13 @@ export class ChatbotAiService {
       this.specialtiesData = await this.specialtiesService.findAllName();
     }
 
-
-    // Tạo prompt dựa trên lịch sử trò chuyện
     const prompt = ChatPromptTemplate.fromMessages([
       ['system', `
         You are a helpful assistant in health.
         Say greetings first. Then ask how you can help.
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
-        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
         Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
         Next Answer" "Specialty can be: **speciaty predict**."
         Finally, ask them Would you like to make an appointment?.
@@ -142,7 +137,6 @@ export class ChatbotAiService {
 
       //collect specialty
       if (response.content.includes("Specialty can be:")) {
-        // Xử lý đoạn văn bản để lấy specialty
         const specialtyMatch = response.content.match(specialtyRegex);
 
         if (specialtyMatch) {
@@ -334,7 +328,7 @@ export class ChatbotAiService {
   //   Context: ${context}
 
   //   User Question: ${chatDTO.message}
-      
+
   //   Only return the helpful answer below and nothing else.
   //   Helpful answer:
   // `;

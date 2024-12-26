@@ -7,15 +7,15 @@ export class UpdatePatientDto extends PartialType(CreatePatientDto) {
   @IsOptional()
   email?: string;
 
-  @IsOptional() // Trường này không bắt buộc
+  @IsOptional()
   @IsDateString()
-  dateOfBirth?: string; // Chỉ cần cập nhật nếu muốn
+  dateOfBirth?: string;
 
-  @IsOptional() // Trường này không bắt buộc
+  @IsOptional()
   @IsString()
-  address?: string; // Chỉ cần cập nhật nếu muốn
+  address?: string;
 
-  @IsOptional() // Trường này không bắt buộc
+  @IsOptional()
   @IsEnum(Gender)
-  gender?: Gender; // Chỉ cần cập nhật nếu muốn
+  gender?: Gender;
 }

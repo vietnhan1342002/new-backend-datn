@@ -39,7 +39,7 @@ export class BillsService {
 
   async findByPrescriptionId(prescriptionId: string): Promise<Bill | null> {
     const bill = await this.billModel.findOne({ prescriptionId }).exec();
-    return bill; // Trả về hóa đơn nếu tìm thấy, nếu không sẽ trả về null
+    return bill; 
   }
 
   async updateStatus(id: string): Promise<Bill> {

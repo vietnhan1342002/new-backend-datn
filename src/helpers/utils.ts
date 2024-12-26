@@ -31,7 +31,7 @@ export function formatDate(date: Date | string): string {
 }
 
 //----------------------------------------Pagination--------------------------------------------------//
-// Hàm phụ trợ để kiểm tra và phân tích các tham số
+
 export const parseQueryParam = (value: string): number => {
   const parsedValue = parseInt(value, 10);
   if (isNaN(parsedValue) || parsedValue < 1) {
@@ -40,14 +40,13 @@ export const parseQueryParam = (value: string): number => {
   return parsedValue;
 };
 
-// Kiểm tra tính hợp lệ của phân trang
 export const validatePagination = (current: number, totalPages: number) => {
   if (current > totalPages) {
     throw new NotFoundException('Page not found');
   }
 };
 
-// Tính toán giá trị skip
+
 export const calculateSkip = (current: number, pageSize: number): number => {
   return (current - 1) * pageSize;
 };

@@ -28,7 +28,6 @@ export class DetailMedicalRecordService {
     return { _id: detailMedicalRecord.id };
   }
 
-  // Tìm một Detail Medical Record theo medicalRecordId
   async findOneByMedicalRecordId(medicalRecordId: string): Promise<DetailMedicalRecord | null> {
     return await this.detailMedicalRecordModel.findOne({ medicalRecordId: new Types.ObjectId(medicalRecordId) }).populate({
       path: 'medicalRecordId',
@@ -77,10 +76,8 @@ export class DetailMedicalRecordService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await this.populateDetailMedicalRecordQuery(
       this.detailMedicalRecordModel
         .find(filter)
@@ -88,8 +85,6 @@ export class DetailMedicalRecordService {
         .skip(skip)
         .sort(sort as any),
     ).exec();
-
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (result.length === 0) {
       throw new NotFoundException('No medical record is deleted available');
     }
@@ -140,7 +135,6 @@ export class DetailMedicalRecordService {
   }
 
   //------------------------------------------------------//
-  // Kiểm tra xem một Detail Medical Record có tồn tại không
   private async checkDetailMedicalRecordExists(_id: string) {
     const detailMedicalRecord = await this.detailMedicalRecordModel.findById(_id);
     if (!detailMedicalRecord) {
@@ -149,10 +143,9 @@ export class DetailMedicalRecordService {
     return detailMedicalRecord;
   }
 
-  // Phương thức này để populate các thông tin cần thiết từ các bảng liên quan
   private populateDetailMedicalRecordQuery(query: any) {
     return query
-      .select('symptoms disease treatmentPlan medicalRecordId')  // Chọn các trường trong bảng hiện tại
-      .populate('medicalRecordId', 'note diagnosis');  // Populate thông tin từ bảng `medicalRecord` và chỉ lấy trường `note`
+      .select('symptoms disease treatmentPlan medicalRecordId')  
+      .populate('medicalRecordId', 'note diagnosis'); 
   }
 }

@@ -42,7 +42,6 @@ export class NotificationsGateway
                     this.doctorsSockets.push({ userId, socket })
                     console.log('Doctor connected:', userId);
                 }
-                // socket.join(userId);
             } catch (error) {
                 console.error('Token verification failed', error);
                 socket.disconnect();

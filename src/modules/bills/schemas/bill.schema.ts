@@ -11,19 +11,19 @@ export enum BillStatus {
 @Schema({ timestamps: true })
 export class Bill {
     @Prop({ type: Types.ObjectId, ref: Prescription.name, required: true })
-    prescriptionId: string; // Liên kết đến đơn thuốc
+    prescriptionId: string; 
 
     @Prop()
-    patientName: string; // Liên kết đến bệnh nhân
+    patientName: string; 
 
     @Prop({ required: true })
-    totalPrice: number; // Tổng giá trị hóa đơn
+    totalPrice: number; 
 
     @Prop({ enum: BillStatus, default: BillStatus.PENDING })
-    status: BillStatus; // Trạng thái hóa đơn
+    status: BillStatus; 
 
     @Prop({ required: false })
-    paymentDate: Date; // Ngày thanh toán, nếu có
+    paymentDate: Date;
 }
 
 export const BillSchema = SchemaFactory.createForClass(Bill);

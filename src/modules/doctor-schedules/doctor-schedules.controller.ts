@@ -39,14 +39,13 @@ export class DoctorSchedulesController {
   @Public()
   @Get()
   async findAll(
-    @Query('query') query: string = '', // Sử dụng giá trị mặc định là chuỗi rỗng nếu không có query
+    @Query('query') query: string = '', 
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
   ) {
     const currentPage = parseQueryParam(current);
     const pageLimit = parseQueryParam(pageSize);
 
-    // Tìm tất cả bác sĩ hoặc theo query
     return this.doctorSchedulesService.findAll(query, currentPage, pageLimit);
   }
 

@@ -33,7 +33,6 @@ export class ShiftsService {
   async create(createShiftDto: CreateShiftDto) {
     const { startTime, endTime } = createShiftDto;
 
-    // Kiểm tra ca làm việc có tồn tại không
     await this.checkShiftExistence(startTime, endTime);
 
     const shift = await this.shiftModel.create({
@@ -78,7 +77,6 @@ export class ShiftsService {
     const shift = await this.findOne(_id);
     const { name, startTime, endTime } = updateShiftDto;
 
-    // Kiểm tra xem ca làm việc mới có trùng không
     await this.checkShiftExistence(startTime, endTime);
 
     return await this.shiftModel.updateOne(

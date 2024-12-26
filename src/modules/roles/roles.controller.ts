@@ -16,7 +16,6 @@ export class RolesController {
 
   @Get()
   async findAll() {
-    // Tìm tất cả bác sĩ hoặc theo query
     return this.rolesService.findAll();
   }
 

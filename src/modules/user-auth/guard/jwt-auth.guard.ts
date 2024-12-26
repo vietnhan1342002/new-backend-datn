@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from './public.guard'; // Đây là nơi định nghĩa metadata của @Public()
+import { IS_PUBLIC_KEY } from './public.guard';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {

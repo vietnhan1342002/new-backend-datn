@@ -38,10 +38,9 @@ export class AppointmentsService {
     const { patientId, doctorId, doctorScheduleId } = createAppointmentDto;
 
 
-    // Chuyển chuỗi thành ObjectId (Mongoose tự động chuyển khi lưu vào DB)
-    const patientObjectId = new Types.ObjectId(patientId); // Chuyển chuỗi thành ObjectId
-    const doctorObjectId = new Types.ObjectId(doctorId);   // Chuyển chuỗi thành ObjectId
-    const doctorScheduleObjectId = new Types.ObjectId(doctorScheduleId); // Chuyển chuỗi thành ObjectId
+    const patientObjectId = new Types.ObjectId(patientId);
+    const doctorObjectId = new Types.ObjectId(doctorId);
+    const doctorScheduleObjectId = new Types.ObjectId(doctorScheduleId);
 
     const session = await this.connection.startSession();
     session.startTransaction();
@@ -102,9 +101,7 @@ export class AppointmentsService {
 
   async findAllStatus(query: string, status: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
-    // Thêm điều kiện lọc status là 'pending'
     filter.status = status;
-
     const { result, totalPages, totalItems } = await paginateAndPopulate(
       this.appointmentModel,
       {
@@ -176,17 +173,17 @@ export class AppointmentsService {
         await this.medicalRecordsService.create(createMedicalRecordDto);
       }
 
-      // const patient = await this.patientsService.findOne(appointment.patientId.toString())
-      // const email = patient.email
-      // console.log("email", email);
-      // await this.mailerService.sendMail({
-      //   to: email,
-      //   subject: 'Confirm appointment',
-      //   template: './confirmAppointment',
-      //   context: {
-      //     appointmentDate: appointment.appointmentDate,
-      //   },
-      // });
+      const patient = await this.patientsService.findOne(appointment.patientId.toString())
+      const email = patient.email
+      console.log("email", email);
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Confirm appointment',
+        template: './confirmAppointment',
+        context: {
+          appointmentDate: appointment.appointmentDate,
+        },
+      });
 
 
       if (status.status === Status.CONFIRMED || status.status === Status.CANCELED) {
@@ -215,10 +212,8 @@ export class AppointmentsService {
       await this.validateSchedule(schedule.result, doctorId);
     }
 
-    // Prepare update data with only provided fields
     const updateData = this.prepareUpdateData(updateAppointmentDto);
 
-    // Update appointment with the filtered data
     return await this.appointmentModel.updateOne({ _id }, { $set: updateData });
   }
 

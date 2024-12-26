@@ -24,11 +24,9 @@ export class MedicalRecordsService {
     const medical_record = await this.medicalRecordModel.create({
       appointmentId, doctorId, patientId, diagnosis, note
     });
-    console.log("medical_record", medical_record);
     return { _id: medical_record.id };
   }
 
-  // Tìm một Medical Record dựa trên appointmentId
   async findOneByAppointmentId(appointmentId: Types.ObjectId): Promise<MedicalRecord | null> {
     return await this.medicalRecordModel.findOne({ appointmentId: new Types.ObjectId(appointmentId) });
   }
@@ -36,7 +34,6 @@ export class MedicalRecordsService {
   async findAll(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    // Thêm điều kiện để chỉ lấy các bản ghi chưa bị xóa (isDeleted: false)
     filter.isDeleted = filter.isDeleted !== undefined ? filter.isDeleted : false;
 
     const { totalItems, totalPages } = await preparePaginationFilter(
@@ -46,10 +43,8 @@ export class MedicalRecordsService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await this.populateMedicalRecordQuery(
       this.medicalRecordModel
         .find(filter)
@@ -58,7 +53,6 @@ export class MedicalRecordsService {
         .sort(sort as any),
     ).exec();
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (result.length === 0) {
       throw new NotFoundException('No medical record available');
     }
@@ -112,7 +106,6 @@ export class MedicalRecordsService {
 
       await this.detailMedicalRecordService.softDeleteByMedicalRecordId(objectId, session);
 
-
       await session.commitTransaction();
       return { message: 'Medical record soft deleted successfully' };
     } catch (error) {
@@ -127,7 +120,6 @@ export class MedicalRecordsService {
   async findAllSoftDelete(query: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
 
-    // Thêm điều kiện để chỉ lấy các bản ghi chưa bị xóa (isDeleted: false)
     filter.isDeleted = filter.isDeleted !== true;
 
     const { totalItems, totalPages } = await preparePaginationFilter(
@@ -137,10 +129,8 @@ export class MedicalRecordsService {
       pageSize,
     );
 
-    // Tính toán skip để phân trang
     const skip = calculateSkip(current, pageSize);
 
-    // Truy vấn các bản ghi với phân trang và sắp xếp
     const result = await this.populateMedicalRecordQuery(
       this.medicalRecordModel
         .find(filter)
@@ -149,7 +139,6 @@ export class MedicalRecordsService {
         .sort(sort as any),
     ).exec();
 
-    // Nếu không có dữ liệu, ném ngoại lệ
     if (result.length === 0) {
       throw new NotFoundException('No medical record is deleted available');
     }
@@ -157,7 +146,6 @@ export class MedicalRecordsService {
     return { result, totalItems, totalPages };
   }
 
-  //------------------------------------------------------//
   private async checkMedicalRecordExists(_id: Types.ObjectId) {
     const medical_record = await this.medicalRecordModel.findById(_id);
     if (!medical_record) {
@@ -191,6 +179,7 @@ export class MedicalRecordsService {
         },
       ]);
   }
+
   async checkIfMedicalRecordIsDeleted(_id: Types.ObjectId): Promise<void> {
     const objectId = new Types.ObjectId(_id);
 
