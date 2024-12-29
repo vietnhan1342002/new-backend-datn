@@ -170,8 +170,6 @@ export class DoctorsService {
     return { result: doctors, totalItems: totalItemsCount, totalPages };
   }
 
-
-
   async findOne(_id: string): Promise<Doctor> {
     await this.checkDoctorExists(_id);
 

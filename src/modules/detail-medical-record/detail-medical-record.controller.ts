@@ -29,6 +29,7 @@ export class DetailMedicalRecordController {
     
     return this.detailMedicalRecordService.findAll(query, currentPage, pageLimit);
   }
+  
   @Get('soft-delete')
   async getSoftDelete(
     @Query('query') query: string = '', 

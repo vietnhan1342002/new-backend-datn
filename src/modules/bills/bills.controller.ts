@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, Query } from '@nestjs/common';
 import { BillsService } from './bills.service';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { Bill } from './schemas/bill.schema';
 import { Public } from '../user-auth/guard/public.guard';
+import { parseQueryParam } from '@/helpers/utils';
 
 @Public()
 @Controller('bills')
@@ -18,9 +19,30 @@ export class BillsController {
   }
 
   @Get()
-  findAll(): Promise<Bill[]> {
-    return this.billsService.findAll();
+  async findAll(
+    @Query('query') query: string = '',
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
+  ) {
+    const currentPage = parseQueryParam(current);
+    const pageLimit = parseQueryParam(pageSize);
+
+    return this.billsService.findAll(query, currentPage, pageLimit);
   }
+
+  @Get('sum-paid-bills')
+  async getSumPaidBillsToday(@Query('date') date?: string): Promise<{ totalPaidAmountToday: number }> {
+    const totalPaidAmountToday = await this.billsService.sumPaidBillsByDate(date);
+    return { totalPaidAmountToday };
+  }
+
+  @Get('last-month')
+  async getSumPaidBillsLastMonth(): Promise<{ totalPaidAmountLastMonth: number }> {
+    const totalPaidAmountLastMonth = await this.billsService.sumPaidBillsLastMonth();
+    return { totalPaidAmountLastMonth };
+  }
+
+
   @Get('/prescriptionId/:id')
   findByPrescriptionId(@Param('id') id: string): Promise<Bill> {
     return this.billsService.findByPrescriptionId(id);
