@@ -111,7 +111,7 @@ export class ChatbotAiService {
         Say greetings first. Then ask how you can help.
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
-        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
         Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
         Next Answer" "Specialty can be: **speciaty predict**."
         Finally, ask them Would you like to make an appointment?.
@@ -198,17 +198,16 @@ export class ChatbotAiService {
         const email = emailMatch[0].trim();
         this.userDetails.email = email;
 
-        // const createUserAuthDto: CreateUserAuthDto = {
-        //   fullName: this.userDetails.name,
-        //   phoneNumber: this.userDetails.phone,
-        //   password: this.userDetails.phone,
-        //   email,
-        //   roleId: new Types.ObjectId('673d931c35e97c832bfa6351'),
-        // };
-        // const user = await this.userAuthService.register(createUserAuthDto);
-        // const patient = await this.patientsService.findPatientByUserId(user._id);
-        // this.patientId = patient;
-        // console.log('this.patientId', this.patientId);
+        const createUserAuthDto: CreateUserAuthDto = {
+          fullName: this.userDetails.name,
+          phoneNumber: this.userDetails.phone,
+          password: this.userDetails.phone,
+          email,
+          roleId: new Types.ObjectId('673d931c35e97c832bfa6351'),
+        };
+        const user = await this.userAuthService.register(createUserAuthDto);
+        const patient = await this.patientsService.findPatientByUserId(user._id);
+        this.patientId = patient;
 
         const response = `Thank you, ${this.userDetails.name}. I created an account for you with a phone and password is your phone number. \nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
         this.chatHistory.push(new AIMessage({ content: response }));
@@ -247,7 +246,6 @@ export class ChatbotAiService {
         const response = `Your appointment has been scheduled for ${this.date}. The available shifts are: ${shiftList}. Please choose a shift.`;
         this.chatHistory.push(new AIMessage({ content: response }));
         this.shift = shiftList
-        console.log(this.shift, shiftList);
 
         return { message: response, shiftList: shiftList };
       }
@@ -255,8 +253,6 @@ export class ChatbotAiService {
       //collect shift
       const ShiftMatch = input.match(Shiftregex);
       if (ShiftMatch) {
-        console.log('shift');
-
         const shiftDate = ShiftMatch[0];
         if (!this.shift) {
           this.shift = shiftDate;
@@ -268,7 +264,6 @@ export class ChatbotAiService {
           status: 'active',
           shift: this.shift
         });
-        console.log(schedule);
 
         const scheduleId = schedule[0]._id;
         const doctorId = schedule[0].doctorId;
@@ -305,23 +300,18 @@ export class ChatbotAiService {
     const index = pc.Index('chatbot');
 
     try {
-      // Tạo embedding từ tin nhắn người dùng
       const queryEmbedding = await this.createEmbedding(chatDTO.message);
 
-      // Tìm kiếm kết quả từ Pinecone để lấy ngữ cảnh chat trước đó (nếu có)
       const searchResults = await index.query({
         vector: queryEmbedding,
         topK: 5,
         includeMetadata: true,
       });
 
-      // Tạo ngữ cảnh từ kết quả tìm kiếm
       const context = searchResults.matches.map(match => match.metadata?.content).join('\n');
 
-      // Gọi phương thức processMessage để xử lý lời nhắn người dùng và lịch sử trò chuyện
       const processedResponse = await this.processMessage(chatDTO.message);
 
-      // Trả về kết quả từ processMessage kết hợp với ngữ cảnh tìm được từ Pinecone
       return {
         message: processedResponse.message,
         context,
@@ -333,7 +323,6 @@ export class ChatbotAiService {
       return { message: 'Sorry, there was an error processing your request. Please try again later.' };
     }
   }
-
 
   async createEmbedding(text: string): Promise<number[]> {
     const model = this.genAI.getGenerativeModel({ model: "text-embedding-004" })
