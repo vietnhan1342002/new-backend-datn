@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { DoctorSchedule } from '../doctor-schedules/schemas/doctor-schedule.schema';
+import { DoctorSchedule, Status } from '../doctor-schedules/schemas/doctor-schedule.schema';
 import { Model, Types } from 'mongoose';
 import { Specialty } from '../specialties/schemas/specialty.schema';
 import { Doctor } from '../doctors/schemas/doctor.schema';
@@ -59,15 +59,16 @@ export class FilterService {
   async filterDoctorSchedulesBySpecialty(filterCriteria: { specialtyId?: string; date?: string; status?: string; shift?: string }) {
     const matchFilter: any = {};
     if (filterCriteria.date) matchFilter.date = new Date(filterCriteria.date);
-    if (filterCriteria.status) matchFilter.status = filterCriteria.status;
+    if (filterCriteria.status) matchFilter.status = { $ne: Status.EXPIRED };
+
     const doctor_schedules = await this.doctorScheduleModel.aggregate([
       { $match: matchFilter },
       {
         $lookup: {
-          from: 'doctors',             
-          localField: 'doctorId',     
-          foreignField: '_id',      
-          as: 'doctorDetails',        
+          from: 'doctors',
+          localField: 'doctorId',
+          foreignField: '_id',
+          as: 'doctorDetails',
         },
       },
       { $unwind: { path: '$doctorDetails', preserveNullAndEmptyArrays: true } },
@@ -93,12 +94,12 @@ export class FilterService {
         },
       },
       {
-        $project: {        
+        $project: {
           _id: 1,
           doctorId: 1,
           shiftId: 1,
           date: 1,
-          shift: '$shiftDetails.name', 
+          shift: '$shiftDetails.name',
         },
       },
     ]).exec();
@@ -117,9 +118,9 @@ export class FilterService {
       {
         $lookup: {
           from: 'doctors',
-          localField: 'doctorId',   
-          foreignField: '_id',    
-          as: 'doctorDetails',    
+          localField: 'doctorId',
+          foreignField: '_id',
+          as: 'doctorDetails',
         },
       },
       { $unwind: '$doctorDetails' },
@@ -170,7 +171,7 @@ export class FilterService {
       })
       .populate({
         path: 'doctorId',
-        select: 'userId', 
+        select: 'userId',
         populate: {
           path: 'userId',
           select: 'fullName',
@@ -186,7 +187,7 @@ export class FilterService {
   }
 
   async countDoctors(): Promise<number> {
-    const count = await this.doctorModel.countDocuments(); 
+    const count = await this.doctorModel.countDocuments();
     return count;
   }
 

@@ -13,13 +13,13 @@ export class ChatBotAiController {
     return { response };
   }
 
-  // @Post('test')
-  // async chat(@Body() chatDTO: { message: string }) {
-  //   try {
-  //     const aiResponse = await this.chatbotAiService.chatWithAI(chatDTO);
-  //     return { message: aiResponse };
-  //   } catch (error) {
-  //     return { message: 'An error occurred while processing your request.' };
-  //   }
-  // }
+  @Post('test')
+  async chat(@Body() chatDTO: { message: string }) {
+    try {
+      const aiResponse = await this.chatbotAiService.chatWithAI(chatDTO);
+      return { message: aiResponse };
+    } catch (error) {
+      return { message: 'An error occurred while processing your request.' };
+    }
+  }
 }

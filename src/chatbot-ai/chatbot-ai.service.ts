@@ -29,6 +29,7 @@ export class ChatbotAiService {
   private chatHistory = [];
   private specialtiesData: string[] = [];
   private dateList: string[] = [];
+  private shiftList: string;
   private vectorStore;
   private patientId: Types.ObjectId;
   private specialtyId: string;
@@ -110,7 +111,7 @@ export class ChatbotAiService {
         Say greetings first. Then ask how you can help.
         You can only ask one question at a time and give examples for them.
         Ask and wait for them to answer.
-        After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
+        After 1 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
         Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
         Next Answer" "Specialty can be: **speciaty predict**."
         Finally, ask them Would you like to make an appointment?.
@@ -197,17 +198,17 @@ export class ChatbotAiService {
         const email = emailMatch[0].trim();
         this.userDetails.email = email;
 
-        const createUserAuthDto: CreateUserAuthDto = {
-          fullName: this.userDetails.name,
-          phoneNumber: this.userDetails.phone,
-          password: this.userDetails.phone,
-          email,
-          roleId: new Types.ObjectId('673d931c35e97c832bfa6351'),
-        };
-        const user = await this.userAuthService.register(createUserAuthDto);
-        const patient = await this.patientsService.findPatientByUserId(user._id);
-        this.patientId = patient;
-        console.log('this.patientId', this.patientId);
+        // const createUserAuthDto: CreateUserAuthDto = {
+        //   fullName: this.userDetails.name,
+        //   phoneNumber: this.userDetails.phone,
+        //   password: this.userDetails.phone,
+        //   email,
+        //   roleId: new Types.ObjectId('673d931c35e97c832bfa6351'),
+        // };
+        // const user = await this.userAuthService.register(createUserAuthDto);
+        // const patient = await this.patientsService.findPatientByUserId(user._id);
+        // this.patientId = patient;
+        // console.log('this.patientId', this.patientId);
 
         const response = `Thank you, ${this.userDetails.name}. I created an account for you with a phone and password is your phone number. \nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
         this.chatHistory.push(new AIMessage({ content: response }));
@@ -245,6 +246,9 @@ export class ChatbotAiService {
 
         const response = `Your appointment has been scheduled for ${this.date}. The available shifts are: ${shiftList}. Please choose a shift.`;
         this.chatHistory.push(new AIMessage({ content: response }));
+        this.shift = shiftList
+        console.log(this.shift, shiftList);
+
         return { message: response, shiftList: shiftList };
       }
 
@@ -294,72 +298,47 @@ export class ChatbotAiService {
 
   }
 
-  // async chatWithAI(chatDTO: ChatDTO) {
-  //   const pc = new Pinecone({
-  //     apiKey: "pcsk_6B2zbn_68sJ4fEuQE5U5amWME5LFjPG15B71T7UsBSztRdm8ratCPQPvim2NSacPJWYjg7"
-  //   });
-  //   const index = pc.Index('chatbot');
+  async chatWithAI(chatDTO: ChatDTO) {
+    const pc = new Pinecone({
+      apiKey: "pcsk_6B2zbn_68sJ4fEuQE5U5amWME5LFjPG15B71T7UsBSztRdm8ratCPQPvim2NSacPJWYjg7"
+    });
+    const index = pc.Index('chatbot');
 
-  //   try {
-  //     const queryEmbedding = await this.createEmbedding(chatDTO.message);
+    try {
+      // Tạo embedding từ tin nhắn người dùng
+      const queryEmbedding = await this.createEmbedding(chatDTO.message);
 
-  //     const searchResults = await index.query({
-  //       vector: queryEmbedding,
-  //       topK: 5,
-  //       includeMetadata: true,
-  //     });
-  //     const context = searchResults.matches
-  //       .map((match: any) => match.metadata.text)
-  //       .join("\n");
+      // Tìm kiếm kết quả từ Pinecone để lấy ngữ cảnh chat trước đó (nếu có)
+      const searchResults = await index.query({
+        vector: queryEmbedding,
+        topK: 5,
+        includeMetadata: true,
+      });
 
-  //     const prompt = `
-  //     You are a helpful assistant in health.
-  //       Say greetings first. Then ask how you can help.
-  //       You can only ask one question at a time and give examples for them.
-  //       Ask and wait for them to answer.
-  //       After 5 question, you conclude with a possible disease diagnosis, severity level, and temporary home precautions.
-  //       Then from the list of ${this.specialtiesData}, predict which specialty the patient is in, just in the list above and only one specialty. 
-  //       Next Answer" "Specialty can be: **speciaty predict**."
-  //       Finally, ask them Would you like to make an appointment?.
-  //       If user agree. Ask What is your name? Format: My name is [your name], [your phone number][only 10 numbers]. 
-  //       Else, answer: "Have a good day!".
-  //   Use the following pieces of information to answer the user's question.
-  //   If you don't know the answer. You can research on google, just say that you don't know. don't try to make up an answer.
-  //   Context: ${context}
+      // Tạo ngữ cảnh từ kết quả tìm kiếm
+      const context = searchResults.matches.map(match => match.metadata?.content).join('\n');
 
-  //   User Question: ${chatDTO.message}
+      // Gọi phương thức processMessage để xử lý lời nhắn người dùng và lịch sử trò chuyện
+      const processedResponse = await this.processMessage(chatDTO.message);
 
-  //   Only return the helpful answer below and nothing else.
-  //   Helpful answer:
-  // `;
+      // Trả về kết quả từ processMessage kết hợp với ngữ cảnh tìm được từ Pinecone
+      return {
+        message: processedResponse.message,
+        context,
+        dateList: this.dateList || [],
+        shiftList: this.shift.toString(),
+      };
+    } catch (error) {
+      console.error('Error in chatWithAI:', error);
+      return { message: 'Sorry, there was an error processing your request. Please try again later.' };
+    }
+  }
 
-  //     // const llm = new ChatGroq({
-  //     //   model: "mixtral-8x7b-32768",
-  //     //   temperature: 0.7,
-  //     //   maxTokens: 3000,
-  //     //   maxRetries: 2,
-  //     // });
 
-  //     const aiMsg = await this.llm.invoke([
-  //       {
-  //         role: "system",
-  //         content:
-  //           "You are a helpful assistant.",
-  //       },
-  //       { role: "user", content: prompt },
-  //     ]);
-
-  //     return aiMsg.content;
-
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // }
-
-  // async createEmbedding(text: string): Promise<number[]> {
-  //   const model = this.genAI.getGenerativeModel({ model: "text-embedding-004" })
-  //   const response = await model.embedContent(text)
-  //   return response.embedding.values.slice(0, 384);
-  // }
+  async createEmbedding(text: string): Promise<number[]> {
+    const model = this.genAI.getGenerativeModel({ model: "text-embedding-004" })
+    const response = await model.embedContent(text)
+    return response.embedding.values.slice(0, 384);
+  }
 
 }
