@@ -8,6 +8,7 @@ import { MedicalRecord } from '../medical_records/schemas/medical_record.schema'
 import { MedicalRecordsService } from '../medical_records/medical_records.service';
 import { Appointment } from '../appointments/schemas/appointment.schema';
 import { UserAuth } from '../user-auth/schemas/user-auth.schema';
+import { of } from 'rxjs';
 
 @Injectable()
 export class FilterService {
@@ -24,31 +25,28 @@ export class FilterService {
 
   async filterDoctorSchedules(filterCriteria: { doctorId?: string; date?: string; status?: string; shiftId?: string }) {
     const filter: any = {};
+    const today = new Date().toLocaleDateString('en-GB').replaceAll('/', '-')
 
+    // Áp dụng các điều kiện filter dựa trên đầu vào
     if (filterCriteria.doctorId) filter.doctorId = new Types.ObjectId(filterCriteria.doctorId);
     if (filterCriteria.shiftId) filter.shiftId = new Types.ObjectId(filterCriteria.shiftId);
     if (filterCriteria.status) filter.status = filterCriteria.status;
-
-    if (!filterCriteria.date) {
-      const date = new Date();
-      date.setHours(0, 0, 0, 0);
-      filter.date = { $gte: date };
+    if (filterCriteria.date) {
+      filter.date = new Date(filterCriteria.date);
+    } else {
+      filter.date = today
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    console.log(filter);
-
-
+    // Truy vấn dữ liệu
     const doctor_schedules = await this.doctorScheduleModel
-      .find({ ...filter, date: { $gte: today } })
+      .find(filter) // Áp dụng filter đã xây dựng
       .populate({
         path: 'shiftId',
         select: 'name',
       })
       .exec();
 
+    // Kiểm tra nếu không tìm thấy lịch phù hợp
     if (doctor_schedules.length === 0) {
       throw new NotFoundException("Don't have any schedule suitable");
     }
@@ -58,9 +56,10 @@ export class FilterService {
 
   async filterDoctorSchedulesBySpecialty(filterCriteria: { specialtyId?: string; date?: string; status?: string; shift?: string }) {
     const matchFilter: any = {};
-    if (filterCriteria.date) matchFilter.date = new Date(filterCriteria.date);
-    if (filterCriteria.status) matchFilter.status = { $ne: Status.EXPIRED };
+    console.log("filterCriteria", filterCriteria);
 
+    if (filterCriteria.date) matchFilter.date = new Date(filterCriteria.date);
+    if (filterCriteria.status) matchFilter.status = filterCriteria.status
     const doctor_schedules = await this.doctorScheduleModel.aggregate([
       { $match: matchFilter },
       {
@@ -99,6 +98,7 @@ export class FilterService {
           doctorId: 1,
           shiftId: 1,
           date: 1,
+          status: 1,
           shift: '$shiftDetails.name',
         },
       },
