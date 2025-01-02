@@ -28,6 +28,18 @@ export class MedicalRecordsController {
     return this.medicalRecordsService.findAll(query, currentPage, pageLimit);
   }
 
+  @Get('doctor/:doctorId')
+  async findByDoctorId(
+    @Param('doctorId') doctorId: string, // doctorId là tham số trong URL
+    @Query('query') query: string, // Các tham số query cho việc tìm kiếm
+    @Query('current') current: number = 1, // Trang hiện tại
+    @Query('pageSize') pageSize: number = 10, // Số lượng bản ghi trên một trang
+  ) {
+    // Convert doctorId từ string thành Types.ObjectId
+    const doctorIdObjectId = new Types.ObjectId(doctorId);
+    return await this.medicalRecordsService.findByDoctorId(doctorIdObjectId, query, current, pageSize);
+  }
+
   @Get('soft-delete')
   async getSoftDelete(
     @Query('query') query: string = '',

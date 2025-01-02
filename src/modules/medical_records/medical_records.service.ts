@@ -146,6 +146,36 @@ export class MedicalRecordsService {
     return { result, totalItems, totalPages };
   }
 
+  async findByDoctorId(doctorId: Types.ObjectId, query: string, current: number, pageSize: number) {
+    const { filter, sort } = aqp(query);
+
+    // Thêm điều kiện lọc để chỉ lấy medicalRecord của doctorId cụ thể
+    filter.doctorId = doctorId;
+
+    const { totalItems, totalPages } = await preparePaginationFilter(
+      this.medicalRecordModel,
+      filter,
+      current,
+      pageSize,
+    );
+
+    const skip = calculateSkip(current, pageSize);
+
+    const result = await this.populateMedicalRecordQuery(
+      this.medicalRecordModel
+        .find(filter)
+        .limit(pageSize)
+        .skip(skip)
+        .sort(sort as any),
+    ).exec();
+
+    if (result.length === 0) {
+      throw new NotFoundException('No medical records found for the specified doctor');
+    }
+
+    return { result, totalItems, totalPages };
+  }
+
   private async checkMedicalRecordExists(_id: Types.ObjectId) {
     const medical_record = await this.medicalRecordModel.findById(_id);
     if (!medical_record) {
