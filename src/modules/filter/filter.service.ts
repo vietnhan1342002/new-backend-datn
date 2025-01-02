@@ -25,16 +25,12 @@ export class FilterService {
 
   async filterDoctorSchedules(filterCriteria: { doctorId?: string; date?: string; status?: string; shiftId?: string }) {
     const filter: any = {};
-    const today = new Date().toLocaleDateString('en-GB').replaceAll('/', '-')
-
     // Áp dụng các điều kiện filter dựa trên đầu vào
     if (filterCriteria.doctorId) filter.doctorId = new Types.ObjectId(filterCriteria.doctorId);
     if (filterCriteria.shiftId) filter.shiftId = new Types.ObjectId(filterCriteria.shiftId);
     if (filterCriteria.status) filter.status = filterCriteria.status;
     if (filterCriteria.date) {
       filter.date = new Date(filterCriteria.date);
-    } else {
-      filter.date = today
     }
 
     // Truy vấn dữ liệu
