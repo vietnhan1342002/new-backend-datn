@@ -29,7 +29,7 @@ export class ChatbotAiService {
   private chatHistory = [];
   private specialtiesData: string[] = [];
   private dateList: string[] = [];
-  private shiftList: string;
+  private shiftList: string[] = [];
   private vectorStore;
   private patientId: Types.ObjectId;
   private specialtyId: string;
@@ -145,7 +145,9 @@ export class ChatbotAiService {
           specialty = specialty.replace(/\*\*/g, '').trim();
           if (!this.specialtyId) {
             this.specialtyId = await this.specialtiesService.findByName(specialty)
-            const dateSchedule = await this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId: this.specialtyId });
+            const dateSchedule = await this.filterService.filterDoctorSchedulesBySpecialty({ specialtyId: this.specialtyId, status: Status.ACTIVE });
+            console.log("dateSchedule", dateSchedule);
+
             const uniqueDates = [...new Set(dateSchedule.map(schedule => schedule.date.toISOString().split('T')[0]))];
             this.dateList = uniqueDates
           }
@@ -209,7 +211,7 @@ export class ChatbotAiService {
         const patient = await this.patientsService.findPatientByUserId(user._id);
         this.patientId = patient;
 
-        const response = `Thank you, ${this.userDetails.name}. I created an account for you with a phone and password is your phone number. \nWhat date would you like to schedule your appointment?\n.${this.dateList}`;
+        const response = `Thank you, ${this.userDetails.name}. I created an account for you with a phone and password is your phone number. \nWhat date would you like to schedule your appointment?\n.`;
         this.chatHistory.push(new AIMessage({ content: response }));
         return { message: response, dateList: this.dateList };
       }
@@ -232,7 +234,7 @@ export class ChatbotAiService {
         const schedule = await this.filterService.filterDoctorSchedulesBySpecialty({
           specialtyId: this.specialtyId,
           date: this.date,
-          status: 'active'
+          status: Status.ACTIVE
         });
 
         if (schedule.length === 0) {
@@ -241,11 +243,11 @@ export class ChatbotAiService {
           return { message: response };
         }
 
-        const shiftList = schedule.map(shift => shift.shift).join(', ');
+        const shiftList = schedule.map(shift => shift.shift);
 
-        const response = `Your appointment has been scheduled for ${this.date}. The available shifts are: ${shiftList}. Please choose a shift.`;
+        const response = `Your appointment has been scheduled for ${this.date}. Please choose a shift.`;
         this.chatHistory.push(new AIMessage({ content: response }));
-        this.shift = shiftList
+        this.shiftList = shiftList
 
         return { message: response, shiftList: shiftList };
       }
@@ -261,7 +263,7 @@ export class ChatbotAiService {
         const schedule = await this.filterService.filterDoctorSchedulesBySpecialty({
           specialtyId: this.specialtyId,
           date: this.date,
-          status: 'active',
+          status: Status.ACTIVE,
           shift: this.shift
         });
 
