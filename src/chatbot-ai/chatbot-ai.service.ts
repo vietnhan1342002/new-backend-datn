@@ -44,7 +44,7 @@ export class ChatbotAiService {
     private appointmentsService: AppointmentsService,
     private readonly genAI: GoogleGenerativeAI
   ) {
-    const apiKey = "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";
+    const apiKey = "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";
     this.llm = new ChatGroq({
       model: 'gemma2-9b-it',
       temperature: 0.4,
