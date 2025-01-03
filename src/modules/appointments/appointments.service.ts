@@ -158,10 +158,7 @@ export class AppointmentsService {
 
     if (status.status === Status.CONFIRMED) {
       const existingRecord = await this.medicalRecordsService.findOneByAppointmentId(appointment._id);
-      console.log("existingRecord", existingRecord);
       if (!existingRecord) {
-        console.log("appointment", appointment);
-
         const createMedicalRecordDto: CreateMedicalRecordDto = {
           patientId: new Types.ObjectId(appointment.patientId),
           doctorId: new Types.ObjectId(appointment.doctorId),
@@ -175,16 +172,16 @@ export class AppointmentsService {
 
       const patient = await this.patientsService.findOne(appointment.patientId.toString())
       const email = patient.email
-      console.log("email", email);
-      await this.mailerService.sendMail({
-        to: email,
-        subject: 'Confirm appointment',
-        template: './confirmAppointment',
-        context: {
-          appointmentDate: appointment.appointmentDate,
-        },
-      });
-
+      if (email) {
+        await this.mailerService.sendMail({
+          to: email,
+          subject: 'Confirm appointment',
+          template: './confirmAppointment',
+          context: {
+            appointmentDate: appointment.appointmentDate,
+          },
+        });
+      }
 
       if (status.status === Status.CONFIRMED || status.status === Status.CANCELED) {
         appointment.status = status.status;

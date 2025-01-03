@@ -61,7 +61,7 @@ export class NotificationsGateway
     sendNotificationToDoctor(userId: string, doctorId: string, message: string,) {
         console.log("doctorId", doctorId);
         console.log("doctorsSockets", this.doctorsSockets[0]);
-        const doctorSocket = this.doctorsSockets[0].userId;
+        const doctorSocket = userId;
         console.log("doctorSocket", doctorSocket);
 
         if (doctorSocket) {
