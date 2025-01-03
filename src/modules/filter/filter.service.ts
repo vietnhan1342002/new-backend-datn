@@ -198,11 +198,13 @@ export class FilterService {
   }
 
   async filterAppointmentConfirmed(doctorId?: string): Promise<Appointment[]> {
+    const filter = { status: 'confirmed' };
+
     if (doctorId) {
-      return this.appointmentModel.find({ doctorId: new Types.ObjectId(doctorId), status: 'confirmed' }).exec();
-    } else {
-      return this.appointmentModel.find({ status: 'confirmed' }).exec();
+      filter['doctorId'] = new Types.ObjectId(doctorId);
     }
+
+    return this.appointmentModel.find(filter).sort({ createdAt: -1 }).exec();
   }
 
 }

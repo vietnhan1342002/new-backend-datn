@@ -101,12 +101,13 @@ export class AppointmentsService {
 
   async findAllStatus(query: string, status: string, current: number, pageSize: number) {
     const { filter, sort } = aqp(query);
+    const sortedQuery = { ...sort, createdAt: -1 };
     filter.status = status;
     const { result, totalPages, totalItems } = await paginateAndPopulate(
       this.appointmentModel,
       {
         filter,
-        sort,
+        sort: sortedQuery,
         current,
         pageSize,
         populateQuery: this.populateAppointmentQuery,
